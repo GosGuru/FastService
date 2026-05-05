@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BoatGrid } from "@/components/boats/BoatGrid";
+import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
-import { vehicles } from "@/data/vehicles";
-import { waterToys } from "@/data/waterToys";
-import { buildAlternates, getAllLocalizedStaticPaths, getBoatsByCollection, getPageBySlug } from "@/lib/content";
+import { buildAlternates, getAllLocalizedStaticPaths, getBoatsByCollection, getPageBySlug, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
+import type { ServicePage } from "@/types/content";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
+
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return getAllLocalizedStaticPaths();
@@ -20,7 +22,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: rawLocale, slug } = await params;
   const locale = assertLocale(rawLocale);
-  const page = getPageBySlug(locale, slug);
+  const page = await getPageBySlug(locale, slug);
 
   if (!page) return {};
 
@@ -30,20 +32,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `${siteUrl}/${locale}/${getLocalizedSlug(page.slugsByLocale, locale)}`,
       languages: buildAlternates(page.slugsByLocale)
-    },
-    robots: page.status === "hidden" ? { index: false, follow: true } : undefined
+    }
   };
 }
 
 export default async function DynamicPage({ params }: Props) {
   const { locale: rawLocale, slug } = await params;
   const locale = assertLocale(rawLocale) as Locale;
-  const page = getPageBySlug(locale, slug);
+  const page = await getPageBySlug(locale, slug);
 
   if (!page) notFound();
 
   if (page.kind === "boatCollection") {
-    const collectionBoats = getBoatsByCollection(page.collectionId);
+    const collectionBoats = await getBoatsByCollection(page.collectionId);
 
     return (
       <main>
@@ -68,6 +69,39 @@ export default async function DynamicPage({ params }: Props) {
     );
   }
 
+  if (page.kind === "seoPage") {
+    const currentSlug = getLocalizedSlug(page.slugsByLocale, locale);
+    const richContent = page.body[locale] ?? page.body.es;
+
+    return (
+      <main>
+        <section className="page-hero page-hero--compact">
+          <div className="page-hero__media">
+            <MediaImage asset={page.image} locale={locale} sizes="100vw" priority />
+          </div>
+          <div className="page-hero__overlay" />
+          <div className="container page-hero__content">
+            <p className="eyebrow">{getLocalizedValue(page.eyebrow, locale)}</p>
+            <h1>{getLocalizedValue(page.title, locale)}</h1>
+            <p>{getLocalizedValue(page.excerpt, locale)}</p>
+            <WhatsAppCta locale={locale} variant="light" />
+          </div>
+        </section>
+        <article className="section">
+          <div className="container seo-page-layout">
+            <div className="narrow-copy seo-page-body" dangerouslySetInnerHTML={{ __html: richContent.html }} />
+            {page.gallery.length ? (
+              <ImageCarousel assets={[page.image, ...page.gallery]} locale={locale} href={`/${locale}/${currentSlug}`} ariaLabel={getLocalizedValue(page.title, locale)} className="seo-page-gallery" sizes="(max-width: 900px) 100vw, 42vw" />
+            ) : null}
+          </div>
+        </article>
+      </main>
+    );
+  }
+
+  const content = await getPublicContent();
+  const sectionSlug = getLocalizedSlug(page.slugsByLocale, locale);
+
   if (page.serviceId === "transfers") {
     return (
       <main>
@@ -79,8 +113,8 @@ export default async function DynamicPage({ params }: Props) {
               <h2>{locale === "es" ? "Vehículos con chófer para cada momento" : "Chauffeur vehicles for every moment"}</h2>
             </div>
             <div className="content-grid content-grid--three">
-              {vehicles.map((vehicle) => (
-                <VehicleCard vehicle={vehicle} locale={locale} key={vehicle.id} />
+              {content.vehicles.map((vehicle) => (
+                <VehicleCard vehicle={vehicle} locale={locale} sectionSlug={sectionSlug} key={vehicle.id} />
               ))}
             </div>
           </div>
@@ -101,8 +135,8 @@ export default async function DynamicPage({ params }: Props) {
               <p>{locale === "es" ? "Cada juguete depende de logística, fecha, barco y condiciones. Te lo confirmamos directamente por WhatsApp." : "Each toy depends on logistics, date, boat and conditions. We confirm it directly by WhatsApp."}</p>
             </div>
             <div className="content-grid content-grid--three">
-              {waterToys.map((toy) => (
-                <WaterToyCard toy={toy} locale={locale} key={toy.id} />
+              {content.waterToys.map((toy) => (
+                <WaterToyCard toy={toy} locale={locale} sectionSlug={sectionSlug} key={toy.id} />
               ))}
             </div>
           </div>
@@ -131,7 +165,7 @@ export default async function DynamicPage({ params }: Props) {
   );
 }
 
-function ServiceHero({ page, locale }: { page: NonNullable<ReturnType<typeof getPageBySlug>>; locale: Locale }) {
+function ServiceHero({ page, locale }: { page: ServicePage; locale: Locale }) {
   return (
     <section className="page-hero">
       <div className="page-hero__media">

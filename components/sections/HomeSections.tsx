@@ -3,10 +3,8 @@ import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
-import { boatCollections } from "@/data/boatCollections";
-import { vehicles } from "@/data/vehicles";
-import { waterToys } from "@/data/waterToys";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
+import type { BoatCollection, ServicePage, Vehicle, WaterToy } from "@/types/content";
 
 interface HomeSectionsProps {
   locale: Locale;
@@ -37,7 +35,7 @@ export function HomeHero({ locale }: HomeSectionsProps) {
   );
 }
 
-export function BoatCollectionSection({ locale }: HomeSectionsProps) {
+export function BoatCollectionSection({ collections, locale }: HomeSectionsProps & { collections: BoatCollection[] }) {
   return (
     <section className="section" id="alquiler-barcos">
       <div className="container">
@@ -51,7 +49,7 @@ export function BoatCollectionSection({ locale }: HomeSectionsProps) {
           </p>
         </div>
         <div className="content-grid content-grid--three service-card-grid">
-          {boatCollections.map((collection) => (
+          {collections.map((collection) => (
             <Link href={`/${locale}/${getLocalizedSlug(collection.slugsByLocale, locale)}`} className="service-card" key={collection.id}>
               <span className="service-card__tag">{getLocalizedValue(collection.title, locale)}</span>
               <span className="service-card__image">
@@ -70,7 +68,9 @@ export function BoatCollectionSection({ locale }: HomeSectionsProps) {
   );
 }
 
-export function TransferSection({ locale }: HomeSectionsProps) {
+export function TransferSection({ locale, servicePages, vehicles }: HomeSectionsProps & { servicePages: ServicePage[]; vehicles: Vehicle[] }) {
+  const transferSectionSlug = getLocalizedSlug(servicePages.find((page) => page.serviceId === "transfers")?.slugsByLocale ?? { es: "transfer", en: "transfers" }, locale);
+
   return (
     <section className="section section--soft">
       <div className="container">
@@ -85,7 +85,7 @@ export function TransferSection({ locale }: HomeSectionsProps) {
         </div>
         <div className="content-grid content-grid--three">
           {vehicles.map((vehicle) => (
-            <VehicleCard vehicle={vehicle} locale={locale} key={vehicle.id} />
+            <VehicleCard vehicle={vehicle} locale={locale} sectionSlug={transferSectionSlug} key={vehicle.id} />
           ))}
         </div>
       </div>
@@ -93,7 +93,9 @@ export function TransferSection({ locale }: HomeSectionsProps) {
   );
 }
 
-export function WaterToysSection({ locale }: HomeSectionsProps) {
+export function WaterToysSection({ locale, servicePages, waterToys }: HomeSectionsProps & { servicePages: ServicePage[]; waterToys: WaterToy[] }) {
+  const waterToysSectionSlug = getLocalizedSlug(servicePages.find((page) => page.serviceId === "water-toys")?.slugsByLocale ?? { es: "juguetes-nauticos", en: "water-toys" }, locale);
+
   return (
     <section className="section">
       <div className="container">
@@ -108,7 +110,7 @@ export function WaterToysSection({ locale }: HomeSectionsProps) {
         </div>
         <div className="content-grid content-grid--three">
           {waterToys.map((toy) => (
-            <WaterToyCard toy={toy} locale={locale} key={toy.id} />
+            <WaterToyCard toy={toy} locale={locale} sectionSlug={waterToysSectionSlug} key={toy.id} />
           ))}
         </div>
       </div>

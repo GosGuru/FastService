@@ -41,8 +41,7 @@ export function MobileMenu({ locale }: MobileMenuProps) {
       top: document.body.style.top,
       left: document.body.style.left,
       right: document.body.style.right,
-      width: document.body.style.width,
-      overflow: document.body.style.overflow
+      width: document.body.style.width
     };
 
     document.body.classList.add("mobile-menu-open");
@@ -51,7 +50,6 @@ export function MobileMenu({ locale }: MobileMenuProps) {
     document.body.style.left = "0";
     document.body.style.right = "0";
     document.body.style.width = "100%";
-    document.body.style.overflow = "hidden";
 
     return () => {
       document.body.classList.remove("mobile-menu-open");
@@ -60,7 +58,6 @@ export function MobileMenu({ locale }: MobileMenuProps) {
       document.body.style.left = previousStyles.left;
       document.body.style.right = previousStyles.right;
       document.body.style.width = previousStyles.width;
-      document.body.style.overflow = previousStyles.overflow;
       window.scrollTo(0, scrollY);
     };
   }, [open]);
@@ -78,8 +75,8 @@ export function MobileMenu({ locale }: MobileMenuProps) {
       </button>
       <div className={`mobile-panel ${open ? "is-open" : ""}`} aria-hidden={!open}>
         <div className="mobile-panel__bar">
-          <Link href={`/${locale}`} className="brand brand--mobile" onClick={closeMenu}>
-            <span>FAST</span>Services
+          <Link href={`/${locale}`} className="brand brand--mobile" onClick={closeMenu} aria-label="FastServices">
+            <span className="brand__logo" aria-hidden="true" />
           </Link>
           <div className="mobile-panel__actions">
             <div className="mobile-language">
@@ -135,28 +132,30 @@ export function MobileMenu({ locale }: MobileMenuProps) {
           </button>
         </div>
 
-        {activeTab === "boats" ? (
-          <div className="mobile-panel__cards" role="tabpanel">
-            {boatItems.map((item) => (
-              <Link href={item.href} key={item.id} className="mobile-boat-card" onClick={closeMenu}>
-                <span className="mobile-boat-card__tag">{item.label}</span>
-                <span className="mobile-boat-card__image">
-                  <MediaImage asset={item.image} locale={locale} sizes="(max-width: 430px) 100vw, 360px" />
-                </span>
-                <span className="mobile-boat-card__title">{boatCardPrefixes[locale]} {item.label}</span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="mobile-panel__pages" role="tabpanel">
-            {pageItems.map((item) => (
-              <Link href={item.href} key={item.href} className="mobile-page-link" onClick={closeMenu}>
-                <span>{item.label}</span>
-                <FiArrowRight aria-hidden="true" />
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mobile-panel__scroll" role="tabpanel">
+          {activeTab === "boats" ? (
+            <div className="mobile-panel__cards">
+              {boatItems.map((item) => (
+                <Link href={item.href} key={item.id} className="mobile-boat-card" onClick={closeMenu}>
+                  <span className="mobile-boat-card__tag">{item.label}</span>
+                  <span className="mobile-boat-card__image">
+                    <MediaImage asset={item.image} locale={locale} sizes="(max-width: 430px) 100vw, 360px" />
+                  </span>
+                  <span className="mobile-boat-card__title">{boatCardPrefixes[locale]} {item.label}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="mobile-panel__pages">
+              {pageItems.map((item) => (
+                <Link href={item.href} key={item.href} className="mobile-page-link" onClick={closeMenu}>
+                  <span>{item.label}</span>
+                  <FiArrowRight aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </>

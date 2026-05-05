@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BoatGrid } from "@/components/boats/BoatGrid";
-import { MediaImage } from "@/components/MediaImage";
+import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { getAllBoatPaths, getBoatBySlug, getBoatsByCollection } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: string; categorySlug: string; boatSlug: string }> };
+
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return getAllBoatPaths();
@@ -15,7 +17,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: rawLocale, categorySlug, boatSlug } = await params;
   const locale = assertLocale(rawLocale);
-  const boat = getBoatBySlug(locale, categorySlug, boatSlug);
+  const boat = await getBoatBySlug(locale, categorySlug, boatSlug);
 
   if (!boat) return {};
 
@@ -31,18 +33,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BoatPage({ params }: Props) {
   const { locale: rawLocale, categorySlug, boatSlug } = await params;
   const locale = assertLocale(rawLocale) as Locale;
-  const boat = getBoatBySlug(locale, categorySlug, boatSlug);
+  const boat = await getBoatBySlug(locale, categorySlug, boatSlug);
 
   if (!boat) notFound();
 
-  const related = getBoatsByCollection(boat.collectionId).filter((item) => item.id !== boat.id).slice(0, 3);
+  const related = (await getBoatsByCollection(boat.collectionId)).filter((item) => item.id !== boat.id).slice(0, 3);
 
   return (
     <main>
       <section className="detail-hero">
-        <div className="detail-hero__image">
-          <MediaImage asset={boat.image} locale={locale} sizes="(max-width: 900px) 100vw, 50vw" priority />
-        </div>
+        <ImageCarousel assets={[boat.image, ...boat.gallery]} locale={locale} href={`/${locale}/boat/${categorySlug}/${boatSlug}`} ariaLabel={boat.name} className="detail-hero__image" sizes="(max-width: 900px) 100vw, 50vw" priority />
         <div className="detail-hero__content">
           <p className="eyebrow">{boat.collectionId === "fast-boats" ? "Embarcación rápida" : "Alquiler de barcos"}</p>
           <h1>{boat.name}</h1>

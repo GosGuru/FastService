@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { MediaImage } from "@/components/MediaImage";
+import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { buildAlternates, getAllLocalizedItemPaths, getItemBySectionAndSlug, getServicePageBySlug } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
 
 type Props = { params: Promise<{ locale: string; slug: string; itemSlug: string }> };
+
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return getAllLocalizedItemPaths();
@@ -14,10 +16,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: rawLocale, slug, itemSlug } = await params;
   const locale = assertLocale(rawLocale);
-  const item = getItemBySectionAndSlug(locale, slug, itemSlug);
-  const section = getServicePageBySlug(locale, slug);
+  const item = await getItemBySectionAndSlug(locale, slug, itemSlug);
 
-  if (!item || !section) return {};
+  if (!item) return {};
+
+  const section = await getServicePageBySlug(locale, slug);
+
+  if (!section) return {};
 
   return {
     title: getLocalizedValue(item.seoTitle, locale),
@@ -32,16 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ItemPage({ params }: Props) {
   const { locale: rawLocale, slug, itemSlug } = await params;
   const locale = assertLocale(rawLocale) as Locale;
-  const item = getItemBySectionAndSlug(locale, slug, itemSlug);
+  const item = await getItemBySectionAndSlug(locale, slug, itemSlug);
 
   if (!item) notFound();
 
   return (
     <main>
       <section className="detail-hero">
-        <div className="detail-hero__image">
-          <MediaImage asset={item.image} locale={locale} sizes="(max-width: 900px) 100vw, 50vw" priority />
-        </div>
+        <ImageCarousel assets={[item.image, ...item.gallery]} locale={locale} href={`/${locale}/${slug}/${itemSlug}`} ariaLabel={item.kind === "vehicle" ? item.name : getLocalizedValue(item.name, locale)} className="detail-hero__image" sizes="(max-width: 900px) 100vw, 50vw" priority />
         <div className="detail-hero__content">
           <p className="eyebrow">{item.kind === "vehicle" ? (locale === "es" ? "Transfer privado" : "Private transfer") : (locale === "es" ? "Juguete náutico" : "Water toy")}</p>
           <h1>{item.kind === "vehicle" ? item.name : getLocalizedValue(item.name, locale)}</h1>

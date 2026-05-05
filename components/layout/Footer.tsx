@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaFacebookF, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
 import { servicePages } from "@/data/services";
@@ -17,10 +17,10 @@ export function Footer({ locale }: FooterProps) {
     <footer className="site-footer">
       <div className="container site-footer__grid">
         <div>
-          <Link href={`/${locale}`} className="brand brand--footer">
-            <span>FAST</span>Services
+          <Link href={`/${locale}`} className="brand brand--footer" aria-label="Fast Services – Home">
+            <span className="brand__logo" aria-hidden="true" />
           </Link>
-          <p>{locale === "es" ? "Ibiza lifestyle management para mar, movilidad y experiencias." : "Ibiza lifestyle management for sea, mobility and experiences."}</p>
+          <p className="site-footer__tagline">{locale === "es" ? "Ibiza lifestyle management para mar, movilidad y experiencias." : "Ibiza lifestyle management for sea, mobility and experiences."}</p>
         </div>
         <div>
           <h2>{labels.services}</h2>
@@ -32,10 +32,7 @@ export function Footer({ locale }: FooterProps) {
           <h2>{labels.contact}</h2>
           <Link href={buildWhatsAppUrl(undefined, locale)} target="_blank" rel="noreferrer"><FaWhatsapp /> +34 671 338 141</Link>
           <a href="mailto:info@fastservices.example">info@fastservices.example</a>
-          <div className="site-footer__socials">
-            <FaInstagram aria-label="Instagram" />
-            <FaFacebookF aria-label="Facebook" />
-          </div>
+          <Link href="/admin" className="site-footer__admin-link">Admin</Link>
         </div>
       </div>
     </footer>

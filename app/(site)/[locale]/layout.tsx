@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { FloatingWhatsApp } from "@/components/layout/FloatingWhatsApp";
 import { Footer } from "@/components/layout/Footer";
+import { SiteLoader } from "@/components/layout/SiteLoader";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { isLocale, locales, type Locale } from "@/lib/i18n";
 
@@ -24,6 +25,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <>
+      <SiteLoader />
       <SiteHeader locale={locale} />
       {children}
       <Footer locale={locale} />

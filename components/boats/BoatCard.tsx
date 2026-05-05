@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { PiBed, PiBathtub, PiRuler, PiUsers } from "react-icons/pi";
-import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
+import { ImageCarousel } from "@/components/media/ImageCarousel";
 import type { Boat } from "@/types/content";
 import { getLocalizedValue, type Locale } from "@/lib/i18n";
 
@@ -19,11 +18,11 @@ interface BoatCardProps {
 }
 
 export function BoatCard({ boat, locale, href }: BoatCardProps) {
+  const cardHref = href ?? "#";
+
   return (
     <article className="boat-card">
-      <Link href={href ?? "#"} className="boat-card__image" aria-label={boat.name}>
-        <MediaImage asset={boat.image} locale={locale} sizes="(max-width: 768px) 100vw, 33vw" />
-      </Link>
+      <ImageCarousel assets={[boat.image, ...boat.gallery]} locale={locale} href={cardHref} ariaLabel={boat.name} className="boat-card__image" sizes="(max-width: 768px) 100vw, 33vw" />
       <div className="boat-card__body">
         <div className="boat-card__meta">
           <span>{boat.collectionId === "yachts-xl" ? "Megayate" : boat.collectionId === "fast-boats" ? "Lancha" : "Yate"}</span>

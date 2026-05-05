@@ -2,7 +2,9 @@ import type { Locale } from "@/lib/i18n";
 
 export type LocalizedText = Record<string, string> & { es: string; en: string } & Partial<Record<Locale, string>>;
 
-export type PublicationStatus = "draft" | "published" | "hidden";
+export type PublicationStatus = "published";
+
+export type ContentVisibility = "listed" | "hidden";
 
 export type ServiceId = "boats" | "transfers" | "water-toys";
 
@@ -13,8 +15,9 @@ export interface MediaAsset {
   alt: LocalizedText;
   width?: number;
   height?: number;
-  source?: "unsplash" | "dropbox" | "local" | "mock";
+  source?: "unsplash" | "dropbox" | "local" | "mock" | "supabase";
   dropboxPath?: string;
+  storagePath?: string;
 }
 
 export interface SeoFields {
@@ -27,10 +30,17 @@ export interface SeoFields {
 export interface BaseContent extends SeoFields {
   id: string;
   status: PublicationStatus;
+  visibility?: ContentVisibility;
+  robotsIndex?: boolean;
   slugsByLocale: LocalizedText;
   publishedAt: string;
   updatedAt: string;
   schemaType?: string;
+}
+
+export interface RichTextContent {
+  html: string;
+  text?: string;
 }
 
 export interface SpecItem {
@@ -104,6 +114,17 @@ export interface BlogPost extends BaseContent {
   body: LocalizedText[];
   image: MediaAsset;
   category: LocalizedText;
+}
+
+export interface SeoPage extends BaseContent {
+  kind: "seoPage";
+  title: LocalizedText;
+  eyebrow: LocalizedText;
+  excerpt: LocalizedText;
+  body: Partial<Record<Locale, RichTextContent>> & { es: RichTextContent; en: RichTextContent };
+  image: MediaAsset;
+  gallery: MediaAsset[];
+  internalNotes?: string;
 }
 
 export interface FaqItem {

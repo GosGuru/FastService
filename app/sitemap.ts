@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
-import { allPublicRoutes } from "@/lib/content";
+import { getPublicContent } from "@/lib/content";
 import { getLocalizedSlug, locales, siteUrl } from "@/lib/i18n";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const allPublicRoutes = await getPublicContent();
   const urls: MetadataRoute.Sitemap = [];
 
   locales.forEach((locale) => {
@@ -16,6 +17,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       urls.push({ url: `${siteUrl}/${locale}/${getLocalizedSlug(collection.slugsByLocale, locale)}`, lastModified: collection.updatedAt });
     });
 
+    allPublicRoutes.seoPages.forEach((page) => {
+      urls.push({ url: `${siteUrl}/${locale}/${getLocalizedSlug(page.slugsByLocale, locale)}`, lastModified: page.updatedAt });
+    });
+
     allPublicRoutes.vehicles.forEach((vehicle) => {
       const section = allPublicRoutes.servicePages.find((page) => page.serviceId === "transfers");
       if (section) urls.push({ url: `${siteUrl}/${locale}/${getLocalizedSlug(section.slugsByLocale, locale)}/${getLocalizedSlug(vehicle.slugsByLocale, locale)}`, lastModified: vehicle.updatedAt });
@@ -26,9 +31,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       if (section) urls.push({ url: `${siteUrl}/${locale}/${getLocalizedSlug(section.slugsByLocale, locale)}/${getLocalizedSlug(toy.slugsByLocale, locale)}`, lastModified: toy.updatedAt });
     });
 
-    allPublicRoutes.posts.forEach((post) => {
-      urls.push({ url: `${siteUrl}/${locale}/blog/${getLocalizedSlug(post.slugsByLocale, locale)}`, lastModified: post.updatedAt });
-    });
   });
 
   return urls;
