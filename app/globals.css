@@ -2535,6 +2535,12 @@ button {
   text-align: center;
 }
 
+@media (max-width: 768px) {
+  .not-found-page {
+    min-height: 100dvh;
+  }
+}
+
 @media (max-width: 980px) {
   .admin-shell {
     grid-template-columns: 1fr;
