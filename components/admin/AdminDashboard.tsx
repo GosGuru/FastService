@@ -271,7 +271,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
     updateSnapshot(activeSection, (currentItems) => [newItem as AdminItem, ...currentItems]);
     setSelectedId(newItem.id);
-    setMessage("Nuevo contenido creado en memoria. Exporta el JSON para conservarlo.");
+    setMessage("Nuevo contenido creado en memoria. Guarda en Supabase para publicarlo.");
   }
 
   function duplicateItem() {
@@ -377,12 +377,24 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
               <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por título o ID" />
             </label>
             <div className="admin-list">
-              {filteredItems.map((item) => (
-                <button type="button" key={item.id} className={item.id === selectedItem?.id ? "is-active" : ""} onClick={() => setSelectedId(item.id)}>
-                  <span>{getItemTitle(item, locale)}</span>
-                  <small>{getItemDescription(item, locale)}</small>
-                </button>
-              ))}
+              {filteredItems.map((item) => {
+                const itemVisitTarget = getVisitTarget(activeSection, item, snapshot, locale);
+
+                return (
+                  <article key={item.id} className={`admin-list-item ${item.id === selectedItem?.id ? "is-active" : ""}`}>
+                    <button type="button" className="admin-list-item__select" onClick={() => setSelectedId(item.id)}>
+                      <span>{getItemTitle(item, locale)}</span>
+                      <small>{getItemDescription(item, locale)}</small>
+                    </button>
+                    {itemVisitTarget ? (
+                      <a className="admin-list-item__visit" href={itemVisitTarget.href} target="_blank" rel="noreferrer" title="Ver página pública">
+                        <FiExternalLink aria-hidden="true" />
+                        <span>Ver</span>
+                      </a>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
           </div>
 
