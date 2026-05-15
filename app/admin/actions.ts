@@ -11,13 +11,45 @@ export interface AdminMutationResult {
   ok: boolean;
   message: string;
   snapshot?: AdminContentSnapshot;
+  details?: string[];
+}
+
+function explainSaveError(error: unknown) {
+  const rawMessage = error instanceof Error ? error.message : "No se pudo guardar en Supabase.";
+  const normalizedMessage = rawMessage.toLowerCase();
+
+  if (rawMessage.startsWith("Supabase") || rawMessage.startsWith("No encuentro")) {
+    return rawMessage;
+  }
+
+  if (normalizedMessage.includes("row-level security") || normalizedMessage.includes("rls")) {
+    return "Supabase bloqueo el guardado por permisos RLS. Confirma que tu usuario esta en admin_users y que ejecutaste supabase/schema.sql.";
+  }
+
+  if (normalizedMessage.includes("permission denied") || normalizedMessage.includes("not authorized")) {
+    return "Supabase rechazo el guardado por permisos. Revisa que la sesion sea admin y que las politicas de content_items permitan insert/update/delete.";
+  }
+
+  if (normalizedMessage.includes("content_items") && (normalizedMessage.includes("does not exist") || normalizedMessage.includes("relation"))) {
+    return "No encuentro la tabla content_items en Supabase. Ejecuta supabase/schema.sql antes de guardar contenido.";
+  }
+
+  if (normalizedMessage.includes("duplicate key")) {
+    return "Supabase detecto IDs duplicados al guardar. Revisa que el contenido nuevo no repita slug o ID interno.";
+  }
+
+  return `No se pudo guardar en Supabase: ${rawMessage}`;
 }
 
 export async function saveAdminSnapshotAction(snapshot: AdminContentSnapshot): Promise<AdminMutationResult> {
   const adminSession = await getAdminSession();
 
   if (!adminSession) {
-    return { ok: false, message: "Tu sesion no tiene permisos de administrador." };
+    return {
+      ok: false,
+      message: "Tu sesion no tiene permisos de administrador.",
+      details: ["Vuelve a iniciar sesion desde /admin/login con un usuario incluido en admin_users."]
+    };
   }
 
   try {
@@ -30,12 +62,16 @@ export async function saveAdminSnapshotAction(snapshot: AdminContentSnapshot): P
     return {
       ok: true,
       message: "Contenido guardado en Supabase. El frontend usara estos datos publicados.",
-      snapshot: savedSnapshot
+      snapshot: savedSnapshot,
+      details: ["Se revalidaron las rutas publicas y el panel admin."]
     };
   } catch (error) {
+    const message = explainSaveError(error);
+
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "No se pudo guardar en Supabase."
+      message,
+      details: error instanceof Error && error.message !== message ? [error.message] : undefined
     };
   }
 }

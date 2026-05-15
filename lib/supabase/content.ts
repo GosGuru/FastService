@@ -23,12 +23,51 @@ export interface ContentSnapshotResult {
 
 const contentKeys = ["boatCollections", "boats", "servicePages", "vehicles", "waterToys", "seoPages", "faqs"] as const satisfies AdminContentKey[];
 
+const contentLabels: Record<AdminContentKey, string> = {
+  boatCollections: "colecciones de barcos",
+  boats: "barcos",
+  servicePages: "servicios",
+  vehicles: "vehiculos",
+  waterToys: "juguetes nauticos",
+  seoPages: "paginas SEO",
+  faqs: "FAQs"
+};
+
 function isContentKey(value: string): value is AdminContentKey {
   return contentKeys.includes(value as AdminContentKey);
 }
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function getSupabaseErrorText(error: unknown) {
+  if (!error || typeof error !== "object") return "Error desconocido.";
+
+  const supabaseError = error as { message?: string; code?: string; details?: string; hint?: string };
+  return [supabaseError.message, supabaseError.details, supabaseError.hint, supabaseError.code ? `Codigo ${supabaseError.code}` : undefined]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function createContentSaveError(action: "leer" | "eliminar" | "guardar", key: AdminContentKey, error: unknown) {
+  const rawMessage = getSupabaseErrorText(error);
+  const normalizedMessage = rawMessage.toLowerCase();
+  const label = contentLabels[key];
+
+  if (normalizedMessage.includes("row-level security") || normalizedMessage.includes("rls")) {
+    return new Error(`Supabase bloqueo ${action} ${label} por permisos RLS. Confirma que tu usuario esta en admin_users y que ejecutaste las politicas de supabase/schema.sql.`);
+  }
+
+  if (normalizedMessage.includes("permission denied") || normalizedMessage.includes("not authorized")) {
+    return new Error(`Supabase rechazo ${action} ${label} por permisos. Revisa la sesion admin y las politicas de content_items.`);
+  }
+
+  if (normalizedMessage.includes("content_items") && (normalizedMessage.includes("does not exist") || normalizedMessage.includes("relation"))) {
+    return new Error("No encuentro la tabla content_items en Supabase. Ejecuta supabase/schema.sql y vuelve a guardar.");
+  }
+
+  return new Error(`Supabase fallo al ${action} ${label}: ${rawMessage}`);
 }
 
 function createEmptySnapshot(): AdminContentSnapshot {
@@ -104,7 +143,7 @@ async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
     const { data, error } = await query;
 
     if (error) {
-      return { snapshot: fallback, source: "static", message: error.message };
+      return { snapshot: fallback, source: "static", message: `Supabase no pudo leer content_items: ${getSupabaseErrorText(error)}` };
     }
 
     if (!data?.length) {
@@ -140,19 +179,19 @@ export async function saveAdminSnapshotToSupabase(supabase: SupabaseClient, snap
 
     const { data: existingRows, error: existingError } = await supabase.from("content_items").select("content_id").eq("content_type", key);
 
-    if (existingError) throw new Error(existingError.message);
+    if (existingError) throw createContentSaveError("leer", key, existingError);
 
     const nextIds = new Set(rows.map((row) => row.content_id));
     const staleIds = (existingRows ?? []).map((row) => row.content_id as string).filter((contentId) => !nextIds.has(contentId));
 
     if (staleIds.length) {
       const { error: deleteError } = await supabase.from("content_items").delete().eq("content_type", key).in("content_id", staleIds);
-      if (deleteError) throw new Error(deleteError.message);
+      if (deleteError) throw createContentSaveError("eliminar", key, deleteError);
     }
 
     if (rows.length) {
       const { error: upsertError } = await supabase.from("content_items").upsert(rows, { onConflict: "content_type,content_id" });
-      if (upsertError) throw new Error(upsertError.message);
+      if (upsertError) throw createContentSaveError("guardar", key, upsertError);
     }
   }
 

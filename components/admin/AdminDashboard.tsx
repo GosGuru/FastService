@@ -1,8 +1,8 @@
 "use client";
 
-import { type DragEvent, useMemo, useState, useTransition } from "react";
+import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
-import { FiAnchor, FiBriefcase, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLogOut, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud } from "react-icons/fi";
+import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud } from "react-icons/fi";
 import type { AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -13,6 +13,22 @@ import { supabaseGalleryBucket } from "@/lib/supabase/config";
 import type { Boat, FaqItem, LocalizedText, MediaAsset, SeoPage, SpecItem } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
+
+type FeedbackTone = "info" | "success" | "error";
+
+interface AdminSaveStatus {
+  tone: FeedbackTone;
+  title: string;
+  message: string;
+  details?: string[];
+}
+
+interface UploadQueueItem {
+  id: string;
+  name: string;
+  status: "pending" | "uploading" | "done" | "error";
+  message?: string;
+}
 
 const sectionConfig = [
   { key: "boats", label: "Barcos", description: "Yates XL, yates y embarcaciones rápidas", icon: FiAnchor, tone: "boats" },
@@ -35,6 +51,99 @@ const categorySlugsByCollection: Record<Boat["collectionId"], LocalizedText> = {
   yachts: { es: "yates", en: "yachts", de: "yachten", nl: "jachten" },
   "fast-boats": { es: "embarcaciones-rapidas", en: "fast-boats", de: "schnellboote", nl: "snelle-boten" }
 };
+
+const requiredSaveLocales = ["es", "en"] as const satisfies Locale[];
+
+function getInitialSaveStatus(initialSource: "supabase" | "static", initialMessage?: string): AdminSaveStatus {
+  if (initialSource === "supabase") {
+    return {
+      tone: "success",
+      title: "Contenido conectado",
+      message: initialMessage ?? "Contenido cargado desde Supabase."
+    };
+  }
+
+  return {
+    tone: "info",
+    title: "Contenido local listo",
+    message: initialMessage ?? "Seed local cargado. Guarda en Supabase para migrarlo."
+  };
+}
+
+function getUnknownErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "No se pudo completar la accion.";
+}
+
+function getDirectLocalizedValue(value: LocalizedText, locale: Locale) {
+  return String(value[locale] ?? "").trim();
+}
+
+function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
+  const errors: string[] = [];
+  const boatSlugKeys = new Set<string>();
+
+  snapshot.content.boats.forEach((boat, index) => {
+    const label = boat.name.trim() || boat.id || `Barco ${index + 1}`;
+
+    if (!boat.name.trim() || boat.name.trim().toLowerCase() === "nuevo barco") {
+      errors.push(`${label}: cambia el nombre visible antes de guardar.`);
+    }
+
+    if (!categorySlugsByCollection[boat.collectionId]) {
+      errors.push(`${label}: selecciona una coleccion valida.`);
+    }
+
+    requiredSaveLocales.forEach((saveLocale) => {
+      const slug = getDirectLocalizedValue(boat.slugsByLocale, saveLocale);
+
+      if (!slug) {
+        errors.push(`${label}: completa el slug ${saveLocale.toUpperCase()}.`);
+        return;
+      }
+
+      const slugKey = `${saveLocale}:${boat.collectionId}:${slug.toLowerCase()}`;
+
+      if (boatSlugKeys.has(slugKey)) {
+        errors.push(`${label}: el slug ${saveLocale.toUpperCase()} ya existe dentro de esta coleccion.`);
+      }
+
+      boatSlugKeys.add(slugKey);
+    });
+
+    const primaryImage = boat.image.src.trim() ? boat.image : boat.gallery.find((asset) => asset.src.trim());
+
+    if (!primaryImage?.src.trim()) {
+      errors.push(`${label}: sube o pega una imagen principal.`);
+      return;
+    }
+
+    requiredSaveLocales.forEach((saveLocale) => {
+      if (!getDirectLocalizedValue(primaryImage.alt, saveLocale)) {
+        errors.push(`${label}: completa el alt ${saveLocale.toUpperCase()} de la imagen principal.`);
+      }
+    });
+  });
+
+  if (errors.length <= 8) return errors;
+
+  return [...errors.slice(0, 8), `Hay ${errors.length - 8} avisos mas. Corrige los primeros y vuelve a guardar.`];
+}
+
+function getSuggestedAlt(baseAlt: LocalizedText, itemLabel: string, locale: Locale): LocalizedText {
+  const label = itemLabel.trim();
+
+  if (!label || label.toLowerCase() === "nuevo barco") return baseAlt;
+
+  const es = baseAlt.es?.trim() || `${label} disponible para consultar en Ibiza`;
+  const en = baseAlt.en?.trim() || `${label} available to enquire in Ibiza`;
+
+  return {
+    ...baseAlt,
+    es,
+    en,
+    [locale]: getDirectLocalizedValue(baseAlt, locale) || (locale === "en" ? en : es)
+  };
+}
 
 function createId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -196,10 +305,12 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [activeSection, setActiveSection] = useState<AdminContentKey>("boats");
   const [selectedId, setSelectedId] = useState(initialSnapshot.content.boats[0]?.id ?? "");
+  const [mobileView, setMobileView] = useState<"list" | "editor">("list");
   const [locale, setLocale] = useState<Locale>("es");
   const [query, setQuery] = useState("");
-  const [message, setMessage] = useState(initialMessage ?? (initialSource === "supabase" ? "Contenido cargado desde Supabase." : "Seed local cargado. Guarda en Supabase para migrarlo."));
-  const [isSaving, startSaving] = useTransition();
+  const [saveStatus, setSaveStatus] = useState<AdminSaveStatus>(() => getInitialSaveStatus(initialSource, initialMessage));
+  const [isSaving, setIsSaving] = useState(false);
+  const saveStatusRef = useRef<HTMLDivElement>(null);
 
   const section = sectionConfig.find((item) => item.key === activeSection) ?? sectionConfig[0];
   const SectionIcon = section.icon;
@@ -207,6 +318,13 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const filteredItems = items.filter((item) => `${getItemTitle(item, locale)} ${item.id}`.toLowerCase().includes(query.toLowerCase()));
   const selectedItem = items.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items[0];
   const visitTarget = selectedItem ? getVisitTarget(activeSection, selectedItem, snapshot, locale) : null;
+  const SaveStatusIcon = isSaving ? FiLoader : saveStatus.tone === "success" ? FiCheckCircle : saveStatus.tone === "error" ? FiAlertCircle : FiSave;
+
+  useEffect(() => {
+    if (saveStatus.tone === "error") {
+      saveStatusRef.current?.focus();
+    }
+  }, [saveStatus]);
 
   const counters = useMemo(() => {
     const boats = snapshot.content.boats;
@@ -232,7 +350,13 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     const nextItems = snapshot.content[key] as AdminItem[];
     setActiveSection(key);
     setSelectedId(nextItems[0]?.id ?? "");
+    setMobileView("list");
     setQuery("");
+  }
+
+  function selectItem(id: string) {
+    setSelectedId(id);
+    setMobileView("editor");
   }
 
   function updateSnapshot(key: AdminContentKey, updater: (items: AdminItem[]) => AdminItem[]) {
@@ -270,8 +394,12 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     if (!newItem) return;
 
     updateSnapshot(activeSection, (currentItems) => [newItem as AdminItem, ...currentItems]);
-    setSelectedId(newItem.id);
-    setMessage("Nuevo contenido creado en memoria. Guarda en Supabase para publicarlo.");
+    selectItem(newItem.id);
+    setSaveStatus({
+      tone: "info",
+      title: "Contenido creado en memoria",
+      message: "Completa los campos clave y guarda en Supabase para publicarlo."
+    });
   }
 
   function duplicateItem() {
@@ -279,8 +407,12 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
     const copy = touch(normalizeItemForActiveSection({ ...selectedItem, id: createId(activeSection) } as AdminItem));
     updateSnapshot(activeSection, (currentItems) => [copy, ...currentItems]);
-    setSelectedId(copy.id);
-    setMessage("Contenido duplicado en memoria.");
+    selectItem(copy.id);
+    setSaveStatus({
+      tone: "info",
+      title: "Contenido duplicado en memoria",
+      message: "Revisa slug, imagen y textos antes de guardar en Supabase."
+    });
   }
 
   function deleteItem() {
@@ -289,21 +421,58 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
     updateSnapshot(activeSection, () => nextItems);
     setSelectedId(nextItems[0]?.id ?? "");
-    setMessage("Contenido eliminado del snapshot actual.");
+    setMobileView("list");
+    setSaveStatus({
+      tone: "info",
+      title: "Contenido eliminado en memoria",
+      message: "Guarda en Supabase para aplicar el borrado en la web publica."
+    });
   }
 
-  function saveToSupabase() {
-    startSaving(() => {
-      void (async () => {
-        const result = await saveSnapshotAction(snapshot);
+  async function saveToSupabase() {
+    if (isSaving) return;
 
-        setMessage(result.message);
+    const validationErrors = validateSnapshotBeforeSave(snapshot);
 
-        if (result.ok && result.snapshot) {
-          setSnapshot(result.snapshot);
-        }
-      })();
+    if (validationErrors.length) {
+      setSaveStatus({
+        tone: "error",
+        title: "Revisa antes de guardar",
+        message: "No envie cambios a Supabase porque hay datos clave incompletos.",
+        details: validationErrors
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveStatus({
+      tone: "info",
+      title: "Guardando en Supabase",
+      message: "Publicando contenido, imagenes y rutas para que el frontend use los datos actualizados."
     });
+
+    try {
+      const result = await saveSnapshotAction(snapshot);
+
+      setSaveStatus({
+        tone: result.ok ? "success" : "error",
+        title: result.ok ? "Contenido publicado" : "No se pudo guardar",
+        message: result.message,
+        details: result.details
+      });
+
+      if (result.ok && result.snapshot) {
+        setSnapshot(result.snapshot);
+      }
+    } catch (error) {
+      setSaveStatus({
+        tone: "error",
+        title: "No se pudo guardar",
+        message: getUnknownErrorMessage(error)
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -337,11 +506,34 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           <div>
             <p className="admin-kicker">Panel preparado para Supabase</p>
             <h1>Administrador de contenido</h1>
-            <p>{message}</p>
             <small className="admin-session-label">{adminEmail}</small>
           </div>
+          <div
+            ref={saveStatusRef}
+            className={`admin-save-status admin-save-status--${saveStatus.tone}`}
+            role={saveStatus.tone === "error" ? "alert" : "status"}
+            aria-live="polite"
+            tabIndex={-1}
+          >
+            <span className="admin-save-status__icon">
+              <SaveStatusIcon aria-hidden="true" className={isSaving ? "admin-spin" : undefined} />
+            </span>
+            <div>
+              <strong>{isSaving ? "Guardando en Supabase" : saveStatus.title}</strong>
+              <p>{saveStatus.message}</p>
+              {saveStatus.details?.length ? (
+                <ul>
+                  {saveStatus.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </div>
           <div className="admin-actions">
-            <button type="button" className="admin-button admin-button--primary" onClick={saveToSupabase} disabled={isSaving}><FiSave aria-hidden="true" /> {isSaving ? "Guardando" : "Guardar Supabase"}</button>
+            <button type="button" className="admin-button admin-button--primary" onClick={() => void saveToSupabase()} disabled={isSaving} aria-busy={isSaving}>
+              {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Guardando" : "Guardar Supabase"}
+            </button>
             <form action={signOutAction}>
               <button type="submit" className="admin-button admin-button--ghost"><FiLogOut aria-hidden="true" /> Salir</button>
             </form>
@@ -358,7 +550,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           ))}
         </section>
 
-        <section className={`admin-workspace admin-workspace--${section.tone}`}>
+        <section className={`admin-workspace admin-workspace--${section.tone} admin-workspace--show-${mobileView}`}>
           <div className="admin-list-panel">
             <div className="admin-panel-heading">
               <span className="admin-heading-icon">
@@ -382,7 +574,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
                 return (
                   <article key={item.id} className={`admin-list-item ${item.id === selectedItem?.id ? "is-active" : ""}`}>
-                    <button type="button" className="admin-list-item__select" onClick={() => setSelectedId(item.id)}>
+                    <button type="button" className="admin-list-item__select" onClick={() => selectItem(item.id)}>
                       <span>{getItemTitle(item, locale)}</span>
                       <small>{getItemDescription(item, locale)}</small>
                     </button>
@@ -399,6 +591,9 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           </div>
 
           <div className="admin-editor-panel">
+            <button type="button" className="admin-back-button" onClick={() => setMobileView("list")} aria-label="Volver a la lista">
+              <FiChevronLeft aria-hidden="true" /> Lista
+            </button>
             {selectedItem ? (
               <>
                 <div className="admin-editor-toolbar">
@@ -430,6 +625,27 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           </div>
         </section>
       </main>
+
+      <nav className="admin-bottom-nav" aria-label="Navegación de secciones">
+        {sectionConfig.map((item) => {
+          const NavIcon = item.icon;
+
+          return (
+            <button
+              type="button"
+              key={item.key}
+              className={`admin-bottom-nav__item${item.key === activeSection ? " is-active" : ""}`}
+              onClick={() => selectSection(item.key)}
+              aria-label={item.label}
+            >
+              <span className={`admin-section-icon admin-section-icon--${item.tone}`}>
+                <NavIcon aria-hidden="true" />
+              </span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
@@ -470,12 +686,12 @@ function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; on
           </select>
         </label>
       </div>
+      <MediaEditor image={boat.image} gallery={boat.gallery} locale={locale} itemLabel={boat.name} onChange={(image, gallery) => onChange({ image, gallery })} />
       <LocalizedTextEditor label="Slug por idioma" value={boat.slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
       <LocalizedTextEditor label="Título SEO" value={boat.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value })} />
       <LocalizedTextEditor label="Descripción SEO" value={boat.seoDescription} locale={locale} multiline onChange={(value) => onChange({ seoDescription: value })} />
       <LocalizedTextEditor label="Precio / disponibilidad" value={boat.priceLabel ?? localized("")} locale={locale} onChange={(value) => onChange({ priceLabel: value })} />
       <SpecsEditor specs={boat.specs} locale={locale} onChange={(specs) => onChange({ specs })} />
-      <MediaEditor image={boat.image} gallery={boat.gallery} locale={locale} onChange={(image, gallery) => onChange({ image, gallery })} />
       <LocalizedTextEditor label="Mensaje WhatsApp" value={boat.whatsappMessage} locale={locale} multiline onChange={(value) => onChange({ whatsappMessage: value })} />
     </div>
   );
@@ -513,7 +729,7 @@ function SeoPageEditor({ page, locale, onChange }: { page: SeoPage; locale: Loca
         onChange={(html, text) => onChange({ body: { ...page.body, [locale]: { html, text } } })}
         onUploadImage={uploadImageForBody}
       />
-      <MediaEditor image={page.image} gallery={page.gallery} locale={locale} onChange={(image, gallery) => onChange({ image, gallery })} />
+      <MediaEditor image={page.image} gallery={page.gallery} locale={locale} itemLabel={getLocalizedValue(page.title, locale)} onChange={(image, gallery) => onChange({ image, gallery })} />
       <TextAreaField label="Notas internas" value={page.internalNotes ?? ""} onChange={(value) => onChange({ internalNotes: value })} />
       <SeoPreview title={getLocalizedValue(page.title, locale)} description={getLocalizedValue(page.seoDescription, locale)} slug={getLocalizedValue(page.slugsByLocale, locale)} html={richValue.html} />
     </div>
@@ -557,7 +773,7 @@ function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: L
       </div>
       <div className="admin-spec-list">
         {specs.map((spec, index) => (
-          <div className="admin-spec-row" key={`${spec.label.es}-${index}`}>
+          <div className="admin-spec-row" key={`${spec.icon ?? "spec"}-${spec.label.es}-${spec.value.es}`}>
             <select value={spec.icon ?? "water"} onChange={(event) => updateSpec(index, { icon: event.target.value as SpecItem["icon"] })} aria-label="Icono del spec">
               <option value="cabins">Cabinas</option>
               <option value="length">Eslora</option>
@@ -579,14 +795,24 @@ function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: L
   );
 }
 
-function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; gallery: MediaAsset[]; locale: Locale; onChange: (image: MediaAsset, gallery: MediaAsset[]) => void }) {
+const blankImage: MediaAsset = { src: "", alt: { es: "", en: "", de: "", nl: "" }, source: "local" };
+
+function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: MediaAsset; gallery: MediaAsset[]; locale: Locale; itemLabel?: string; onChange: (image: MediaAsset, gallery: MediaAsset[]) => void }) {
   const [uploadStatus, setUploadStatus] = useState("");
+  const [uploadTone, setUploadTone] = useState<FeedbackTone>("info");
+  const [uploadQueue, setUploadQueue] = useState<UploadQueueItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
-  const assets = gallery.length ? gallery : [image];
+  const assets = gallery.length > 0 ? gallery : image.src.trim() ? [image] : [];
+  const visibleImageCount = assets.filter((asset) => asset.src).length;
+
+  function updateQueueItem(id: string, patch: Partial<UploadQueueItem>) {
+    setUploadQueue((currentItems) => currentItems.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
 
   function commitGallery(nextGallery: MediaAsset[]) {
     const cleanedGallery = nextGallery.filter((asset) => asset.src.trim());
-    onChange(cleanedGallery[0] ?? defaultImage, cleanedGallery);
+    onChange(cleanedGallery[0] ?? blankImage, cleanedGallery);
   }
 
   function updateAsset(index: number, patch: Partial<MediaAsset>) {
@@ -606,6 +832,8 @@ function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; 
   }
 
   function addImageUrl() {
+    if (isUploading) return;
+
     const src = window.prompt("Pega la URL de la imagen");
     if (!src?.trim()) return;
 
@@ -613,20 +841,28 @@ function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; 
       ...assets,
       {
         src: src.trim(),
-        alt: image.alt,
+        alt: getSuggestedAlt(image.alt, itemLabel ?? "", locale),
         source: "local"
       }
     ]);
+    setUploadTone("info");
+    setUploadStatus("URL agregada al contenido. Pulsa Guardar Supabase para publicarla en la web.");
   }
 
   function setMainImage(index: number) {
+    if (isUploading) return;
+
     const asset = assets[index];
     const nextGallery = [asset, ...assets.filter((_, assetIndex) => assetIndex !== index)];
 
     onChange(asset, nextGallery);
+    setUploadTone("info");
+    setUploadStatus("Imagen principal actualizada en memoria. Guarda en Supabase para publicarla.");
   }
 
   async function deleteAsset(index: number) {
+    if (isUploading) return;
+
     const asset = assets[index];
 
     if (asset.storagePath) {
@@ -639,23 +875,44 @@ function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; 
     }
 
     commitGallery(assets.filter((_, assetIndex) => assetIndex !== index));
+    setUploadTone("info");
+    setUploadStatus("Imagen quitada del contenido. Guarda en Supabase para aplicar el cambio.");
   }
 
   async function uploadFiles(fileList: FileList | null) {
+    if (isUploading) return;
+
     const files = Array.from(fileList ?? []).filter((file) => file.type.startsWith("image/"));
 
     if (!files.length) {
+      setUploadTone("error");
       setUploadStatus("Arrastra o selecciona archivos de imagen validos.");
       return;
     }
 
-    setUploadStatus("Subiendo imagenes...");
+    const queueItems = files.map((file) => ({
+      id: `${file.name}-${file.lastModified}-${file.size}`,
+      name: file.name,
+      status: "pending" as const,
+      message: "En cola"
+    }));
+
+    setIsUploading(true);
+    setUploadTone("info");
+    setUploadQueue(queueItems);
+    setUploadStatus(`Subiendo ${files.length} ${files.length === 1 ? "imagen" : "imagenes"} a Supabase Storage...`);
 
     try {
       const supabase = createSupabaseBrowserClient();
       const uploadedAssets: MediaAsset[] = [];
+      const uploadErrors: string[] = [];
+      const suggestedAlt = getSuggestedAlt(image.alt, itemLabel ?? "", locale);
 
-      for (const file of files) {
+      for (const [fileIndex, file] of files.entries()) {
+        const queueItem = queueItems[fileIndex];
+
+        updateQueueItem(queueItem.id, { status: "uploading", message: "Subiendo al bucket" });
+
         const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
         const storagePath = `${new Date().getFullYear()}/${createId("media")}.${extension}`;
         const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
@@ -664,25 +921,45 @@ function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; 
           upsert: false
         });
 
-        if (error) throw error;
+        if (error) {
+          const message = error.message || "No se pudo subir esta imagen.";
+
+          uploadErrors.push(`${file.name}: ${message}`);
+          updateQueueItem(queueItem.id, { status: "error", message });
+          continue;
+        }
 
         const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
 
         uploadedAssets.push({
           src: data.publicUrl,
-          alt: image.alt,
+          alt: suggestedAlt,
           source: "supabase",
           storagePath
         });
+        updateQueueItem(queueItem.id, { status: "done", message: "Lista para publicar" });
       }
 
-      const hasCustomImage = image.src !== defaultImage.src || gallery.some((asset) => asset.src !== defaultImage.src);
-      const nextGallery = hasCustomImage ? [...assets, ...uploadedAssets] : uploadedAssets;
+      if (uploadedAssets.length) {
+        const hasCustomImage = image.src !== defaultImage.src || gallery.some((asset) => asset.src !== defaultImage.src);
+        const nextGallery = hasCustomImage ? [...assets, ...uploadedAssets] : uploadedAssets;
 
-      onChange(nextGallery[0] ?? image, nextGallery);
-      setUploadStatus(`${uploadedAssets.length} imagenes subidas a Supabase Storage.`);
+        onChange(nextGallery[0] ?? image, nextGallery);
+      }
+
+      if (uploadErrors.length) {
+        setUploadTone("error");
+        setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"}; ${uploadErrors.length} con error. Guarda solo si las fotos correctas ya aparecen abajo.`);
+        return;
+      }
+
+      setUploadTone("success");
+      setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"} a Storage. Pulsa Guardar Supabase para publicarlas en la web.`);
     } catch (error) {
+      setUploadTone("error");
       setUploadStatus(error instanceof Error ? error.message : "No se pudieron subir las imagenes.");
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -719,28 +996,50 @@ function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; 
     <section className="admin-subpanel">
       <div className="admin-panel-heading admin-panel-heading--compact">
         <h3><FiImage aria-hidden="true" /> Galería e imagen principal</h3>
-        <span className="admin-pill">{assets.filter((asset) => asset.src).length} imagenes</span>
+        <span className="admin-pill">{visibleImageCount} {visibleImageCount === 1 ? "imagen" : "imagenes"}</span>
       </div>
       <label
-        className={`admin-upload-dropzone ${isDragActive ? "is-drag-active" : ""}`}
+        className={`admin-upload-dropzone ${isDragActive ? "is-drag-active" : ""} ${isUploading ? "is-uploading" : ""}`}
+        aria-disabled={isUploading}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <FiUploadCloud aria-hidden="true" />
-        <span>{isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
-        <small>JPG, PNG, WebP o GIF. Se guardan en el bucket de galeria.</small>
-        <input type="file" accept="image/*" multiple onChange={(event) => uploadFiles(event.target.files)} />
+        {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiUploadCloud aria-hidden="true" />}
+        <span>{isUploading ? "Subiendo fotos a Storage" : isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
+        <small>JPG, PNG, WebP o GIF. La subida guarda el archivo; el boton Guardar Supabase publica el contenido.</small>
+        <input type="file" accept="image/*" multiple disabled={isUploading} onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ""; }} />
       </label>
       <div className="admin-actions admin-actions--compact">
-        <button type="button" className="admin-button admin-button--ghost" onClick={addImageUrl}><FiPlus aria-hidden="true" /> Agregar URL</button>
+        <button type="button" className="admin-button admin-button--ghost" onClick={addImageUrl} disabled={isUploading}><FiPlus aria-hidden="true" /> Agregar URL</button>
       </div>
-      {uploadStatus ? <p className="admin-upload-status">{uploadStatus}</p> : null}
+      {uploadStatus ? (
+        <div className={`admin-upload-status admin-upload-status--${uploadTone}`} role={uploadTone === "error" ? "alert" : "status"} aria-live="polite">
+          <strong>{uploadStatus}</strong>
+          {uploadQueue.length ? (
+            <ul className="admin-upload-queue">
+              {uploadQueue.map((item) => (
+                <li key={item.id} className={`admin-upload-queue__item admin-upload-queue__item--${item.status}`}>
+                  <span>{item.name}</span>
+                  <small>{item.message}</small>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
       <div className="admin-gallery-list">
+        {!assets.length ? (
+          <div className="admin-gallery-empty">
+            <FiImage aria-hidden="true" />
+            <span>Sube la imagen principal para este contenido.</span>
+          </div>
+        ) : null}
         {assets.map((asset, index) => (
-          <article className="admin-gallery-item" key={`${asset.src}-${index}`}>
+          <article className={`admin-gallery-item ${index === 0 ? "is-main" : ""}`} key={asset.storagePath ?? asset.src}>
             <div className="admin-gallery-item__preview">
+              {index === 0 ? <span className="admin-gallery-item__badge">Principal</span> : null}
               {asset.src ? <MediaImage asset={asset} locale={locale} sizes="180px" /> : <FiImage aria-hidden="true" />}
             </div>
             <div className="admin-gallery-item__fields">
@@ -748,10 +1047,10 @@ function MediaEditor({ image, gallery, locale, onChange }: { image: MediaAsset; 
               <TextField label={`Alt (${locale.toUpperCase()})`} value={getLocalizedValue(asset.alt, locale)} onChange={(value) => updateAssetAlt(index, value)} />
             </div>
             <div className="admin-gallery-item__actions">
-              <button type="button" className="admin-icon-button" onClick={() => setMainImage(index)} disabled={index === 0} aria-label="Marcar como imagen principal">
+              <button type="button" className="admin-icon-button" onClick={() => setMainImage(index)} disabled={index === 0 || isUploading} aria-label="Marcar como imagen principal">
                 <FiStar aria-hidden="true" />
               </button>
-              <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => deleteAsset(index)} aria-label="Eliminar imagen">
+              <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => deleteAsset(index)} disabled={isUploading} aria-label="Eliminar imagen">
                 <FiTrash2 aria-hidden="true" />
               </button>
             </div>

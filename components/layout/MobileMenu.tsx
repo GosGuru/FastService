@@ -70,7 +70,12 @@ export function MobileMenu({ locale }: MobileMenuProps) {
 
   return (
     <>
-      <button className="mobile-menu-button" type="button" onClick={() => setOpen((v) => !v)} aria-label={open ? labels.close : labels.menu}>
+      <button
+        className={`mobile-menu-button ${open ? "is-open" : ""}`}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? labels.close : labels.menu}
+      >
         {open ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
       </button>
       <div className={`mobile-panel ${open ? "is-open" : ""}`} aria-hidden={!open}>
