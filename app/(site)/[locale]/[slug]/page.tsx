@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BoatGrid } from "@/components/boats/BoatGrid";
+import { BoatCtaBanner } from "@/components/sections/BoatCtaBanner";
+import { ContactFormSection } from "@/components/sections/ContactFormSection";
+import { FaqSection } from "@/components/sections/FaqSection";
 import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
-import { buildAlternates, getAllLocalizedStaticPaths, getBoatsByCollection, getPageBySlug, getPublicContent } from "@/lib/content";
+import { faqs as fallbackFaqs } from "@/data/faqs";
+import { buildAlternates, getAllLocalizedStaticPaths, getPageBySlug, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
 import type { ServicePage } from "@/types/content";
 
@@ -44,7 +47,11 @@ export default async function DynamicPage({ params }: Props) {
   if (!page) notFound();
 
   if (page.kind === "boatCollection") {
-    const collectionBoats = await getBoatsByCollection(page.collectionId);
+    const content = await getPublicContent();
+    const collectionBoats = content.boats.filter((boat) => boat.collectionId === page.collectionId);
+    const snapshotBoatFaqs = (content.faqs ?? []).filter((faq) => faq.serviceId === "boats");
+    const fallbackBoatFaqs = fallbackFaqs.filter((faq) => faq.serviceId === "boats");
+    const boatFaqs = snapshotBoatFaqs.length >= 4 ? snapshotBoatFaqs : fallbackBoatFaqs;
 
     return (
       <main>
@@ -65,6 +72,8 @@ export default async function DynamicPage({ params }: Props) {
             <BoatGrid boats={collectionBoats} locale={locale} />
           </div>
         </section>
+        <BoatCtaBanner collection={page} locale={locale} />
+        <FaqSection items={boatFaqs} locale={locale} />
       </main>
     );
   }
@@ -148,19 +157,7 @@ export default async function DynamicPage({ params }: Props) {
   return (
     <main>
       <ServiceHero page={page} locale={locale} />
-      <section className="section">
-        <div className="container contact-panel">
-          <div>
-            <h2>{locale === "es" ? "Escríbenos por WhatsApp" : "Message us on WhatsApp"}</h2>
-            <p>{getLocalizedValue(page.description, locale)}</p>
-            <WhatsAppCta locale={locale} message={getLocalizedValue(page.whatsappMessage, locale)} />
-          </div>
-          <div className="contact-panel__links">
-            <Link href="tel:+34671338141">+34 671 338 141</Link>
-            <Link href="mailto:info@fastservices.example">info@fastservices.example</Link>
-          </div>
-        </div>
-      </section>
+      <ContactFormSection locale={locale} />
     </main>
   );
 }

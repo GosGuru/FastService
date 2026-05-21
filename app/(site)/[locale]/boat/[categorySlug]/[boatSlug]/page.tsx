@@ -5,6 +5,7 @@ import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { getAllBoatPaths, getBoatBySlug, getBoatsByCollection } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
+import { buildBoatAvailabilityMessage } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ locale: string; categorySlug: string; boatSlug: string }> };
 
@@ -38,6 +39,12 @@ export default async function BoatPage({ params }: Props) {
   if (!boat) notFound();
 
   const related = (await getBoatsByCollection(boat.collectionId)).filter((item) => item.id !== boat.id).slice(0, 3);
+  const availabilityMessage = buildBoatAvailabilityMessage(
+    locale,
+    boat.collectionId,
+    boat.name,
+    getLocalizedValue(boat.whatsappMessage, locale)
+  );
 
   return (
     <main>
@@ -52,7 +59,7 @@ export default async function BoatPage({ params }: Props) {
               <span key={spec.label.es}>{getLocalizedValue(spec.value, locale)} {getLocalizedValue(spec.label, locale)}</span>
             ))}
           </div>
-          <WhatsAppCta locale={locale} message={getLocalizedValue(boat.whatsappMessage, locale)} />
+          <WhatsAppCta locale={locale} message={availabilityMessage} />
         </div>
       </section>
       <section className="section section--soft">

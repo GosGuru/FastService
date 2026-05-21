@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { FinalCta, BoatCollectionSection, HomeHero, TransferSection, WaterToysSection } from "@/components/sections/HomeSections";
+import { BoatCollectionSection, FeaturedBoatsSection, HomeHero, HomeIntroSection, TransferSection, WaterToysSection } from "@/components/sections/HomeSections";
+import { ContactFormSection } from "@/components/sections/ContactFormSection";
 import { buildHomeAlternates, getPublicContent } from "@/lib/content";
 import { assertLocale, siteUrl, type Locale } from "@/lib/i18n";
 
@@ -32,10 +33,12 @@ export default async function HomePage({ params }: Props) {
   return (
     <main>
       <HomeHero locale={locale} />
+      <HomeIntroSection locale={locale} />
       <BoatCollectionSection collections={content.boatCollections} locale={locale} />
+      <FeaturedBoatsSection boats={content.boats} locale={locale} />
       <TransferSection servicePages={content.servicePages} vehicles={content.vehicles} locale={locale} />
       <WaterToysSection servicePages={content.servicePages} waterToys={content.waterToys} locale={locale} />
-      <FinalCta locale={locale} />
+      <ContactFormSection locale={locale} />
     </main>
   );
 }

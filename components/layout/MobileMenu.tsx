@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FiArrowRight, FiChevronDown, FiGlobe, FiMenu, FiX } from "react-icons/fi";
 import { MediaImage } from "@/components/MediaImage";
-import { getBoatNavigation, getPrimaryNavigation } from "@/data/navigation";
-import { languageOptions, uiLabels, type Locale } from "@/lib/i18n";
+import { getBoatNavigation, getMobilePageNavigation } from "@/data/navigation";
+import { servicePages } from "@/data/services";
+import { languageOptions, uiLabels, getLocalizedSlug, type Locale } from "@/lib/i18n";
 
 interface MobileMenuProps {
   locale: Locale;
@@ -26,8 +27,18 @@ export function MobileMenu({ locale }: MobileMenuProps) {
   const [languageOpen, setLanguageOpen] = useState(false);
   const labels = uiLabels[locale];
   const boatItems = getBoatNavigation(locale);
-  const pageItems = getPrimaryNavigation(locale).filter((item) => !item.hasMegaMenu);
+  const pageItems = getMobilePageNavigation(locale);
   const activeLanguage = languageOptions.find((item) => item.locale === locale) ?? languageOptions[0];
+
+  const contactPage = servicePages.find((page) => page.serviceId === "contact");
+  const contactHref = `/${locale}/${contactPage ? getLocalizedSlug(contactPage.slugsByLocale, locale) : "contact"}`;
+
+  const contactNowLabel = {
+    es: "Contacta ahora",
+    en: "Contact now",
+    de: "Jetzt kontaktieren",
+    nl: "Contact opnemen"
+  }[locale];
 
   useEffect(() => {
     if (!open) {
@@ -36,28 +47,14 @@ export function MobileMenu({ locale }: MobileMenuProps) {
     }
 
     const scrollY = window.scrollY;
-    const previousStyles = {
-      position: document.body.style.position,
-      top: document.body.style.top,
-      left: document.body.style.left,
-      right: document.body.style.right,
-      width: document.body.style.width
-    };
+    const previousBodyStyle = document.body.style.cssText;
 
     document.body.classList.add("mobile-menu-open");
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.width = "100%";
+    document.body.style.cssText = `${previousBodyStyle}; position: fixed; top: -${scrollY}px; left: 0; right: 0; width: 100%;`;
 
     return () => {
       document.body.classList.remove("mobile-menu-open");
-      document.body.style.position = previousStyles.position;
-      document.body.style.top = previousStyles.top;
-      document.body.style.left = previousStyles.left;
-      document.body.style.right = previousStyles.right;
-      document.body.style.width = previousStyles.width;
+      document.body.style.cssText = previousBodyStyle;
       window.scrollTo(0, scrollY);
     };
   }, [open]);
@@ -158,6 +155,11 @@ export function MobileMenu({ locale }: MobileMenuProps) {
                   <FiArrowRight aria-hidden="true" />
                 </Link>
               ))}
+              <div className="mobile-menu-cta">
+                <Link href={contactHref} className="mobile-menu-cta__button" onClick={closeMenu}>
+                  {contactNowLabel}
+                </Link>
+              </div>
             </div>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { NauticalLoaderMark } from "@/components/layout/NauticalLoaderMark";
 
 const minVisibleMs = 280;
 const maxVisibleMs = 1400;
@@ -100,7 +101,12 @@ export function SiteLoader() {
 
   return (
     <div className={`site-loader ${active ? "is-active" : ""}`} aria-hidden="true">
-      <span className="site-loader__bar" />
+      <span className="site-loader__track">
+        <span className="site-loader__bar" />
+      </span>
+      <span className="site-loader__craft">
+        <NauticalLoaderMark compact />
+      </span>
     </div>
   );
 }

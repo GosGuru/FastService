@@ -5,9 +5,9 @@ import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiMail } from "react-icons/fi";
 import { DesktopMegaMenu } from "@/components/layout/DesktopMegaMenu";
+import { DesktopServicesDropdown } from "@/components/layout/DesktopServicesDropdown";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
-import { getPrimaryNavigation } from "@/data/navigation";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { servicePages } from "@/data/services";
@@ -19,6 +19,7 @@ interface SiteHeaderProps {
 export function SiteHeader({ locale }: SiteHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
 
   useEffect(() => {
     function handleScroll() {
@@ -29,20 +30,23 @@ export function SiteHeader({ locale }: SiteHeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleMegaMenuOpenChange = (open: boolean) => {
+    setIsMegaMenuOpen(open);
+    if (open) setIsServicesDropdownOpen(false);
+  };
+
+  const handleServicesDropdownOpenChange = (open: boolean) => {
+    setIsServicesDropdownOpen(open);
+    if (open) setIsMegaMenuOpen(false);
+  };
+
   const labels = uiLabels[locale];
   const contactPage = servicePages.find((page) => page.serviceId === "contact");
   const contactHref = `/${locale}/${contactPage ? getLocalizedSlug(contactPage.slugsByLocale, locale) : "contact"}`;
-  const headerIsActive = isScrolled || isMegaMenuOpen;
-  const nav = getPrimaryNavigation(locale).reduce<ReturnType<typeof getPrimaryNavigation>>((items, item) => {
-    if (!item.hasMegaMenu && !item.cta) {
-      items.push(item);
-    }
-
-    return items;
-  }, []);
+  const headerIsActive = isScrolled || isMegaMenuOpen || isServicesDropdownOpen;
 
   return (
-    <header className={`site-header ${headerIsActive ? "is-scrolled" : ""} ${isMegaMenuOpen ? "is-menu-open" : ""}`}>
+    <header className={`site-header ${headerIsActive ? "is-scrolled" : ""} ${isMegaMenuOpen || isServicesDropdownOpen ? "is-menu-open" : ""}`}>
       <div className="site-header__top">
         <div className="site-header__top-inner">
           <div className="site-header__contact-group">
@@ -66,12 +70,8 @@ export function SiteHeader({ locale }: SiteHeaderProps) {
           <span className="brand__logo" aria-hidden="true" />
         </Link>
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <DesktopMegaMenu locale={locale} open={isMegaMenuOpen} onOpenChange={setIsMegaMenuOpen} />
-          {nav.map((item) => (
-            <Link href={item.href} className="nav-link" key={item.href}>
-              {item.label}
-            </Link>
-          ))}
+          <DesktopMegaMenu locale={locale} open={isMegaMenuOpen} onOpenChange={handleMegaMenuOpenChange} />
+          <DesktopServicesDropdown locale={locale} open={isServicesDropdownOpen} onOpenChange={handleServicesDropdownOpenChange} />
         </nav>
         <div className="site-header__actions">
           <LanguageSwitcher locale={locale} />

@@ -16,6 +16,27 @@ export function getPrimaryNavigation(locale: Locale) {
   ];
 }
 
+export function getMobilePageNavigation(locale: Locale) {
+  const transfers = servicePages.find((page) => page.serviceId === "transfers");
+  const waterToys = servicePages.find((page) => page.serviceId === "water-toys");
+  const contact = servicePages.find((page) => page.serviceId === "contact");
+  const transfersHref = `/${locale}/${transfers ? getLocalizedSlug(transfers.slugsByLocale, locale) : "transfer"}`;
+  const waterToysHref = `/${locale}/${waterToys ? getLocalizedSlug(waterToys.slugsByLocale, locale) : "water-toys"}`;
+  const contactHref = `/${locale}/${contact ? getLocalizedSlug(contact.slugsByLocale, locale) : "contact"}`;
+
+  if (locale === "es") {
+    return [
+      { label: "TRANSFER/SHUTTLE PRIVADO", href: transfersHref },
+      { label: "WATER TAXI / TRANSFER ACUÁTICO", href: transfersHref },
+      { label: "JUGUETES NÁUTICOS", href: waterToysHref },
+      { label: "SEGURIDAD PRIVADA Y ESCOLTAS", href: contactHref },
+      { label: "ALQUILER DE VEHÍCULOS SIN CONDUCTOR", href: contactHref }
+    ];
+  }
+
+  return getPrimaryNavigation(locale).filter((item) => !item.hasMegaMenu);
+}
+
 export function getBoatNavigation(locale: Locale) {
   return boatCollections.map((collection) => ({
     id: collection.collectionId,
