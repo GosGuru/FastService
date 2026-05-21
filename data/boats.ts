@@ -79,7 +79,38 @@ export const boats: Boat[] = [
   createBoat({ id: "astondoa-102", name: "Astondoa 102 GLX", collectionId: "yachts-xl", slugs: { es: "astondoa-102-glx", en: "astondoa-102-glx" }, imageQuery: "photo-1528154291023-a6525fabe5b4", cabins: "4", length: "31.5 m", passengers: "12", bathrooms: "6", priceLabel: { es: "Consultar precio", en: "Price on request" }, source: "dropbox" }),
   createBoat({ id: "sunseeker-95", name: "Sunseeker 95", collectionId: "yachts-xl", slugs: { es: "sunseeker-95", en: "sunseeker-95" }, imageQuery: "photo-1605281317010-fe5ffe798166", cabins: "5", length: "29 m", passengers: "12", bathrooms: "5", priceLabel: { es: "Consultar disponibilidad", en: "Check availability" }, source: "dropbox" }),
   createBoat({ id: "benetti-115", name: "Benetti 115", collectionId: "yachts-xl", slugs: { es: "benetti-115", en: "benetti-115" }, imageQuery: "photo-1507525428034-b723cf961d3e", cabins: "5", length: "35 m", passengers: "12", bathrooms: "6", priceLabel: { es: "Consultar precio", en: "Price on request" }, source: "dropbox" }),
-  createBoat({ id: "cranchi-50", name: "Cranchi 50", collectionId: "yachts", slugs: { es: "cranchi-50", en: "cranchi-50" }, imageQuery: "photo-1559827260-dc66d52bef19", cabins: "3", length: "15.53 m", passengers: "11", bathrooms: "2", priceLabel: { es: "Desde 1.800 €/día", en: "From 1,800 €/day" }, budget: { min: 1800, max: 5000 } }),
+  {
+    ...createBoat({ id: "cranchi-50", name: "Cranchi 50", collectionId: "yachts", slugs: { es: "cranchi-50", en: "cranchi-50" }, imageQuery: "photo-1559827260-dc66d52bef19", cabins: "3", length: "15.53 m", passengers: "11", bathrooms: "2", priceLabel: { es: "Desde 1.800 €/día", en: "From 1,800 €/day" }, budget: { min: 1800, max: 5000 } }),
+    marina: { es: "Puerto de Ibiza", en: "Ibiza Marina", de: "Ibiza Hafen", nl: "Ibiza Haven" },
+    video: {
+      src: "/videos/ibiza-boats-header.web.mp4",
+      title: { es: "Video del Cranchi 50", en: "Cranchi 50 video", de: "Cranchi 50 Video", nl: "Cranchi 50 video" },
+      source: "local",
+      mimeType: "video/mp4"
+    },
+    amenities: [
+      { es: "Bimini", en: "Bimini", de: "Bimini", nl: "Bimini" },
+      { es: "Bluetooth", en: "Bluetooth", de: "Bluetooth", nl: "Bluetooth" },
+      { es: "Solarium en proa", en: "Bow sundeck", de: "Sonnendeck am Bug", nl: "Zonnedek voor" },
+      { es: "Solarium en popa", en: "Stern sundeck", de: "Sonnendeck achtern", nl: "Zonnedek achter" },
+      { es: "Paddle surf", en: "Paddle surf", de: "Paddleboard", nl: "Paddleboard" },
+      { es: "Equipo de snorkel", en: "Snorkel equipment", de: "Schnorchelausrüstung", nl: "Snorkeluitrusting" },
+      { es: "Plataforma de baño hidráulica", en: "Hydraulic swim platform", de: "Hydraulische Badeplattform", nl: "Hydraulisch zwemplateau" },
+      { es: "Cocina equipada", en: "Equipped kitchen", de: "Ausgestattete Küche", nl: "Uitgeruste keuken" },
+      { es: "3 Camarotes dobles", en: "3 Double cabins", de: "3 Doppelkabinen", nl: "3 Tweepersoonshutten" },
+      { es: "2 Baños completos", en: "2 Full bathrooms", de: "2 Voll ausgestattete Bäder", nl: "2 Volledige badkamers" }
+    ],
+    description: {
+      es: {
+        html: "<p>El Cranchi 50 es un yate de lujo diseñado para brindar el máximo confort y rendimiento. Con 15,5 metros de eslora y capacidad para 12 pasajeros más el capitán, es una excelente opción para aquellos que desean disfrutar de una experiencia premium en el Mediterráneo.</p><p>La cubierta ofrece amplios espacios para relajarse, con dos soláriums y una zona de comedor exterior. La plataforma de baño hidráulica facilita el acceso al mar y añade un toque de exclusividad.</p><p>El interior está cuidadosamente diseñado, con tres camarotes dobles, dos baños completos y una cocina completamente equipada — ideal para estancias prolongadas.</p>",
+        text: "El Cranchi 50 es un yate de lujo con 15,5 metros de eslora y capacidad para 12 pasajeros."
+      },
+      en: {
+        html: "<p>The Cranchi 50 is a luxury yacht designed to deliver maximum comfort and performance. With 15.5 metres in length and capacity for 12 passengers plus the captain, it is an excellent choice for those seeking a premium experience in the Mediterranean.</p><p>The deck offers generous relaxation spaces with two sundecks and an outdoor dining area. The hydraulic swim platform provides easy sea access and adds a touch of exclusivity.</p><p>The carefully designed interior features three double cabins, two full bathrooms and a fully-equipped kitchen — ideal for extended stays.</p>",
+        text: "The Cranchi 50 is a luxury yacht with 15.5 metres of length and capacity for 12 passengers."
+      }
+    }
+  },
   createBoat({ id: "fjord-41-xl", name: "Fjord 41 XL", collectionId: "yachts", slugs: { es: "fjord-41-xl", en: "fjord-41-xl" }, imageQuery: "photo-1505142468610-359e7d316be0", cabins: "2", length: "13.5 m", passengers: "11", bathrooms: "1", priceLabel: { es: "Desde 1.900 €/día", en: "From 1,900 €/day" }, budget: { min: 1800, max: 5000 } }),
   createBoat({ id: "sunseeker-predator-68", name: "Sunseeker Predator 68", collectionId: "yachts", slugs: { es: "sunseeker-predator-68", en: "sunseeker-predator-68" }, imageQuery: "photo-1500375592092-40eb2168fd21", cabins: "2", length: "21.6 m", passengers: "12", bathrooms: "2", priceLabel: { es: "Desde 4.150 €/día", en: "From 4,150 €/day" }, budget: { min: 1800, max: 5000 } }),
   createBoat({ id: "princess-v65", name: "Princess V65", collectionId: "yachts", slugs: { es: "princess-v65", en: "princess-v65" }, imageQuery: "photo-1471922694854-ff1b63b20054", cabins: "3", length: "20.61 m", passengers: "12", bathrooms: "3", priceLabel: { es: "Desde 3.500 €/día", en: "From 3,500 €/day" }, budget: { min: 1800, max: 5000 } }),

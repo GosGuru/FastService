@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import { PiBathtub, PiBed, PiRuler, PiUsers } from "react-icons/pi";
 import { MediaImage } from "@/components/MediaImage";
 import type { Boat } from "@/types/content";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
-import { getBoatTypeLabel } from "@/lib/whatsapp";
+import { buildBoatAvailabilityMessage, buildWhatsAppUrl, getBoatTypeLabel } from "@/lib/whatsapp";
 
 const icons = {
   cabins: PiBed,
@@ -13,11 +14,11 @@ const icons = {
   bathrooms: PiBathtub
 };
 
-const cardLabels: Record<Locale, { details: string; metres: string }> = {
-  es: { details: "Más información", metres: "Metros" },
-  en: { details: "More information", metres: "Metres" },
-  de: { details: "Mehr Informationen", metres: "Meter" },
-  nl: { details: "Meer informatie", metres: "Meter" }
+const cardLabels: Record<Locale, { details: string; view: string; availability: string; metres: string }> = {
+  es: { details: "Más información", view: "Ver modelo", availability: "Disponibilidad", metres: "Metros" },
+  en: { details: "More information", view: "View model", availability: "Availability", metres: "Metres" },
+  de: { details: "Mehr Informationen", view: "Modell ansehen", availability: "Verfügbarkeit", metres: "Meter" },
+  nl: { details: "Meer informatie", view: "Model bekijken", availability: "Beschikbaarheid", metres: "Meter" }
 };
 
 interface BoatCardProps {
@@ -30,6 +31,8 @@ export function BoatCard({ boat, locale, href }: BoatCardProps) {
   const labels = cardLabels[locale];
   const cardHref = href ?? `/${locale}/boat/${getLocalizedSlug(boat.categorySlugsByLocale, locale)}/${getLocalizedSlug(boat.slugsByLocale, locale)}`;
   const boatTypeLabel = getBoatTypeLabel(boat.collectionId, locale);
+  const waMessage = buildBoatAvailabilityMessage(locale, boat.collectionId, boat.name, getLocalizedValue(boat.whatsappMessage, locale));
+  const waHref = buildWhatsAppUrl(waMessage, locale);
 
   const formatSpec = (spec: Boat["specs"][number]) => {
     const value = getLocalizedValue(spec.value, locale);
@@ -65,10 +68,16 @@ export function BoatCard({ boat, locale, href }: BoatCardProps) {
         </div>
       </div>
 
-      <Link href={cardHref} className="boat-card__cta">
-        <span>{labels.details}</span>
-        <FiArrowRight aria-hidden="true" />
-      </Link>
+      <div className="boat-card__actions">
+        <Link href={cardHref} className="boat-card__btn boat-card__btn--detail">
+          <span>{labels.view}</span>
+          <FiArrowRight aria-hidden="true" />
+        </Link>
+        <Link href={waHref} className="boat-card__btn boat-card__btn--wa" target="_blank" rel="noreferrer">
+          <FaWhatsapp aria-hidden="true" />
+          <span>{labels.availability}</span>
+        </Link>
+      </div>
     </article>
   );
 }

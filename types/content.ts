@@ -20,6 +20,14 @@ export interface MediaAsset {
   storagePath?: string;
 }
 
+export interface VideoAsset {
+  src: string;
+  title?: LocalizedText;
+  source?: "local" | "supabase" | "external";
+  storagePath?: string;
+  mimeType?: string;
+}
+
 export interface SeoFields {
   seoTitle: LocalizedText;
   seoDescription: LocalizedText;
@@ -69,11 +77,18 @@ export interface Boat extends BaseContent {
   categorySlugsByLocale: LocalizedText;
   image: MediaAsset;
   gallery: MediaAsset[];
+  video?: VideoAsset;
   specs: SpecItem[];
   priceLabel?: LocalizedText;
   internalBudgetRange?: { min: number; max: number };
   source: "dropbox" | "mock";
   whatsappMessage: LocalizedText;
+  /** Rich-text description per locale (same shape as SeoPage.body) */
+  description?: Partial<Record<Locale, RichTextContent>>;
+  /** On-board amenities / equipment. Strings are accepted for legacy Supabase payloads. */
+  amenities?: Array<string | LocalizedText>;
+  /** Home marina / departure port */
+  marina?: LocalizedText;
 }
 
 export interface ServicePage extends BaseContent {

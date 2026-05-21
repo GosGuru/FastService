@@ -196,12 +196,11 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
             <dl>
               <div>
                 <dt><FaWhatsapp aria-hidden="true" /> {labels.whatsapp}</dt>
-                <dd><Link href="https://wa.me/34671338141" target="_blank" rel="noreferrer">+34 671 338 141</Link></dd>
-                <dd><Link href="https://wa.me/34606592373" target="_blank" rel="noreferrer">+34 606 59 23 73</Link></dd>
+                <dd><Link href="https://wa.me/34655835803" target="_blank" rel="noreferrer">+34 655 835 803</Link></dd>
               </div>
               <div>
                 <dt><FiMail aria-hidden="true" /> {labels.email}</dt>
-                <dd><Link href="mailto:info@ibizaboats.info">info@ibizaboats.info</Link></dd>
+                <dd><Link href="mailto:Fastservicesibiza@gmail.com">Fastservicesibiza@gmail.com</Link></dd>
               </div>
             </dl>
           </div>

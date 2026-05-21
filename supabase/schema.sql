@@ -120,8 +120,8 @@ values (
   'fastservice-gallery',
   'fastservice-gallery',
   true,
-  10485760,
-  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  209715200,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime']
 )
 on conflict (id) do update set
   public = excluded.public,

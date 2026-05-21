@@ -2,7 +2,7 @@
 
 import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
-import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud } from "react-icons/fi";
+import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
 import type { AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -10,7 +10,7 @@ import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentS
 import { getLocalizedSlug, getLocalizedValue, locales, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
-import type { Boat, FaqItem, LocalizedText, MediaAsset, SeoPage, SpecItem } from "@/types/content";
+import type { Boat, FaqItem, LocalizedText, MediaAsset, SeoPage, SpecItem, VideoAsset } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
 
@@ -667,6 +667,22 @@ function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: 
 }
 
 function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; onChange: (patch: Partial<Boat>) => void }) {
+  const richValue = boat.description?.[locale] ?? boat.description?.es ?? { html: "", text: "" };
+
+  async function uploadImageForDescription(file: File): Promise<string> {
+    const supabase = createSupabaseBrowserClient();
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const storagePath = `${new Date().getFullYear()}/${createId("boat-body")}.${extension}`;
+    const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
+      cacheControl: "31536000",
+      contentType: file.type || undefined,
+      upsert: false
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
+    return data.publicUrl;
+  }
+
   return (
     <div className="admin-form">
       <div className="admin-form-grid admin-form-grid--two">
@@ -687,11 +703,21 @@ function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; on
         </label>
       </div>
       <MediaEditor image={boat.image} gallery={boat.gallery} locale={locale} itemLabel={boat.name} onChange={(image, gallery) => onChange({ image, gallery })} />
+      <BoatVideoEditor video={boat.video} locale={locale} itemLabel={boat.name} onChange={(video) => onChange({ video })} />
       <LocalizedTextEditor label="Slug por idioma" value={boat.slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
       <LocalizedTextEditor label="Título SEO" value={boat.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value })} />
       <LocalizedTextEditor label="Descripción SEO" value={boat.seoDescription} locale={locale} multiline onChange={(value) => onChange({ seoDescription: value })} />
       <LocalizedTextEditor label="Precio / disponibilidad" value={boat.priceLabel ?? localized("")} locale={locale} onChange={(value) => onChange({ priceLabel: value })} />
+      <LocalizedTextEditor label="Puerto / Marina de salida" value={boat.marina ?? localized("")} locale={locale} onChange={(value) => onChange({ marina: value })} />
       <SpecsEditor specs={boat.specs} locale={locale} onChange={(specs) => onChange({ specs })} />
+      <RichTextEditor
+        id={`rich-${boat.id}-${locale}`}
+        label={`Descripción completa (${locale.toUpperCase()})`}
+        value={richValue.html}
+        onChange={(html, text) => onChange({ description: { ...boat.description, [locale]: { html, text } } })}
+        onUploadImage={uploadImageForDescription}
+      />
+      <AmenitiesEditor amenities={boat.amenities ?? []} locale={locale} onChange={(amenities) => onChange({ amenities })} />
       <LocalizedTextEditor label="Mensaje WhatsApp" value={boat.whatsappMessage} locale={locale} multiline onChange={(value) => onChange({ whatsappMessage: value })} />
     </div>
   );
@@ -758,6 +784,183 @@ function GenericContentEditor({ item, locale, onChange }: { item: AdminItem; loc
   );
 }
 
+function normalizeAmenity(item: string | LocalizedText): LocalizedText {
+  return typeof item === "string" ? localized(item) : { ...localized(item.es ?? item.en ?? ""), ...item };
+}
+
+function AmenitiesEditor({ amenities, locale, onChange }: { amenities: Array<string | LocalizedText>; locale: Locale; onChange: (items: LocalizedText[]) => void }) {
+  const normalizedAmenities = amenities.map(normalizeAmenity);
+
+  return (
+    <section className="admin-subpanel">
+      <div className="admin-panel-heading admin-panel-heading--compact">
+        <h3>Equipamiento a bordo por idioma</h3>
+        <button
+          type="button"
+          className="admin-icon-button"
+          onClick={() => onChange([...normalizedAmenities, localized("")])}
+          aria-label="Agregar equipamiento"
+        >
+          <FiPlus aria-hidden="true" />
+        </button>
+      </div>
+      <div className="admin-spec-list">
+        {normalizedAmenities.map((item, index) => (
+          <div className="admin-amenity-row" key={index}>
+            <LocalizedTextEditor
+              label={`Equipamiento ${index + 1}`}
+              value={item}
+              locale={locale}
+              onChange={(value) => onChange(normalizedAmenities.map((amenity, amenityIndex) => (amenityIndex === index ? value : amenity)))}
+            />
+            <button
+              type="button"
+              className="admin-icon-button admin-icon-button--danger"
+              onClick={() => onChange(normalizedAmenities.filter((_, amenityIndex) => amenityIndex !== index))}
+              aria-label="Eliminar equipamiento"
+            >
+              <FiTrash2 aria-hidden="true" />
+            </button>
+          </div>
+        ))}
+        {normalizedAmenities.length === 0 && (
+          <p className="admin-empty-hint">Sin equipamiento. Pulsa + para añadir ítems.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: VideoAsset; locale: Locale; itemLabel: string; onChange: (video?: VideoAsset) => void }) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [statusTone, setStatusTone] = useState<FeedbackTone>("info");
+  const [status, setStatus] = useState("");
+  const titleFallback = localized(itemLabel.trim() ? `Video de ${itemLabel}` : "Video del barco");
+  const currentTitle = video?.title ?? titleFallback;
+
+  function updateVideo(patch: Partial<VideoAsset>) {
+    onChange({
+      src: video?.src ?? "",
+      title: currentTitle,
+      source: video?.source ?? "external",
+      ...video,
+      ...patch
+    });
+  }
+
+  async function uploadVideo(fileList: FileList | null) {
+    if (isUploading) return;
+
+    const file = Array.from(fileList ?? []).find((candidate) => candidate.type.startsWith("video/"));
+
+    if (!file) {
+      setStatusTone("error");
+      setStatus("Selecciona un archivo de video valido: MP4, WebM o MOV.");
+      return;
+    }
+
+    if (file.size > 200 * 1024 * 1024) {
+      setStatusTone("error");
+      setStatus("El video supera 200 MB. Comprimelo antes de subirlo.");
+      return;
+    }
+
+    setIsUploading(true);
+    setStatusTone("info");
+    setStatus("Subiendo video a Supabase Storage...");
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "mp4";
+      const storagePath = `${new Date().getFullYear()}/${createId("boat-video")}.${extension}`;
+      const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
+        cacheControl: "31536000",
+        contentType: file.type || undefined,
+        upsert: false
+      });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
+
+      onChange({
+        src: data.publicUrl,
+        title: currentTitle,
+        source: "supabase",
+        storagePath,
+        mimeType: file.type || undefined
+      });
+      setStatusTone("success");
+      setStatus("Video subido. Pulsa Guardar Supabase para publicarlo en la web.");
+    } catch (error) {
+      setStatusTone("error");
+      setStatus(error instanceof Error ? error.message : "No se pudo subir el video.");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function removeVideo() {
+    if (isUploading) return;
+
+    if (video?.storagePath) {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage.from(supabaseGalleryBucket).remove([video.storagePath]);
+      } catch {
+        setStatusTone("info");
+        setStatus("El video se quito del contenido, pero no se pudo borrar el archivo del bucket.");
+      }
+    }
+
+    onChange(undefined);
+    setStatusTone("info");
+    setStatus("Video quitado. Guarda en Supabase para aplicar el cambio.");
+  }
+
+  return (
+    <section className="admin-subpanel admin-video-editor">
+      <div className="admin-panel-heading admin-panel-heading--compact">
+        <h3><FiVideo aria-hidden="true" /> Video de la ficha individual</h3>
+        {video?.src ? <span className="admin-pill">Activo</span> : <span className="admin-pill">Opcional</span>}
+      </div>
+
+      <label className={`admin-upload-dropzone ${isUploading ? "is-uploading" : ""}`} aria-disabled={isUploading}>
+        {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiVideo aria-hidden="true" />}
+        <span>{isUploading ? "Subiendo video" : "Subir MP4, WebM o MOV"}</span>
+        <small>Máximo 200 MB. También puedes pegar una URL directa al video.</small>
+        <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={isUploading} onChange={(event) => { void uploadVideo(event.target.files); event.target.value = ""; }} />
+      </label>
+
+      {video?.src ? (
+        <video className="admin-video-preview" src={video.src} controls preload="metadata" />
+      ) : null}
+
+      <div className="admin-video-editor__fields">
+        <TextField label="URL del video" value={video?.src ?? ""} onChange={(value) => updateVideo({ src: value, source: value ? "external" : undefined, storagePath: undefined, mimeType: undefined })} />
+        <LocalizedTextEditor label="Titulo del video" value={currentTitle} locale={locale} onChange={(value) => updateVideo({ title: value })} />
+      </div>
+
+      <div className="admin-actions admin-actions--compact">
+        <button type="button" className="admin-button admin-button--ghost" onClick={() => updateVideo({ src: video?.src ?? "", title: currentTitle })} disabled={isUploading}>
+          <FiPlus aria-hidden="true" /> Preparar video
+        </button>
+        {video?.src ? (
+          <button type="button" className="admin-button admin-button--danger" onClick={() => { void removeVideo(); }} disabled={isUploading}>
+            <FiTrash2 aria-hidden="true" /> Quitar video
+          </button>
+        ) : null}
+      </div>
+
+      {status ? (
+        <div className={`admin-upload-status admin-upload-status--${statusTone}`} role={statusTone === "error" ? "alert" : "status"} aria-live="polite">
+          <strong>{status}</strong>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: Locale; onChange: (specs: SpecItem[]) => void }) {
   function updateSpec(index: number, patch: Partial<SpecItem>) {
     onChange(specs.map((spec, specIndex) => (specIndex === index ? { ...spec, ...patch } : spec)));
@@ -773,7 +976,7 @@ function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: L
       </div>
       <div className="admin-spec-list">
         {specs.map((spec, index) => (
-          <div className="admin-spec-row" key={`${spec.icon ?? "spec"}-${spec.label.es}-${spec.value.es}`}>
+          <div className="admin-spec-row" key={index}>
             <select value={spec.icon ?? "water"} onChange={(event) => updateSpec(index, { icon: event.target.value as SpecItem["icon"] })} aria-label="Icono del spec">
               <option value="cabins">Cabinas</option>
               <option value="length">Eslora</option>

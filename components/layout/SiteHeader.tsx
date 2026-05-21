@@ -52,16 +52,12 @@ export function SiteHeader({ locale }: SiteHeaderProps) {
           <div className="site-header__contact-group">
             <Link href={buildWhatsAppUrl(undefined, locale)} className="site-header__contact-link" target="_blank" rel="noreferrer">
               <span className="site-header__contact-icon"><FaWhatsapp aria-hidden="true" /></span>
-              <span>+34 671 338 141</span>
-            </Link>
-            <Link href="https://wa.me/34606592373" className="site-header__contact-link" target="_blank" rel="noreferrer">
-              <span className="site-header__contact-icon"><FaWhatsapp aria-hidden="true" /></span>
-              <span>+34 606 59 23 73</span>
+              <span>+34 655 835 803</span>
             </Link>
           </div>
-          <a href="mailto:info@ibizaboats.info" className="site-header__contact-link">
+          <a href="mailto:Fastservicesibiza@gmail.com" className="site-header__contact-link">
             <span className="site-header__contact-icon"><FiMail aria-hidden="true" /></span>
-            <span>info@ibizaboats.info</span>
+            <span>Fastservicesibiza@gmail.com</span>
           </a>
         </div>
       </div>

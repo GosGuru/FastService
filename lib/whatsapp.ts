@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n";
 import type { BoatCollectionId } from "@/types/content";
 
-const whatsappPhone = "34671338141";
+const whatsappPhone = "34655835803";
 
 const defaults: Record<Locale, string> = {
   es: "Hola, quiero consultar disponibilidad para un servicio en Ibiza.",
