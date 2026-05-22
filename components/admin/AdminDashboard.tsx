@@ -13,6 +13,7 @@ import { supabaseGalleryBucket } from "@/lib/supabase/config";
 import type { Boat, FaqItem, LocalizedText, MediaAsset, SeoPage, SpecItem, VideoAsset } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
+type GenericContentItem = Exclude<AdminItem, Boat | SeoPage | FaqItem>;
 
 type FeedbackTone = "info" | "success" | "error";
 
@@ -169,6 +170,10 @@ function getItemDescription(item: AdminItem, locale: Locale) {
   if ("seoDescription" in item) return getLocalizedValue(item.seoDescription, locale);
   if ("answer" in item) return getLocalizedValue(item.answer, locale);
   return "Contenido preparado para edición";
+}
+
+function isGenericContentItem(item: AdminItem): item is GenericContentItem {
+  return "kind" in item && item.kind !== "boat" && item.kind !== "seoPage";
 }
 
 function touch<T extends AdminItem>(item: T): T {
@@ -663,7 +668,7 @@ function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: 
     return <FaqEditor faq={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }
 
-  return <GenericContentEditor item={item} locale={locale} onChange={onChange} />;
+  return isGenericContentItem(item) ? <GenericContentEditor item={item} locale={locale} onChange={onChange} /> : null;
 }
 
 function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; onChange: (patch: Partial<Boat>) => void }) {
@@ -772,7 +777,7 @@ function FaqEditor({ faq, locale, onChange }: { faq: FaqItem; locale: Locale; on
   );
 }
 
-function GenericContentEditor({ item, locale, onChange }: { item: AdminItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
+function GenericContentEditor({ item, locale, onChange }: { item: GenericContentItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
   const title = "title" in item ? item.title : "description" in item ? item.description : undefined;
 
   return (
