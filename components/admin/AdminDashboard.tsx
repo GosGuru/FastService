@@ -10,10 +10,10 @@ import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentS
 import { getLocalizedSlug, getLocalizedValue, locales, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
-import type { Boat, FaqItem, LocalizedText, MediaAsset, SeoPage, SpecItem, VideoAsset } from "@/types/content";
+import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, SeoPage, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
-type GenericContentItem = Exclude<AdminItem, Boat | SeoPage | FaqItem>;
+type GenericContentItem = BoatCollection | ServicePage | Vehicle | WaterToy;
 
 type FeedbackTone = "info" | "success" | "error";
 
