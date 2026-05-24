@@ -2357,7 +2357,12 @@ button {
   z-index: 500;
   display: grid;
   place-items: center;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
   padding: clamp(18px, 4vw, 52px);
+  border: 0;
   background: rgb(2 20 26 / 92%);
   color: #fff;
   isolation: isolate;
@@ -3321,10 +3326,17 @@ button {
   scroll-snap-align: start;
 }
 
-.boat-detail-gallery__item a {
+.boat-detail-gallery__trigger {
   position: absolute;
   inset: 0;
   display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: zoom-in;
+  text-align: left;
 }
 
 .boat-detail-gallery__image {
@@ -3332,8 +3344,40 @@ button {
   transition: transform 0.4s ease;
 }
 
-.boat-detail-gallery__item:hover .boat-detail-gallery__image {
+.boat-detail-gallery__item:hover .boat-detail-gallery__image,
+.boat-detail-gallery__trigger:focus-visible .boat-detail-gallery__image {
   transform: scale(1.04);
+}
+
+.boat-detail-gallery__expand {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgb(255 255 255 / 58%);
+  border-radius: 50%;
+  background: rgb(7 46 58 / 62%);
+  color: #fff;
+  font-size: 18px;
+  opacity: 0;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 18%);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.boat-detail-gallery__trigger:hover .boat-detail-gallery__expand,
+.boat-detail-gallery__trigger:focus-visible .boat-detail-gallery__expand {
+  opacity: 1;
+  transform: translateY(-1px) scale(1.04);
+}
+
+.boat-detail-gallery__trigger:focus-visible {
+  outline: 3px solid rgb(80 133 158 / 45%);
+  outline-offset: -3px;
 }
 
 .boat-detail-gallery__controls {
@@ -5262,6 +5306,14 @@ button {
     grid-auto-columns: minmax(260px, 82vw);
     margin-inline: -16px;
     padding-inline: 16px;
+  }
+
+  .boat-detail-gallery__expand {
+    right: 10px;
+    top: 10px;
+    width: 40px;
+    height: 40px;
+    opacity: 1;
   }
 
   .boat-detail-gallery__controls {
