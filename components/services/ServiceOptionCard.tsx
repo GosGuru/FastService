@@ -1,25 +1,31 @@
-import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
+import { CardActions } from "@/components/cards/CardActions";
 import { MediaImage } from "@/components/MediaImage";
+import { NoWidowText } from "@/components/typography/NoWidowText";
 import { getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
 import type { ServiceOption } from "@/data/serviceOptions";
 
 interface ServiceOptionCardProps {
   option: ServiceOption;
   locale: Locale;
+  detailHref?: string;
   showAvailabilityPill?: boolean;
 }
 
-export function ServiceOptionCard({ option, locale, showAvailabilityPill = true }: ServiceOptionCardProps) {
+export function ServiceOptionCard({ option, locale, detailHref, showAvailabilityPill = true }: ServiceOptionCardProps) {
+  const resolvedDetailHref = detailHref ?? `#${option.id}`;
+
   return (
-    <article className="water-toy-card service-option-card">
+    <article className="water-toy-card service-option-card" id={option.id}>
       <div className="water-toy-card__image service-option-card__image">
         <MediaImage asset={option.image} locale={locale} sizes="(max-width: 768px) 100vw, 33vw" />
       </div>
       <div className="water-toy-card__body service-option-card__body">
         {showAvailabilityPill ? <span className="availability-pill">{uiLabels[locale].noPrices}</span> : null}
         <h2>{getLocalizedValue(option.name, locale)}</h2>
-        <p>{getLocalizedValue(option.description, locale)}</p>
-        <WhatsAppCta locale={locale} message={getLocalizedValue(option.whatsappMessage, locale)} variant="outline" />
+        <p>
+          <NoWidowText text={getLocalizedValue(option.description, locale)} />
+        </p>
+        <CardActions locale={locale} whatsappMessage={getLocalizedValue(option.whatsappMessage, locale)} detailHref={resolvedDetailHref} />
       </div>
     </article>
   );

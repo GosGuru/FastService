@@ -1,0 +1,120 @@
+
+> fastservice@1.0.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.2:3001
+- Environments: .env.local
+✓ Ready in 480ms
+
+○ Compiling /[locale] ...
+ GET /es/alquiler-vehiculos-sin-conductor 200 in 9.3s (next.js: 6.9s, generate-params: 1204ms, application-code: 2.4s)
+ GET /es 200 in 9.3s (next.js: 6.4s, generate-params: 783ms, application-code: 2.9s)
+ GET /es 200 in 9.3s (next.js: 6.8s, generate-params: 1140ms, application-code: 2.5s)
+ GET /es 200 in 697ms (next.js: 12ms, generate-params: 8ms, application-code: 685ms)
+ GET /es 200 in 647ms (next.js: 12ms, generate-params: 7ms, application-code: 635ms)
+ GET /es 200 in 1252ms (next.js: 12ms, generate-params: 8ms, application-code: 1240ms)
+ GET /es 200 in 1853ms (next.js: 16ms, generate-params: 11ms, application-code: 1837ms)
+ GET /es 200 in 898ms (next.js: 10ms, generate-params: 6ms, application-code: 888ms)
+ GET /es 200 in 741ms (next.js: 314ms, generate-params: 7ms, application-code: 427ms)
+ GET /es 200 in 153ms (next.js: 4ms, generate-params: 56µs, application-code: 148ms)
+ GET /es 200 in 2.3s (next.js: 21ms, generate-params: 14ms, application-code: 2.3s)
+ GET /es 200 in 775ms (next.js: 286ms, generate-params: 6ms, application-code: 489ms)
+ GET /es 200 in 312ms (next.js: 3ms, generate-params: 28µs, application-code: 310ms)
+ GET /es 200 in 157ms (next.js: 3ms, generate-params: 25µs, application-code: 154ms)
+✓ Compiled in 223ms
+ GET /es 200 in 1687ms (next.js: 858ms, generate-params: 21ms, application-code: 829ms)
+ GET /es 200 in 226ms (next.js: 9ms, generate-params: 194µs, application-code: 217ms)
+✓ Compiled in 133ms
+ GET /es 200 in 1135ms (next.js: 290ms, generate-params: 9ms, application-code: 844ms)
+ GET /es 200 in 672ms (next.js: 3ms, generate-params: 32µs, application-code: 669ms)
+ GET /es 200 in 479ms (next.js: 7ms, generate-params: 60µs, application-code: 472ms)
+ GET /es 200 in 477ms (next.js: 75ms, generate-params: 23µs, application-code: 402ms)
+ GET /es 200 in 480ms (next.js: 41ms, generate-params: 21µs, application-code: 439ms)
+ GET /es 200 in 479ms (next.js: 107ms, generate-params: 26µs, application-code: 371ms)
+✓ Compiled in 91ms
+ GET /es 200 in 1002ms (next.js: 268ms, generate-params: 6ms, application-code: 734ms)
+ GET /es 200 in 492ms (next.js: 4ms, generate-params: 29µs, application-code: 487ms)
+ GET /es 200 in 313ms (next.js: 4ms, generate-params: 29µs, application-code: 309ms)
+ GET /es 200 in 313ms (next.js: 68ms, generate-params: 34µs, application-code: 245ms)
+✓ Compiled in 121ms
+ GET /es 200 in 853ms (next.js: 287ms, generate-params: 11ms, application-code: 567ms)
+ GET /es 200 in 351ms (next.js: 3ms, generate-params: 26µs, application-code: 349ms)
+ GET /es 200 in 225ms (next.js: 4ms, generate-params: 31µs, application-code: 221ms)
+ GET /es 200 in 226ms (next.js: 51ms, generate-params: 31µs, application-code: 174ms)
+✓ Compiled in 126ms
+ GET /es 200 in 1151ms (next.js: 260ms, generate-params: 6ms, application-code: 890ms)
+ GET /es 200 in 680ms (next.js: 5ms, generate-params: 42µs, application-code: 676ms)
+ GET /es 200 in 613ms (next.js: 38ms, generate-params: 24µs, application-code: 575ms)
+ GET /es 200 in 614ms (next.js: 5ms, generate-params: 26µs, application-code: 610ms)
+ GET /es 200 in 614ms (next.js: 73ms, generate-params: 22µs, application-code: 542ms)
+ GET /es 200 in 614ms (next.js: 104ms, generate-params: 25µs, application-code: 511ms)
+ GET /es 200 in 393ms (next.js: 9ms, generate-params: 7ms, application-code: 384ms)
+ GET /es 200 in 275ms (next.js: 7ms, generate-params: 26µs, application-code: 268ms)
+ GET /es 200 in 147ms (next.js: 3ms, generate-params: 22µs, application-code: 145ms)
+✓ Compiled in 701ms
+✓ Compiled in 283ms
+✓ Compiled in 130ms
+ GET /es 200 in 714ms (next.js: 300ms, generate-params: 13ms, application-code: 414ms)
+ GET /es 200 in 144ms (next.js: 4ms, generate-params: 30µs, application-code: 141ms)
+ GET /es 200 in 3.0s (next.js: 9ms, generate-params: 7ms, application-code: 3.0s)
+ GET /es 200 in 1163ms (next.js: 16ms, generate-params: 12ms, application-code: 1147ms)
+ GET /es/yates 200 in 3.1s (next.js: 1400ms, generate-params: 8ms, application-code: 1737ms)
+ GET /es/boat/yates/cranchi-50 200 in 2.8s (next.js: 1586ms, generate-params: 579ms, application-code: 1246ms)
+ GET /es/boat/yates/TEST 200 in 1183ms (next.js: 9ms, generate-params: 6ms, application-code: 1175ms)
+ GET /es/juguetes-nauticos 200 in 918ms (next.js: 11ms, generate-params: 8ms, application-code: 907ms)
+ GET /es/embarcaciones-rapidas 200 in 1069ms (next.js: 10ms, generate-params: 7ms, application-code: 1059ms)
+ GET /es 200 in 815ms (next.js: 31ms, generate-params: 7ms, application-code: 783ms)
+ GET /es 200 in 764ms (next.js: 9ms, generate-params: 6ms, application-code: 756ms)
+✓ Compiled in 159ms
+ GET /es 200 in 2.1s (next.js: 1377ms, generate-params: 9ms, application-code: 739ms)
+ GET /es 200 in 533ms (next.js: 3ms, generate-params: 34µs, application-code: 530ms)
+ GET /es 200 in 419ms (next.js: 4ms, generate-params: 20µs, application-code: 415ms)
+ GET /es 200 in 419ms (next.js: 58ms, generate-params: 20µs, application-code: 361ms)
+ GET /es 200 in 420ms (next.js: 87ms, generate-params: 22µs, application-code: 333ms)
+ GET /es 200 in 422ms (next.js: 28ms, generate-params: 21µs, application-code: 394ms)
+✓ Compiled in 120ms
+ GET /es 200 in 1150ms (next.js: 272ms, generate-params: 6ms, application-code: 878ms)
+ GET /es 200 in 630ms (next.js: 3ms, generate-params: 24µs, application-code: 627ms)
+ GET /es 200 in 508ms (next.js: 5ms, generate-params: 35µs, application-code: 503ms)
+ GET /es 200 in 507ms (next.js: 132ms, generate-params: 22µs, application-code: 376ms)
+ GET /es 200 in 509ms (next.js: 53ms, generate-params: 44µs, application-code: 456ms)
+ GET /es 200 in 509ms (next.js: 91ms, generate-params: 36µs, application-code: 419ms)
+✓ Compiled in 111ms
+ GET /es 200 in 1199ms (next.js: 254ms, generate-params: 6ms, application-code: 945ms)
+ GET /es 200 in 750ms (next.js: 3ms, generate-params: 33µs, application-code: 747ms)
+ GET /es 200 in 589ms (next.js: 47ms, generate-params: 25µs, application-code: 542ms)
+ GET /es 200 in 589ms (next.js: 131ms, generate-params: 24µs, application-code: 457ms)
+ GET /es 200 in 590ms (next.js: 102ms, generate-params: 22µs, application-code: 488ms)
+ GET /es 200 in 594ms (next.js: 6ms, generate-params: 33µs, application-code: 588ms)
+✓ Compiled in 84ms
+ GET /es 200 in 4.7s (next.js: 287ms, generate-params: 7ms, application-code: 4.4s)
+✓ Compiled in 93ms
+ GET /es 200 in 677ms (next.js: 273ms, generate-params: 7ms, application-code: 404ms)
+ GET /es 200 in 138ms (next.js: 5ms, generate-params: 24µs, application-code: 133ms)
+✓ Compiled in 483ms
+✓ Compiled in 195ms
+ GET /favicon.ico 404 in 1753ms (next.js: 12ms, generate-params: 8ms, application-code: 1740ms)
+ GET /es/yates 200 in 1895ms (next.js: 507ms, generate-params: 7ms, application-code: 1388ms)
+ GET /es/transfer-privado 200 in 702ms (next.js: 11ms, generate-params: 8ms, application-code: 691ms)
+ GET /es/alquiler-vehiculos-sin-conductor 200 in 640ms (next.js: 17ms, generate-params: 11ms, application-code: 623ms)
+ GET /es/transfer-privado 200 in 709ms (next.js: 15ms, generate-params: 11ms, application-code: 694ms)
+ GET /es/yates 200 in 713ms (next.js: 11ms, generate-params: 7ms, application-code: 701ms)
+ GET /es 200 in 814ms (next.js: 12ms, generate-params: 8ms, application-code: 802ms)
+ GET /es 200 in 854ms (next.js: 12ms, generate-params: 9ms, application-code: 842ms)
+ GET /es 200 in 700ms (next.js: 16ms, generate-params: 11ms, application-code: 684ms)
+ GET /es 200 in 705ms (next.js: 12ms, generate-params: 9ms, application-code: 693ms)
+✓ Compiled in 116ms
+ GET /es 200 in 1164ms (next.js: 310ms, generate-params: 8ms, application-code: 854ms)
+ GET /es 200 in 635ms (next.js: 4ms, generate-params: 30µs, application-code: 631ms)
+ GET /es 200 in 453ms (next.js: 7ms, generate-params: 68µs, application-code: 445ms)
+ GET /es 200 in 453ms (next.js: 77ms, generate-params: 30µs, application-code: 376ms)
+✓ Compiled in 243ms
+ GET /es 200 in 864ms (next.js: 401ms, generate-params: 14ms, application-code: 463ms)
+ GET /es 200 in 178ms (next.js: 3ms, generate-params: 27µs, application-code: 175ms)
+ GET /es 200 in 2.2s (next.js: 11ms, generate-params: 6ms, application-code: 2.2s)
+ GET /es/juguetes-nauticos 200 in 1423ms (next.js: 343ms, generate-params: 7ms, application-code: 1080ms)
+ GET /es/transfer-privado 200 in 783ms (next.js: 9ms, generate-params: 5ms, application-code: 774ms)
+ GET /es/seguridad 200 in 792ms (next.js: 8ms, generate-params: 5ms, application-code: 784ms)
+ GET /es/alquiler-vehiculos-sin-conductor 200 in 741ms (next.js: 8ms, generate-params: 6ms, application-code: 733ms)

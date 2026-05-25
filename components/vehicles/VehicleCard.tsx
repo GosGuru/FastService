@@ -1,5 +1,6 @@
-import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
+import { CardActions } from "@/components/cards/CardActions";
 import { ImageCarousel } from "@/components/media/ImageCarousel";
+import { NoWidowText } from "@/components/typography/NoWidowText";
 import { getVehiclePath } from "@/lib/routes";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
 import type { Vehicle } from "@/types/content";
@@ -18,13 +19,15 @@ export function VehicleCard({ vehicle, locale, sectionSlug }: VehicleCardProps) 
       <ImageCarousel assets={[vehicle.image, ...vehicle.gallery]} locale={locale} href={href} ariaLabel={vehicle.name} className="vehicle-card__image" sizes="(max-width: 768px) 100vw, 33vw" />
       <div className="vehicle-card__body">
         <h2>{vehicle.name}</h2>
-        <p>{getLocalizedValue(vehicle.overview, locale)}</p>
+        <p>
+          <NoWidowText text={getLocalizedValue(vehicle.overview, locale)} />
+        </p>
         <div className="mini-specs">
           {vehicle.specs.slice(0, 3).map((spec) => (
             <span key={spec.label.es}>{getLocalizedValue(spec.value, locale)}</span>
           ))}
         </div>
-        <WhatsAppCta locale={locale} message={getLocalizedValue(vehicle.whatsappMessage, locale)} variant="outline" />
+        <CardActions locale={locale} whatsappMessage={getLocalizedValue(vehicle.whatsappMessage, locale)} detailHref={href} />
       </div>
     </article>
   );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiCalendar, FiMail, FiPhone, FiSend, FiShield, FiUsers } from "react-icons/fi";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { NoWidowText } from "@/components/typography/NoWidowText";
 import type { Locale } from "@/lib/i18n";
 
 interface ContactFormSectionProps {
@@ -187,9 +188,14 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
         <div className="contact-section__content">
           <p className="eyebrow">{labels.eyebrow}</p>
           <h2>
-            {labels.title} <span>{labels.titleAccent}</span>
+            {labels.title}{" "}
+            <span>
+              <NoWidowText text={labels.titleAccent} />
+            </span>
           </h2>
-          <p>{labels.description}</p>
+          <p>
+            <NoWidowText text={labels.description} lockWords={3} />
+          </p>
 
           <div className="contact-section__methods" aria-label={labels.contactTitle}>
             <h3>{labels.contactTitle}</h3>
@@ -210,13 +216,13 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
           <div className="contact-request-form__grid">
             <label className="contact-field">
               <span>{labels.name}*</span>
-              <input name="name" type="text" autoComplete="name" required aria-describedby="contact-name-hint" />
+              <input name="name" type="text" autoComplete="name" required aria-label={labels.name} aria-describedby="contact-name-hint" />
               <small id="contact-name-hint">{labels.required}</small>
             </label>
 
             <label className="contact-field">
               <span>{labels.emailField}*</span>
-              <input name="email" type="email" autoComplete="email" required aria-describedby="contact-email-hint" />
+              <input name="email" type="email" autoComplete="email" required aria-label={labels.emailField} aria-describedby="contact-email-hint" />
               <small id="contact-email-hint">{labels.required}</small>
             </label>
 
@@ -232,18 +238,18 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
 
               <label className="contact-field contact-field--phone">
                 <span><FiPhone aria-hidden="true" /> {labels.phone}*</span>
-                <input name="phone" type="tel" autoComplete="tel" required />
+                <input name="phone" type="tel" autoComplete="tel" required aria-label={labels.phone} />
               </label>
             </div>
 
             <div className="contact-date-group">
               <label className="contact-field">
                 <span>{labels.from}</span>
-                <input name="fromDate" type="date" min={today} lang={locale} />
+                <input name="fromDate" type="date" min={today} lang={locale} aria-label={labels.from} />
               </label>
               <label className="contact-field">
                 <span>{labels.to}</span>
-                <input name="toDate" type="date" min={today} lang={locale} />
+                <input name="toDate" type="date" min={today} lang={locale} aria-label={labels.to} />
               </label>
             </div>
 
@@ -271,11 +277,11 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
 
           <label className="contact-field contact-field--message">
             <span>{labels.message}</span>
-            <textarea name="message" rows={5} />
+            <textarea name="message" rows={5} aria-label={labels.message} />
           </label>
 
           <label className="contact-consent">
-            <input type="checkbox" required checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
+            <input type="checkbox" required checked={accepted} aria-label={labels.privacy} onChange={(event) => setAccepted(event.target.checked)} />
             <span><FiShield aria-hidden="true" /> {labels.privacy}</span>
           </label>
 

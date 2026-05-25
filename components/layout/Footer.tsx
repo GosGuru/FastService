@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
+import { NoWidowText } from "@/components/typography/NoWidowText";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
 import { servicePages } from "@/data/services";
@@ -22,7 +23,9 @@ export function Footer({ locale }: FooterProps) {
           <Link href={`/${locale}`} className="brand brand--footer" aria-label="Fast Services – Home">
             <span className="brand__logo" aria-hidden="true" />
           </Link>
-          <p className="site-footer__tagline">{locale === "es" ? "Ibiza lifestyle management para mar, movilidad y experiencias." : "Ibiza lifestyle management for sea, mobility and experiences."}</p>
+          <p className="site-footer__tagline">
+            <NoWidowText text={locale === "es" ? "Ibiza lifestyle management para mar, movilidad y experiencias." : "Ibiza lifestyle management for sea, mobility and experiences."} />
+          </p>
         </div>
         <div>
           <h2>{labels.services}</h2>

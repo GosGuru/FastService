@@ -1,5 +1,6 @@
-import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
+import { CardActions } from "@/components/cards/CardActions";
 import { ImageCarousel } from "@/components/media/ImageCarousel";
+import { NoWidowText } from "@/components/typography/NoWidowText";
 import { getWaterToyPath } from "@/lib/routes";
 import { getLocalizedSlug, getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
 import type { WaterToy } from "@/types/content";
@@ -19,8 +20,10 @@ export function WaterToyCard({ toy, locale, sectionSlug }: WaterToyCardProps) {
       <div className="water-toy-card__body">
         <span className="availability-pill">{uiLabels[locale].noPrices}</span>
         <h2>{getLocalizedValue(toy.name, locale)}</h2>
-        <p>{getLocalizedValue(toy.description, locale)}</p>
-        <WhatsAppCta locale={locale} message={getLocalizedValue(toy.whatsappMessage, locale)} variant="outline" />
+        <p>
+          <NoWidowText text={getLocalizedValue(toy.description, locale)} />
+        </p>
+        <CardActions locale={locale} whatsappMessage={getLocalizedValue(toy.whatsappMessage, locale)} detailHref={href} />
       </div>
     </article>
   );

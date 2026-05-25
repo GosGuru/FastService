@@ -5,10 +5,12 @@ import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { HomeHeroExperience } from "@/components/sections/HomeHeroExperience";
 import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
+import { NoWidowAccent, NoWidowText } from "@/components/typography/NoWidowText";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
 import { securityServices, selfDriveVehicles } from "@/data/serviceOptions";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
+import { getServiceSectionSlug } from "@/lib/routes";
 import type { Boat, BoatCollection, BoatCollectionId, ServicePage, Vehicle, WaterToy } from "@/types/content";
 
 interface HomeSectionsProps {
@@ -17,34 +19,6 @@ interface HomeSectionsProps {
 
 export function HomeHero({ locale }: HomeSectionsProps) {
   return <HomeHeroExperience locale={locale} />;
-}
-
-function NoWidowAccent({ text, accent }: { text: string; accent: string }) {
-  const words = text.trim().split(/\s+/);
-  const lastWord = words.pop() ?? "";
-  const prefix = words.join(" ");
-
-  return (
-    <>
-      {prefix ? `${prefix} ` : null}
-      <span className="home-heading-lock">
-        {lastWord}&nbsp;<em>{accent}</em>
-      </span>
-    </>
-  );
-}
-
-function NoWidowText({ text, lockWords = 2 }: { text: string; lockWords?: number }) {
-  const words = text.trim().split(/\s+/);
-  const lockedWords = words.splice(Math.max(0, words.length - lockWords));
-  const prefix = words.join(" ");
-
-  return (
-    <>
-      {prefix ? `${prefix} ` : null}
-      <span className="home-heading-lock">{lockedWords.join("\u00a0")}</span>
-    </>
-  );
 }
 
 const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: string; first: string; second: string; cta: string; message: string }> = {
@@ -340,21 +314,32 @@ export function WaterToysSection({ locale, servicePages, waterToys }: HomeSectio
 }
 
 export function SecuritySection({ locale }: HomeSectionsProps) {
+  const securitySlug = getServiceSectionSlug("security", locale);
+
   return (
     <section className="section section--soft" id="seguridad">
       <div className="container">
         <div className="section-heading section-heading--center">
           <p className="eyebrow">4. {locale === "es" ? "Seguridad" : "Security"}</p>
-          <h2>{locale === "es" ? "Seguridad privada, escolta y acompañamiento" : "Private security, escort and accompaniment"}</h2>
+          <h2>
+            <NoWidowText
+              text={locale === "es" ? "Seguridad privada, escolta y acompañamiento" : "Private security, escort and accompaniment"}
+              lockWords={2}
+            />
+          </h2>
           <p>
-            {locale === "es"
-              ? "Protección de bienes en villas, escolta diurna y cobertura nocturna o clubbing coordinada de forma discreta."
-              : "Asset protection for villas, daytime escort and discreet night or clubbing coverage."}
+            <NoWidowText
+              text={
+                locale === "es"
+                  ? "Protección de bienes en villas, escolta diurna y cobertura nocturna o clubbing coordinada de forma discreta."
+                  : "Asset protection for villas, daytime escort and discreet night or clubbing coverage."
+              }
+            />
           </p>
         </div>
         <div className="content-grid content-grid--three">
           {securityServices.map((service) => (
-            <ServiceOptionCard option={service} locale={locale} key={service.id} />
+            <ServiceOptionCard option={service} locale={locale} detailHref={`/${locale}/${securitySlug}#${service.id}`} key={service.id} />
           ))}
         </div>
       </div>
@@ -363,6 +348,8 @@ export function SecuritySection({ locale }: HomeSectionsProps) {
 }
 
 export function SelfDriveVehiclesSection({ locale }: HomeSectionsProps) {
+  const selfDriveSlug = getServiceSectionSlug("self-drive", locale);
+
   return (
     <section className="section" id="alquiler-vehiculos-sin-conductor">
       <div className="container">
@@ -371,18 +358,23 @@ export function SelfDriveVehiclesSection({ locale }: HomeSectionsProps) {
           <h2>
             <NoWidowText
               text={locale === "es" ? "Tres opciones para moverte a tu ritmo" : "Three options to move at your own pace"}
-              lockWords={locale === "es" ? 3 : 2}
+              lockWords={2}
             />
           </h2>
           <p>
-            {locale === "es"
-              ? "Mismo flujo que juguetes náuticos: sin precios publicados, consulta por WhatsApp y confirmación según fechas, entrega y disponibilidad."
-              : "Same flow as water toys: no published prices, WhatsApp request and confirmation based on dates, delivery and availability."}
+            <NoWidowText
+              text={
+                locale === "es"
+                  ? "Mismo flujo que juguetes náuticos: sin precios publicados, consulta por WhatsApp y confirmación según fechas, entrega y disponibilidad."
+                  : "Same flow as water toys: no published prices, WhatsApp request and confirmation based on dates, delivery and availability."
+              }
+              lockWords={3}
+            />
           </p>
         </div>
         <div className="content-grid content-grid--three">
           {selfDriveVehicles.map((vehicle) => (
-            <ServiceOptionCard option={vehicle} locale={locale} key={vehicle.id} />
+            <ServiceOptionCard option={vehicle} locale={locale} detailHref={`/${locale}/${selfDriveSlug}#${vehicle.id}`} key={vehicle.id} />
           ))}
         </div>
       </div>

@@ -1605,20 +1605,23 @@ button {
   margin-bottom: 46px;
 }
 
-.home-section-heading h2 span:not(.home-heading-lock),
-.home-intro__headline h2 span:not(.home-heading-lock) {
+.home-section-heading h2 span:not(.home-heading-lock):not(.no-widow-lock),
+.home-intro__headline h2 span:not(.home-heading-lock):not(.no-widow-lock) {
   display: block;
   font-style: italic;
   color: var(--color-text);
 }
 
-.home-heading-lock {
+.home-heading-lock,
+.no-widow-lock {
   display: inline-block;
   white-space: nowrap;
 }
 
 .home-section-heading h2 .home-heading-lock em,
-.home-intro__headline h2 .home-heading-lock em {
+.home-intro__headline h2 .home-heading-lock em,
+.home-section-heading h2 .no-widow-lock em,
+.home-intro__headline h2 .no-widow-lock em {
   font-style: italic;
   color: var(--color-text);
 }
@@ -1816,6 +1819,7 @@ button {
 .content-grid {
   display: grid;
   gap: 28px;
+  align-items: stretch;
 }
 
 .content-grid--three {
@@ -1892,7 +1896,7 @@ button {
   color: var(--color-text);
 }
 
-.contact-section__content h2 span {
+.contact-section__content h2 > span {
   display: block;
   color: var(--color-accent);
   font-style: italic;
@@ -2726,15 +2730,18 @@ button {
   color: #141414;
 }
 
-.boat-card__actions {
+.boat-card__actions,
+.catalog-card-actions {
   display: flex;
   flex-direction: row;
   gap: 8px;
   margin-top: auto;
   padding-top: 20px;
+  width: 100%;
 }
 
-.boat-card__btn {
+.boat-card__btn,
+.catalog-card-actions__btn {
   flex: 1 1 0;
   display: flex;
   align-items: center;
@@ -2753,28 +2760,47 @@ button {
   text-align: center;
 }
 
-.boat-card__btn--detail {
+.boat-card__btn--detail,
+.catalog-card-actions__btn--detail {
   background: #050505;
   color: #fff;
 }
 
 .boat-card__btn--detail:hover,
-.boat-card__btn--detail:focus-visible {
+.boat-card__btn--detail:focus-visible,
+.catalog-card-actions__btn--detail:hover,
+.catalog-card-actions__btn--detail:focus-visible {
   background: #000;
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgb(20 20 20 / 18%);
 }
 
-.boat-card__btn--wa {
+.boat-card__btn--wa,
+.catalog-card-actions__btn--wa {
   background: #25d366;
   color: #fff;
 }
 
 .boat-card__btn--wa:hover,
-.boat-card__btn--wa:focus-visible {
+.boat-card__btn--wa:focus-visible,
+.catalog-card-actions__btn--wa:hover,
+.catalog-card-actions__btn--wa:focus-visible {
   background: #128c7e;
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgb(37 211 102 / 25%);
+}
+
+.water-toy-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.water-toy-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .service-option-card {
@@ -2790,10 +2816,27 @@ button {
   align-items: flex-start;
 }
 
-.service-option-card__body .whatsapp-cta {
-  width: 100%;
-  margin-top: auto;
-  justify-content: center;
+.service-option-card__body h2 {
+  min-height: 2.5em;
+}
+
+.service-option-card__body p,
+.water-toy-card__body p,
+.vehicle-card__body p {
+  text-wrap: pretty;
+}
+
+.vehicle-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vehicle-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -5694,11 +5737,13 @@ button {
     font-size: 12px;
   }
 
-  .boat-card__actions {
+  .boat-card__actions,
+  .catalog-card-actions {
     padding-top: 16px;
   }
 
-  .boat-card__btn {
+  .boat-card__btn,
+  .catalog-card-actions__btn {
     min-height: 44px;
     font-size: 10px;
   }
