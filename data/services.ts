@@ -62,6 +62,66 @@ export const servicePages: ServicePage[] = [
     }
   },
   {
+    id: "service-security",
+    kind: "service",
+    serviceId: "security",
+    status: "published",
+    slugsByLocale: { es: "seguridad", en: "security", de: "sicherheit", nl: "beveiliging" },
+    title: { es: "Seguridad", en: "Security", de: "Sicherheit", nl: "Beveiliging" },
+    eyebrow: { es: "Protección privada", en: "Private protection", de: "Privater Schutz", nl: "Privebeveiliging" },
+    description: {
+      es: "Seguridad y protección para villas, escolta diurna y acompañamiento nocturno o clubbing con coordinación discreta en Ibiza.",
+      en: "Security and protection for villas, daytime escort and discreet night or clubbing accompaniment in Ibiza."
+    },
+    image: {
+      src: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80",
+      alt: { es: "Villa privada con servicio de seguridad", en: "Private villa with security service" },
+      source: "unsplash"
+    },
+    seoTitle: { es: "Seguridad privada y escoltas en Ibiza", en: "Private security and escorts in Ibiza" },
+    seoDescription: {
+      es: "Seguridad para villas, escolta diurna y acompañamiento nocturno o clubbing en Ibiza bajo consulta por WhatsApp.",
+      en: "Villa security, daytime escort and nightlife accompaniment in Ibiza by WhatsApp request."
+    },
+    publishedAt: "2026-05-25",
+    updatedAt: "2026-05-25",
+    schemaType: "Service",
+    whatsappMessage: {
+      es: "Hola, quiero consultar servicios de seguridad privada y escolta en Ibiza.",
+      en: "Hello, I would like to check private security and escort services in Ibiza."
+    }
+  },
+  {
+    id: "service-self-drive",
+    kind: "service",
+    serviceId: "self-drive",
+    status: "published",
+    slugsByLocale: { es: "alquiler-vehiculos-sin-conductor", en: "self-drive-car-rental", de: "mietwagen-ohne-fahrer", nl: "auto-huren-zonder-chauffeur" },
+    title: { es: "Alquiler vehículos sin conductor", en: "Self-drive vehicle rental", de: "Mietwagen ohne Fahrer", nl: "Auto huren zonder chauffeur" },
+    eyebrow: { es: "Autonomía en la isla", en: "Island autonomy", de: "Flexibel auf der Insel", nl: "Vrij rijden op het eiland" },
+    description: {
+      es: "Tres opciones de vehículos sin conductor para moverte por Ibiza a tu ritmo. Confirmamos disponibilidad, entrega y condiciones por WhatsApp.",
+      en: "Three self-drive vehicle options to move around Ibiza at your own pace. We confirm availability, delivery and terms by WhatsApp."
+    },
+    image: {
+      src: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80",
+      alt: { es: "Vehículo de alquiler sin conductor en carretera", en: "Self-drive rental vehicle on the road" },
+      source: "unsplash"
+    },
+    seoTitle: { es: "Alquiler de vehículos sin conductor en Ibiza", en: "Self-drive car rental in Ibiza" },
+    seoDescription: {
+      es: "Alquiler de vehículos sin conductor en Ibiza bajo consulta por WhatsApp, sin precios publicados.",
+      en: "Self-drive vehicle rental in Ibiza available on WhatsApp request, with no published prices."
+    },
+    publishedAt: "2026-05-25",
+    updatedAt: "2026-05-25",
+    schemaType: "Service",
+    whatsappMessage: {
+      es: "Hola, quiero consultar alquiler de vehículos sin conductor en Ibiza.",
+      en: "Hello, I would like to check self-drive vehicle rental in Ibiza."
+    }
+  },
+  {
     id: "service-contact",
     kind: "service",
     serviceId: "contact",

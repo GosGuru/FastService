@@ -44,7 +44,7 @@ export function BoatCard({ boat, locale, href }: BoatCardProps) {
   return (
     <article className="boat-card">
       <Link href={cardHref} className="boat-card__image" aria-label={`${labels.details}: ${boat.name}`}>
-        <MediaImage asset={boat.image} locale={locale} sizes="(max-width: 760px) 88vw, (max-width: 1180px) 42vw, 25vw" />
+        <MediaImage asset={boat.image} locale={locale} sizes="(max-width: 760px) 88vw, (max-width: 1180px) 46vw, 32vw" />
         <span className="boat-card__image-link">{labels.details}</span>
       </Link>
 
@@ -69,13 +69,13 @@ export function BoatCard({ boat, locale, href }: BoatCardProps) {
       </div>
 
       <div className="boat-card__actions">
-        <Link href={cardHref} className="boat-card__btn boat-card__btn--detail">
-          <span>{labels.view}</span>
-          <FiArrowRight aria-hidden="true" />
-        </Link>
         <Link href={waHref} className="boat-card__btn boat-card__btn--wa" target="_blank" rel="noreferrer">
           <FaWhatsapp aria-hidden="true" />
           <span>{labels.availability}</span>
+        </Link>
+        <Link href={cardHref} className="boat-card__btn boat-card__btn--detail">
+          <span>{labels.view}</span>
+          <FiArrowRight aria-hidden="true" />
         </Link>
       </div>
     </article>

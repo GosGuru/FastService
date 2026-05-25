@@ -10,10 +10,11 @@ import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentS
 import { getLocalizedSlug, getLocalizedValue, locales, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
-import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, SeoPage, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
+import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, RichTextByLocale, SeoPage, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
-type GenericContentItem = BoatCollection | ServicePage | Vehicle | WaterToy;
+type GenericContentItem = BoatCollection;
+type ManagedDetailsPatch = Partial<Pick<Vehicle, "image" | "gallery" | "specs" | "slugsByLocale" | "seoTitle" | "seoDescription" | "priceLabel" | "marina" | "richDescription" | "amenities" | "whatsappMessage">>;
 
 type FeedbackTone = "info" | "success" | "error";
 
@@ -79,6 +80,50 @@ function getDirectLocalizedValue(value: LocalizedText, locale: Locale) {
   return String(value[locale] ?? "").trim();
 }
 
+function getPrimaryImage(item: { image: MediaAsset; gallery?: MediaAsset[] }) {
+  return item.image.src.trim() ? item.image : item.gallery?.find((asset) => asset.src.trim());
+}
+
+function validateLocalizedSlug(
+  errors: string[],
+  slugKeys: Set<string>,
+  label: string,
+  slugsByLocale: LocalizedText,
+  scope: string
+) {
+  requiredSaveLocales.forEach((saveLocale) => {
+    const slug = getDirectLocalizedValue(slugsByLocale, saveLocale);
+
+    if (!slug) {
+      errors.push(`${label}: completa el slug ${saveLocale.toUpperCase()}.`);
+      return;
+    }
+
+    const slugKey = `${saveLocale}:${scope}:${slug.toLowerCase()}`;
+
+    if (slugKeys.has(slugKey)) {
+      errors.push(`${label}: el slug ${saveLocale.toUpperCase()} ya existe en esta seccion.`);
+    }
+
+    slugKeys.add(slugKey);
+  });
+}
+
+function validatePrimaryImage(errors: string[], label: string, item: { image: MediaAsset; gallery?: MediaAsset[] }) {
+  const primaryImage = getPrimaryImage(item);
+
+  if (!primaryImage?.src.trim()) {
+    errors.push(`${label}: sube o pega una imagen principal.`);
+    return;
+  }
+
+  requiredSaveLocales.forEach((saveLocale) => {
+    if (!getDirectLocalizedValue(primaryImage.alt, saveLocale)) {
+      errors.push(`${label}: completa el alt ${saveLocale.toUpperCase()} de la imagen principal.`);
+    }
+  });
+}
+
 function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
   const errors: string[] = [];
   const boatSlugKeys = new Set<string>();
@@ -94,35 +139,32 @@ function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
       errors.push(`${label}: selecciona una coleccion valida.`);
     }
 
-    requiredSaveLocales.forEach((saveLocale) => {
-      const slug = getDirectLocalizedValue(boat.slugsByLocale, saveLocale);
+    validateLocalizedSlug(errors, boatSlugKeys, label, boat.slugsByLocale, boat.collectionId);
+    validatePrimaryImage(errors, label, boat);
+  });
 
-      if (!slug) {
-        errors.push(`${label}: completa el slug ${saveLocale.toUpperCase()}.`);
-        return;
-      }
+  const vehicleSlugKeys = new Set<string>();
+  snapshot.content.vehicles.forEach((vehicle, index) => {
+    const label = vehicle.name.trim() || vehicle.id || `Transfer ${index + 1}`;
 
-      const slugKey = `${saveLocale}:${boat.collectionId}:${slug.toLowerCase()}`;
+    validateLocalizedSlug(errors, vehicleSlugKeys, label, vehicle.slugsByLocale, "vehicles");
+    validatePrimaryImage(errors, label, vehicle);
+  });
 
-      if (boatSlugKeys.has(slugKey)) {
-        errors.push(`${label}: el slug ${saveLocale.toUpperCase()} ya existe dentro de esta coleccion.`);
-      }
+  const toySlugKeys = new Set<string>();
+  snapshot.content.waterToys.forEach((toy, index) => {
+    const label = getLocalizedValue(toy.name, "es").trim() || toy.id || `Juguete ${index + 1}`;
 
-      boatSlugKeys.add(slugKey);
-    });
+    validateLocalizedSlug(errors, toySlugKeys, label, toy.slugsByLocale, "waterToys");
+    validatePrimaryImage(errors, label, toy);
+  });
 
-    const primaryImage = boat.image.src.trim() ? boat.image : boat.gallery.find((asset) => asset.src.trim());
+  const serviceSlugKeys = new Set<string>();
+  snapshot.content.servicePages.forEach((page, index) => {
+    const label = getLocalizedValue(page.title, "es").trim() || page.id || `Servicio ${index + 1}`;
 
-    if (!primaryImage?.src.trim()) {
-      errors.push(`${label}: sube o pega una imagen principal.`);
-      return;
-    }
-
-    requiredSaveLocales.forEach((saveLocale) => {
-      if (!getDirectLocalizedValue(primaryImage.alt, saveLocale)) {
-        errors.push(`${label}: completa el alt ${saveLocale.toUpperCase()} de la imagen principal.`);
-      }
-    });
+    validateLocalizedSlug(errors, serviceSlugKeys, label, page.slugsByLocale, "servicePages");
+    validatePrimaryImage(errors, label, page);
   });
 
   if (errors.length <= 8) return errors;
@@ -158,6 +200,42 @@ function localized(value: string): LocalizedText {
   return { es: value, en: value, de: value, nl: value };
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function richTextFromPlainText(value: string) {
+  const text = value.trim();
+
+  return {
+    html: text ? `<p>${escapeHtml(text)}</p>` : "",
+    text
+  };
+}
+
+function getRichTextValue(value: RichTextByLocale | undefined, locale: Locale, fallback?: LocalizedText) {
+  return value?.[locale] ?? value?.es ?? (fallback ? richTextFromPlainText(getLocalizedValue(fallback, locale)) : { html: "", text: "" });
+}
+
+async function uploadRichTextImage(file: File, prefix: string): Promise<string> {
+  const supabase = createSupabaseBrowserClient();
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const storagePath = `${new Date().getFullYear()}/${createId(prefix)}.${extension}`;
+  const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
+    cacheControl: "31536000",
+    contentType: file.type || undefined,
+    upsert: false
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
+  return data.publicUrl;
+}
+
 function getItemTitle(item: AdminItem, locale: Locale) {
   if ("name" in item && typeof item.name === "string") return item.name;
   if ("name" in item && typeof item.name === "object") return getLocalizedValue(item.name, locale);
@@ -173,7 +251,7 @@ function getItemDescription(item: AdminItem, locale: Locale) {
 }
 
 function isGenericContentItem(item: AdminItem): item is GenericContentItem {
-  return "kind" in item && item.kind !== "boat" && item.kind !== "seoPage";
+  return "kind" in item && item.kind === "boatCollection";
 }
 
 function touch<T extends AdminItem>(item: T): T {
@@ -184,13 +262,13 @@ function touch<T extends AdminItem>(item: T): T {
   return item;
 }
 
-function getServicePageHref(snapshot: AdminContentSnapshot, serviceId: "boats" | "transfers" | "water-toys", locale: Locale) {
+function getServicePageHref(snapshot: AdminContentSnapshot, serviceId: FaqItem["serviceId"], locale: Locale) {
   const page = snapshot.content.servicePages.find((item) => item.serviceId === serviceId);
   return page ? `/${locale}/${getLocalizedSlug(page.slugsByLocale, locale)}` : null;
 }
 
-function isPublicServiceId(value: unknown): value is "boats" | "transfers" | "water-toys" {
-  return value === "boats" || value === "transfers" || value === "water-toys";
+function isPublicServiceId(value: unknown): value is NonNullable<FaqItem["serviceId"]> {
+  return value === "boats" || value === "transfers" || value === "water-toys" || value === "security" || value === "self-drive";
 }
 
 function getVisitTarget(activeSection: AdminContentKey, item: AdminItem, snapshot: AdminContentSnapshot, locale: Locale) {
@@ -338,6 +416,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       ...snapshot.content.boats.flatMap((item) => [item.image, ...item.gallery]),
       ...snapshot.content.vehicles.flatMap((item) => [item.image, ...item.gallery]),
       ...snapshot.content.waterToys.flatMap((item) => [item.image, ...item.gallery]),
+      ...snapshot.content.servicePages.flatMap((item) => [item.image, ...(item.gallery ?? [])]),
       ...seoPages.flatMap((item) => [item.image, ...item.gallery])
     ].length;
 
@@ -660,6 +739,18 @@ function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: 
     return <BoatEditor boat={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }
 
+  if (activeSection === "vehicles" && "kind" in item && item.kind === "vehicle") {
+    return <VehicleEditor vehicle={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
+  }
+
+  if (activeSection === "waterToys" && "kind" in item && item.kind === "waterToy") {
+    return <WaterToyEditor toy={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
+  }
+
+  if (activeSection === "servicePages" && "kind" in item && item.kind === "service") {
+    return <ServicePageEditor page={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
+  }
+
   if (activeSection === "seoPages" && "kind" in item && item.kind === "seoPage") {
     return <SeoPageEditor page={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }
@@ -728,6 +819,157 @@ function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; on
   );
 }
 
+function ManagedDetailsEditor({
+  itemId,
+  itemLabel,
+  locale,
+  image,
+  gallery,
+  specs,
+  slugsByLocale,
+  seoTitle,
+  seoDescription,
+  priceLabel,
+  marina,
+  richDescription,
+  richFallback,
+  amenities,
+  whatsappMessage,
+  uploadPrefix,
+  onChange
+}: {
+  itemId: string;
+  itemLabel: string;
+  locale: Locale;
+  image: MediaAsset;
+  gallery?: MediaAsset[];
+  specs?: SpecItem[];
+  slugsByLocale: LocalizedText;
+  seoTitle: LocalizedText;
+  seoDescription: LocalizedText;
+  priceLabel?: LocalizedText;
+  marina?: LocalizedText;
+  richDescription?: RichTextByLocale;
+  richFallback?: LocalizedText;
+  amenities?: Array<string | LocalizedText>;
+  whatsappMessage: LocalizedText;
+  uploadPrefix: string;
+  onChange: (patch: ManagedDetailsPatch) => void;
+}) {
+  const richValue = getRichTextValue(richDescription, locale, richFallback);
+
+  return (
+    <>
+      <MediaEditor image={image} gallery={gallery ?? []} locale={locale} itemLabel={itemLabel} onChange={(nextImage, nextGallery) => onChange({ image: nextImage, gallery: nextGallery })} />
+      <LocalizedTextEditor label="Slug por idioma" value={slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
+      <LocalizedTextEditor label="Título SEO" value={seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value })} />
+      <LocalizedTextEditor label="Descripción SEO" value={seoDescription} locale={locale} multiline onChange={(value) => onChange({ seoDescription: value })} />
+      <LocalizedTextEditor label="Precio / disponibilidad" value={priceLabel ?? localized("")} locale={locale} onChange={(value) => onChange({ priceLabel: value })} />
+      <LocalizedTextEditor label="Puerto / ubicación de salida" value={marina ?? localized("")} locale={locale} onChange={(value) => onChange({ marina: value })} />
+      <SpecsEditor specs={specs ?? []} locale={locale} onChange={(nextSpecs) => onChange({ specs: nextSpecs })} />
+      <RichTextEditor
+        id={`rich-${itemId}-${locale}`}
+        label={`Descripción completa (${locale.toUpperCase()})`}
+        value={richValue.html}
+        onChange={(html, text) => onChange({ richDescription: { ...richDescription, [locale]: { html, text } } })}
+        onUploadImage={(file) => uploadRichTextImage(file, uploadPrefix)}
+      />
+      <AmenitiesEditor amenities={amenities ?? []} locale={locale} onChange={(items) => onChange({ amenities: items })} />
+      <LocalizedTextEditor label="Mensaje WhatsApp" value={whatsappMessage} locale={locale} multiline onChange={(value) => onChange({ whatsappMessage: value })} />
+    </>
+  );
+}
+
+function VehicleEditor({ vehicle, locale, onChange }: { vehicle: Vehicle; locale: Locale; onChange: (patch: Partial<Vehicle>) => void }) {
+  return (
+    <div className="admin-form">
+      <TextField label="Nombre visible" value={vehicle.name} onChange={(value) => onChange({ name: value })} />
+      <LocalizedTextEditor label="Resumen para tarjetas" value={vehicle.overview} locale={locale} multiline onChange={(value) => onChange({ overview: value })} />
+      <ManagedDetailsEditor
+        itemId={vehicle.id}
+        itemLabel={vehicle.name}
+        locale={locale}
+        image={vehicle.image}
+        gallery={vehicle.gallery}
+        specs={vehicle.specs}
+        slugsByLocale={vehicle.slugsByLocale}
+        seoTitle={vehicle.seoTitle}
+        seoDescription={vehicle.seoDescription}
+        priceLabel={vehicle.priceLabel}
+        marina={vehicle.marina}
+        richDescription={vehicle.richDescription}
+        richFallback={vehicle.overview}
+        amenities={vehicle.amenities ?? vehicle.services}
+        whatsappMessage={vehicle.whatsappMessage}
+        uploadPrefix="vehicle-body"
+        onChange={(patch) => onChange(patch as Partial<Vehicle>)}
+      />
+    </div>
+  );
+}
+
+function WaterToyEditor({ toy, locale, onChange }: { toy: WaterToy; locale: Locale; onChange: (patch: Partial<WaterToy>) => void }) {
+  const itemLabel = getLocalizedValue(toy.name, locale);
+
+  return (
+    <div className="admin-form">
+      <LocalizedTextEditor label="Nombre visible" value={toy.name} locale={locale} onChange={(value) => onChange({ name: value })} />
+      <LocalizedTextEditor label="Resumen para tarjetas" value={toy.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
+      <LocalizedTextEditor label="Texto breve de ficha" value={toy.details} locale={locale} multiline onChange={(value) => onChange({ details: value })} />
+      <ManagedDetailsEditor
+        itemId={toy.id}
+        itemLabel={itemLabel}
+        locale={locale}
+        image={toy.image}
+        gallery={toy.gallery}
+        specs={toy.specs}
+        slugsByLocale={toy.slugsByLocale}
+        seoTitle={toy.seoTitle}
+        seoDescription={toy.seoDescription}
+        priceLabel={toy.priceLabel}
+        marina={toy.marina}
+        richDescription={toy.richDescription}
+        richFallback={toy.details}
+        amenities={toy.amenities}
+        whatsappMessage={toy.whatsappMessage}
+        uploadPrefix="water-toy-body"
+        onChange={(patch) => onChange(patch as Partial<WaterToy>)}
+      />
+    </div>
+  );
+}
+
+function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; locale: Locale; onChange: (patch: Partial<ServicePage>) => void }) {
+  const itemLabel = getLocalizedValue(page.title, locale);
+
+  return (
+    <div className="admin-form">
+      <LocalizedTextEditor label="Título H1" value={page.title} locale={locale} onChange={(value) => onChange({ title: value })} />
+      <LocalizedTextEditor label="Eyebrow" value={page.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
+      <LocalizedTextEditor label="Resumen del hero" value={page.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
+      <ManagedDetailsEditor
+        itemId={page.id}
+        itemLabel={itemLabel}
+        locale={locale}
+        image={page.image}
+        gallery={page.gallery}
+        specs={page.specs}
+        slugsByLocale={page.slugsByLocale}
+        seoTitle={page.seoTitle}
+        seoDescription={page.seoDescription}
+        priceLabel={page.priceLabel}
+        marina={page.marina}
+        richDescription={page.richDescription}
+        richFallback={page.description}
+        amenities={page.amenities}
+        whatsappMessage={page.whatsappMessage}
+        uploadPrefix="service-body"
+        onChange={(patch) => onChange(patch as Partial<ServicePage>)}
+      />
+    </div>
+  );
+}
+
 function SeoPageEditor({ page, locale, onChange }: { page: SeoPage; locale: Locale; onChange: (patch: Partial<SeoPage>) => void }) {
   const richValue = page.body[locale] ?? page.body.es;
 
@@ -778,13 +1020,12 @@ function FaqEditor({ faq, locale, onChange }: { faq: FaqItem; locale: Locale; on
 }
 
 function GenericContentEditor({ item, locale, onChange }: { item: GenericContentItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
-  const title = "title" in item ? item.title : "description" in item ? item.description : undefined;
-
   return (
     <div className="admin-form">
-      {title ? <LocalizedTextEditor label="Texto principal" value={title} locale={locale} multiline onChange={(value) => onChange("title" in item ? { title: value } as Partial<AdminItem> : { description: value } as Partial<AdminItem>)} /> : null}
-      {"seoTitle" in item ? <LocalizedTextEditor label="Título SEO" value={item.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value } as Partial<AdminItem>)} /> : null}
-      {"seoDescription" in item ? <LocalizedTextEditor label="Descripción SEO" value={item.seoDescription} locale={locale} multiline onChange={(value) => onChange({ seoDescription: value } as Partial<AdminItem>)} /> : null}
+      <LocalizedTextEditor label="Título" value={item.title} locale={locale} onChange={(value) => onChange({ title: value } as Partial<AdminItem>)} />
+      <LocalizedTextEditor label="Descripción" value={item.description} locale={locale} multiline onChange={(value) => onChange({ description: value } as Partial<AdminItem>)} />
+      <LocalizedTextEditor label="Título SEO" value={item.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value } as Partial<AdminItem>)} />
+      <LocalizedTextEditor label="Descripción SEO" value={item.seoDescription} locale={locale} multiline onChange={(value) => onChange({ seoDescription: value } as Partial<AdminItem>)} />
     </div>
   );
 }

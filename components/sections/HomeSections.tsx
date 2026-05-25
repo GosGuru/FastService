@@ -4,8 +4,10 @@ import { BoatCard } from "@/components/boats/BoatCard";
 import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { HomeHeroExperience } from "@/components/sections/HomeHeroExperience";
+import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
+import { securityServices, selfDriveVehicles } from "@/data/serviceOptions";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
 import type { Boat, BoatCollection, BoatCollectionId, ServicePage, Vehicle, WaterToy } from "@/types/content";
 
@@ -300,6 +302,52 @@ export function WaterToysSection({ locale, servicePages, waterToys }: HomeSectio
         <div className="content-grid content-grid--three">
           {waterToys.map((toy) => (
             <WaterToyCard toy={toy} locale={locale} sectionSlug={waterToysSectionSlug} key={toy.id} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function SecuritySection({ locale }: HomeSectionsProps) {
+  return (
+    <section className="section section--soft" id="seguridad">
+      <div className="container">
+        <div className="section-heading section-heading--center">
+          <p className="eyebrow">4. {locale === "es" ? "Seguridad" : "Security"}</p>
+          <h2>{locale === "es" ? "Seguridad privada, escolta y acompañamiento" : "Private security, escort and accompaniment"}</h2>
+          <p>
+            {locale === "es"
+              ? "Protección de bienes en villas, escolta diurna y cobertura nocturna o clubbing coordinada de forma discreta."
+              : "Asset protection for villas, daytime escort and discreet night or clubbing coverage."}
+          </p>
+        </div>
+        <div className="content-grid content-grid--three">
+          {securityServices.map((service) => (
+            <ServiceOptionCard option={service} locale={locale} key={service.id} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function SelfDriveVehiclesSection({ locale }: HomeSectionsProps) {
+  return (
+    <section className="section" id="alquiler-vehiculos-sin-conductor">
+      <div className="container">
+        <div className="section-heading">
+          <p className="eyebrow">5. {locale === "es" ? "Alquiler vehículos sin conductor" : "Self-drive vehicle rental"}</p>
+          <h2>{locale === "es" ? "Tres opciones para moverte a tu ritmo" : "Three options to move at your own pace"}</h2>
+          <p>
+            {locale === "es"
+              ? "Mismo flujo que juguetes náuticos: sin precios publicados, consulta por WhatsApp y confirmación según fechas, entrega y disponibilidad."
+              : "Same flow as water toys: no published prices, WhatsApp request and confirmation based on dates, delivery and availability."}
+          </p>
+        </div>
+        <div className="content-grid content-grid--three">
+          {selfDriveVehicles.map((vehicle) => (
+            <ServiceOptionCard option={vehicle} locale={locale} key={vehicle.id} />
           ))}
         </div>
       </div>

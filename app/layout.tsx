@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: "FastServices Ibiza",
     template: "%s | FastServices Ibiza"
   },
-  description: "Ibiza lifestyle management for boats, private transfers and water toys.",
+  description: "Ibiza lifestyle management for boats, private transfers, water toys, security and self-drive vehicles.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://fastservices.example")
 };
 

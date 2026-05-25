@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BoatCollectionSection, FeaturedBoatsSection, HomeHero, HomeIntroSection, TransferSection, WaterToysSection } from "@/components/sections/HomeSections";
+import { BoatCollectionSection, FeaturedBoatsSection, HomeHero, HomeIntroSection, SecuritySection, SelfDriveVehiclesSection, TransferSection, WaterToysSection } from "@/components/sections/HomeSections";
 import { ContactFormSection } from "@/components/sections/ContactFormSection";
 import { buildHomeAlternates, getPublicContent } from "@/lib/content";
 import { assertLocale, siteUrl, type Locale } from "@/lib/i18n";
@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: locale === "es" ? "Ibiza Lifestyle Management" : "Ibiza Lifestyle Management",
     description:
       locale === "es"
-        ? "Barcos, transfers privados y juguetes náuticos coordinados por FastServices Ibiza."
-        : "Boats, private transfers and water toys coordinated by FastServices Ibiza.",
+        ? "Barcos, transfers privados, juguetes náuticos, seguridad y vehículos sin conductor coordinados por FastServices Ibiza."
+        : "Boats, private transfers, water toys, security and self-drive vehicles coordinated by FastServices Ibiza.",
     alternates: {
       canonical: `${siteUrl}/${locale}`,
       languages: buildHomeAlternates()
@@ -38,6 +38,8 @@ export default async function HomePage({ params }: Props) {
       <FeaturedBoatsSection boats={content.boats} locale={locale} />
       <TransferSection servicePages={content.servicePages} vehicles={content.vehicles} locale={locale} />
       <WaterToysSection servicePages={content.servicePages} waterToys={content.waterToys} locale={locale} />
+      <SecuritySection locale={locale} />
+      <SelfDriveVehiclesSection locale={locale} />
       <ContactFormSection locale={locale} />
     </main>
   );

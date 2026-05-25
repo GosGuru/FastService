@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PiBathtub, PiBed, PiRuler, PiUsers } from "react-icons/pi";
 import { BoatGrid } from "@/components/boats/BoatGrid";
 import { DetailGallery } from "@/components/media/DetailGallery";
 import { MediaImage } from "@/components/MediaImage";
@@ -39,6 +40,13 @@ const collectionLabels: Record<string, Record<string, string>> = {
   "yachts-xl": { es: "Yates XL", en: "XL Yachts", de: "XL Yachten", nl: "XL Jachten" },
   yachts: { es: "Yates", en: "Yachts", de: "Yachten", nl: "Jachten" },
   "fast-boats": { es: "Embarcaciones rápidas", en: "Fast Boats", de: "Schnellboote", nl: "Snelle boten" }
+};
+
+const detailSpecIcons = {
+  cabins: PiBed,
+  length: PiRuler,
+  passengers: PiUsers,
+  bathrooms: PiBathtub
 };
 
 const uiCopy: Record<string, Record<string, string>> = {
@@ -97,13 +105,18 @@ export default async function BoatPage({ params }: Props) {
           )}
 
             <div className="boat-detail-hero__specs">
-            {boat.specs.map((spec) => (
-              <span key={spec.label.es}>
-                <strong>{getLocalizedValue(spec.value, locale)}</strong>{" "}
-                {getLocalizedValue(spec.label, locale)}
-              </span>
-            ))}
-          </div>
+              {boat.specs.map((spec) => {
+                const Icon = detailSpecIcons[spec.icon as keyof typeof detailSpecIcons] ?? PiRuler;
+
+                return (
+                  <span key={spec.label.es}>
+                    <Icon aria-hidden="true" />
+                    <strong>{getLocalizedValue(spec.value, locale)}</strong>{" "}
+                    {getLocalizedValue(spec.label, locale)}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>

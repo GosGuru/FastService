@@ -19,6 +19,12 @@ Para activar la base:
 3. Ejecuta el bloque bootstrap del final de `supabase/schema.sql`, cambiando el email por el del admin.
 4. Entra en `/admin/login`, inicia sesion y pulsa `Guardar Supabase` para sembrar el contenido local inicial en `content_items`.
 
+Para agregar las paginas nuevas de `Seguridad` y `Alquiler vehiculos sin conductor` en una base que ya tiene contenido guardado, ejecuta tambien:
+
+```sql
+supabase/add-security-self-drive-services.sql
+```
+
 El frontend lee primero `content_items` publicados desde Supabase. Si la tabla esta vacia o aun no existe, usa el contenido local como fallback para no dejar la web en blanco.
 
 ### Checklist si falla `Guardar Supabase`

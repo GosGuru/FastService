@@ -4,7 +4,7 @@ import { faqs } from "@/data/faqs";
 import { servicePages } from "@/data/services";
 import { vehicles } from "@/data/vehicles";
 import { waterToys } from "@/data/waterToys";
-import type { Boat, BoatCollection, FaqItem, SeoPage, ServicePage, Vehicle, WaterToy } from "@/types/content";
+import type { Boat, BoatCollection, FaqItem, LocalizedText, RichTextByLocale, SeoPage, ServicePage, SpecItem, Vehicle, WaterToy } from "@/types/content";
 
 export type AdminContentKey = keyof AdminContentSnapshot["content"];
 
@@ -89,6 +89,67 @@ function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function localized(value: string): LocalizedText {
+  return { es: value, en: value, de: value, nl: value };
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function richTextFromLocalized(value: LocalizedText): RichTextByLocale {
+  const fallback = value.es || value.en || "";
+  const entries = (["es", "en", "de", "nl"] as const).map((locale) => {
+    const text = value[locale] || fallback;
+
+    return [locale, { html: text ? `<p>${escapeHtml(text)}</p>` : "", text }];
+  });
+
+  return Object.fromEntries(entries) as RichTextByLocale;
+}
+
+function normalizeSpecs(specs: SpecItem[] | undefined): SpecItem[] {
+  return Array.isArray(specs) ? specs : [];
+}
+
+function normalizeVehicle(vehicle: Vehicle): Vehicle {
+  return {
+    ...vehicle,
+    gallery: Array.isArray(vehicle.gallery) ? vehicle.gallery : [],
+    specs: normalizeSpecs(vehicle.specs),
+    richDescription: vehicle.richDescription ?? richTextFromLocalized(vehicle.overview),
+    amenities: vehicle.amenities ?? vehicle.services ?? [],
+    marina: vehicle.marina ?? localized("")
+  };
+}
+
+function normalizeWaterToy(toy: WaterToy): WaterToy {
+  return {
+    ...toy,
+    gallery: Array.isArray(toy.gallery) ? toy.gallery : [],
+    specs: normalizeSpecs(toy.specs),
+    richDescription: toy.richDescription ?? richTextFromLocalized(toy.details),
+    amenities: toy.amenities ?? [],
+    marina: toy.marina ?? localized("")
+  };
+}
+
+function normalizeServicePage(page: ServicePage): ServicePage {
+  return {
+    ...page,
+    gallery: Array.isArray(page.gallery) ? page.gallery : [],
+    specs: normalizeSpecs(page.specs),
+    richDescription: page.richDescription,
+    amenities: page.amenities ?? [],
+    marina: page.marina ?? localized("")
+  };
+}
+
 export function normalizeAdminContentSnapshot(snapshot: AdminContentSnapshot): AdminContentSnapshot {
   const normalized = clone(snapshot);
   const collectionSlugsById = new Map(normalized.content.boatCollections.map((collection) => [collection.collectionId, collection.slugsByLocale]));
@@ -106,6 +167,9 @@ export function normalizeAdminContentSnapshot(snapshot: AdminContentSnapshot): A
     ...boat,
     categorySlugsByLocale: collectionSlugsById.get(boat.collectionId) ?? boat.categorySlugsByLocale
   }));
+  normalized.content.vehicles = normalized.content.vehicles.map(normalizeVehicle);
+  normalized.content.waterToys = normalized.content.waterToys.map(normalizeWaterToy);
+  normalized.content.servicePages = normalized.content.servicePages.map(normalizeServicePage);
 
   return normalized;
 }

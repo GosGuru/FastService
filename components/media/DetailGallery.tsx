@@ -99,7 +99,7 @@ export function DetailGallery({ assets, locale, title }: DetailGalleryProps) {
   return (
     <>
       <section className="boat-detail-gallery" aria-labelledby="boat-detail-gallery-title">
-        <div className="container">
+        <div className="container boat-detail-gallery__header">
           <h2 id="boat-detail-gallery-title" className="detail-section-title">{title}</h2>
         </div>
 

@@ -10,11 +10,39 @@ interface HomeHeroExperienceProps {
 }
 
 type SoundPreference = "auto" | "on" | "off";
+type ExplicitSoundPreference = Exclude<SoundPreference, "auto">;
 
 const heroPoster = "/videos/ibiza-boats-header-poster.jpg";
 const heroMobileVideoSrc = "/videos/ibiza-boats-header.mobile.mp4";
 const heroVideoSrc = "/videos/ibiza-boats-header.web.mp4";
 const heroVolume = 0.26;
+const soundPreferenceStorageKey = "fastservice.hero.soundPreference";
+
+const readStoredSoundPreference = (): SoundPreference => {
+  if (typeof window === "undefined") {
+    return "auto";
+  }
+
+  try {
+    const storedPreference = window.localStorage.getItem(soundPreferenceStorageKey);
+
+    if (storedPreference === "on" || storedPreference === "off") {
+      return storedPreference;
+    }
+  } catch {
+    return "auto";
+  }
+
+  return "auto";
+};
+
+const saveSoundPreference = (preference: ExplicitSoundPreference) => {
+  try {
+    window.localStorage.setItem(soundPreferenceStorageKey, preference);
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
+  }
+};
 
 const soundLabels: Record<Locale, { enable: string; disable: string; mutedState: string; enabledState: string }> = {
   es: { enable: "Activar música", disable: "Silenciar música", mutedState: "Música silenciada", enabledState: "Música activada" },
@@ -60,6 +88,8 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    soundPreferenceRef.current = readStoredSoundPreference();
 
     let active = true;
     let resumeAfterVisibilityChange = false;
@@ -159,14 +189,17 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
     video.volume = heroVolume;
 
     if (video.muted || !soundEnabled) {
+      const previousPreference = soundPreferenceRef.current;
       soundPreferenceRef.current = "on";
       video.muted = false;
 
       try {
         await video.play();
+        saveSoundPreference("on");
         setSoundEnabled(true);
         setSoundBlocked(false);
       } catch {
+        soundPreferenceRef.current = previousPreference;
         video.muted = true;
         setSoundEnabled(false);
         setSoundBlocked(true);
@@ -176,6 +209,7 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
     }
 
     soundPreferenceRef.current = "off";
+    saveSoundPreference("off");
     video.muted = true;
     setSoundEnabled(false);
     setSoundBlocked(false);
@@ -191,12 +225,12 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
         <video
           ref={videoRef}
           className="hero-section__video"
-          autoPlay
           loop
           playsInline
           preload="metadata"
           poster={heroPoster}
           aria-hidden="true"
+          tabIndex={-1}
         >
           <source src={heroMobileVideoSrc} type="video/mp4" media="(max-width: 768px)" />
           <source src={heroVideoSrc} type="video/mp4" />

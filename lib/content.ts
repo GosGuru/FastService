@@ -5,6 +5,7 @@ import { servicePages } from "@/data/services";
 import { vehicles } from "@/data/vehicles";
 import { waterToys } from "@/data/waterToys";
 import { getLocalizedSlug, getLocalizedValue, locales, siteUrl, type Locale } from "@/lib/i18n";
+import type { AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { loadPublicContentSnapshot } from "@/lib/supabase/content";
 import type { BoatCollectionId, LocalizedText } from "@/types/content";
 
@@ -15,7 +16,19 @@ export function t(value: LocalizedText, locale: Locale) {
 export async function getPublicContent() {
   const result = await loadPublicContentSnapshot();
 
-  return result.snapshot.content;
+  return withStaticServicePages(result.snapshot.content);
+}
+
+function withStaticServicePages(content: AdminContentSnapshot["content"]) {
+  const existingServicePageIds = new Set(content.servicePages.map((page) => page.id));
+  const missingServicePages = servicePages.filter((page) => !existingServicePageIds.has(page.id));
+
+  if (!missingServicePages.length) return content;
+
+  return {
+    ...content,
+    servicePages: [...content.servicePages, ...missingServicePages]
+  };
 }
 
 export async function getBoatCollectionBySlug(locale: Locale, slug: string) {

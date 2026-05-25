@@ -6,7 +6,7 @@ export type PublicationStatus = "published";
 
 export type ContentVisibility = "listed" | "hidden";
 
-export type ServiceId = "boats" | "transfers" | "water-toys";
+export type ServiceId = "boats" | "transfers" | "water-toys" | "security" | "self-drive";
 
 export type BoatCollectionId = "yachts-xl" | "yachts" | "fast-boats";
 
@@ -51,6 +51,8 @@ export interface RichTextContent {
   text?: string;
 }
 
+export type RichTextByLocale = Partial<Record<Locale, RichTextContent>>;
+
 export interface SpecItem {
   label: LocalizedText;
   value: LocalizedText;
@@ -84,14 +86,23 @@ export interface Boat extends BaseContent {
   source: "dropbox" | "mock";
   whatsappMessage: LocalizedText;
   /** Rich-text description per locale (same shape as SeoPage.body) */
-  description?: Partial<Record<Locale, RichTextContent>>;
+  description?: RichTextByLocale;
   /** On-board amenities / equipment. Strings are accepted for legacy Supabase payloads. */
   amenities?: Array<string | LocalizedText>;
   /** Home marina / departure port */
   marina?: LocalizedText;
 }
 
-export interface ServicePage extends BaseContent {
+export interface ManagedDetailFields {
+  gallery?: MediaAsset[];
+  specs?: SpecItem[];
+  priceLabel?: LocalizedText;
+  richDescription?: RichTextByLocale;
+  amenities?: Array<string | LocalizedText>;
+  marina?: LocalizedText;
+}
+
+export interface ServicePage extends BaseContent, ManagedDetailFields {
   kind: "service";
   serviceId: ServiceId | "contact";
   title: LocalizedText;
@@ -101,7 +112,7 @@ export interface ServicePage extends BaseContent {
   whatsappMessage: LocalizedText;
 }
 
-export interface Vehicle extends BaseContent {
+export interface Vehicle extends BaseContent, ManagedDetailFields {
   kind: "vehicle";
   name: string;
   image: MediaAsset;
@@ -112,7 +123,7 @@ export interface Vehicle extends BaseContent {
   whatsappMessage: LocalizedText;
 }
 
-export interface WaterToy extends BaseContent {
+export interface WaterToy extends BaseContent, ManagedDetailFields {
   kind: "waterToy";
   name: LocalizedText;
   image: MediaAsset;

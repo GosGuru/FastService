@@ -12,6 +12,8 @@ export function Footer({ locale }: FooterProps) {
   const labels = uiLabels[locale];
   const transfers = servicePages.find((page) => page.serviceId === "transfers");
   const waterToys = servicePages.find((page) => page.serviceId === "water-toys");
+  const security = servicePages.find((page) => page.serviceId === "security");
+  const selfDrive = servicePages.find((page) => page.serviceId === "self-drive");
 
   return (
     <footer className="site-footer">
@@ -27,6 +29,8 @@ export function Footer({ locale }: FooterProps) {
           <Link href={`/${locale}#alquiler-barcos`}>{labels.boats}</Link>
           <Link href={`/${locale}/${transfers ? getLocalizedSlug(transfers.slugsByLocale, locale) : "transfer"}`}>{labels.transfers}</Link>
           <Link href={`/${locale}/${waterToys ? getLocalizedSlug(waterToys.slugsByLocale, locale) : "water-toys"}`}>{labels.waterToys}</Link>
+          <Link href={`/${locale}/${security ? getLocalizedSlug(security.slugsByLocale, locale) : "security"}`}>{labels.security}</Link>
+          <Link href={`/${locale}/${selfDrive ? getLocalizedSlug(selfDrive.slugsByLocale, locale) : "self-drive-car-rental"}`}>{labels.selfDriveVehicles}</Link>
         </div>
         <div>
           <h2>{labels.contact}</h2>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { getLocalizedValue, type Locale } from "@/lib/i18n";
 import type { FaqItem } from "@/types/content";
 
@@ -28,9 +31,24 @@ interface FaqSectionProps {
 }
 
 export function FaqSection({ items, locale, title, intro }: FaqSectionProps) {
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+
   if (!items.length) return null;
 
   const copy = faqCopy[locale];
+  const toggleItem = (id: string) => {
+    setOpenItems((current) => {
+      const next = new Set(current);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return next;
+    });
+  };
 
   return (
     <section className="faq-section" aria-labelledby="faq-section-title">
@@ -41,16 +59,30 @@ export function FaqSection({ items, locale, title, intro }: FaqSectionProps) {
         </div>
 
         <div className="faq-section__items">
-          {items.map((item, index) => (
-            <details className="faq-section__item" key={item.id}>
-              <summary>
-                <span>{index + 1}. {getLocalizedValue(item.question, locale)}</span>
-              </summary>
-              <div className="faq-section__answer">
-                <p>{getLocalizedValue(item.answer, locale)}</p>
-              </div>
-            </details>
-          ))}
+          {items.map((item, index) => {
+            const answerId = `faq-answer-${item.id}`;
+            const isOpen = openItems.has(item.id);
+
+            return (
+              <article className={`faq-section__item${isOpen ? " is-open" : ""}`} key={item.id}>
+                <button
+                  type="button"
+                  className="faq-section__trigger"
+                  aria-expanded={isOpen}
+                  aria-controls={answerId}
+                  onClick={() => toggleItem(item.id)}
+                >
+                  <span>{index + 1}. {getLocalizedValue(item.question, locale)}</span>
+                  <span className="faq-section__icon" aria-hidden="true" />
+                </button>
+                <div className="faq-section__panel" id={answerId} aria-hidden={!isOpen}>
+                  <div className="faq-section__answer">
+                    <p>{getLocalizedValue(item.answer, locale)}</p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
