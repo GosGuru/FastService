@@ -19,6 +19,34 @@ export function HomeHero({ locale }: HomeSectionsProps) {
   return <HomeHeroExperience locale={locale} />;
 }
 
+function NoWidowAccent({ text, accent }: { text: string; accent: string }) {
+  const words = text.trim().split(/\s+/);
+  const lastWord = words.pop() ?? "";
+  const prefix = words.join(" ");
+
+  return (
+    <>
+      {prefix ? `${prefix} ` : null}
+      <span className="home-heading-lock">
+        {lastWord}&nbsp;<em>{accent}</em>
+      </span>
+    </>
+  );
+}
+
+function NoWidowText({ text, lockWords = 2 }: { text: string; lockWords?: number }) {
+  const words = text.trim().split(/\s+/);
+  const lockedWords = words.splice(Math.max(0, words.length - lockWords));
+  const prefix = words.join(" ");
+
+  return (
+    <>
+      {prefix ? `${prefix} ` : null}
+      <span className="home-heading-lock">{lockedWords.join("\u00a0")}</span>
+    </>
+  );
+}
+
 const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: string; first: string; second: string; cta: string; message: string }> = {
   es: {
     eyebrow: "FastServices Ibiza",
@@ -160,7 +188,7 @@ export function HomeIntroSection({ locale }: HomeSectionsProps) {
         <div className="home-intro__headline">
           <p className="eyebrow">{copy.eyebrow}</p>
           <h2>
-            {copy.title} <span>{copy.italic}</span>
+            <NoWidowAccent text={copy.title} accent={copy.italic} />
           </h2>
         </div>
         <div className="home-intro__copy">
@@ -182,7 +210,7 @@ export function BoatCollectionSection({ collections, locale }: HomeSectionsProps
         <div className="section-heading section-heading--center home-section-heading">
           <p className="eyebrow">{copy.nauticalEyebrow}</p>
           <h2>
-            {copy.chooseSail} <span>{copy.ibiza}</span>
+            <NoWidowAccent text={copy.chooseSail} accent={copy.ibiza} />
           </h2>
           <p>{copy.nauticalText}</p>
         </div>
@@ -196,7 +224,9 @@ export function BoatCollectionSection({ collections, locale }: HomeSectionsProps
               <article className={`home-collection-panel ${index % 2 ? "home-collection-panel--reverse" : ""}`} key={collection.id}>
                 <div className="home-collection-panel__content">
                   <p>{getLocalizedValue(collection.title, locale)}</p>
-                  <h3>{localizedCopy.title}</h3>
+                  <h3>
+                    <NoWidowText text={localizedCopy.title} />
+                  </h3>
                   <span>{localizedCopy.body}</span>
                   <div className="home-collection-panel__actions">
                     <Link href={href} className="home-collection-panel__primary">
@@ -338,7 +368,12 @@ export function SelfDriveVehiclesSection({ locale }: HomeSectionsProps) {
       <div className="container">
         <div className="section-heading">
           <p className="eyebrow">5. {locale === "es" ? "Alquiler vehículos sin conductor" : "Self-drive vehicle rental"}</p>
-          <h2>{locale === "es" ? "Tres opciones para moverte a tu ritmo" : "Three options to move at your own pace"}</h2>
+          <h2>
+            <NoWidowText
+              text={locale === "es" ? "Tres opciones para moverte a tu ritmo" : "Three options to move at your own pace"}
+              lockWords={locale === "es" ? 3 : 2}
+            />
+          </h2>
           <p>
             {locale === "es"
               ? "Mismo flujo que juguetes náuticos: sin precios publicados, consulta por WhatsApp y confirmación según fechas, entrega y disponibilidad."

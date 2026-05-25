@@ -1605,9 +1605,20 @@ button {
   margin-bottom: 46px;
 }
 
-.home-section-heading h2 span,
-.home-intro__headline h2 span {
+.home-section-heading h2 span:not(.home-heading-lock),
+.home-intro__headline h2 span:not(.home-heading-lock) {
   display: block;
+  font-style: italic;
+  color: var(--color-text);
+}
+
+.home-heading-lock {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.home-section-heading h2 .home-heading-lock em,
+.home-intro__headline h2 .home-heading-lock em {
   font-style: italic;
   color: var(--color-text);
 }
@@ -1798,6 +1809,8 @@ button {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(18px, 3vw, 32px);
+  align-items: stretch;
+  justify-content: center;
 }
 
 .content-grid {
@@ -2595,6 +2608,7 @@ button {
 .boat-card {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-width: 0;
   overflow: visible;
   border: 0;
@@ -2654,6 +2668,8 @@ button {
 
 .boat-card__body {
   display: grid;
+  flex: 1 1 auto;
+  align-content: start;
   gap: 10px;
   padding: 14px 0 0;
 }
@@ -2714,7 +2730,8 @@ button {
   display: flex;
   flex-direction: row;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 20px;
 }
 
 .boat-card__btn {
@@ -2758,6 +2775,25 @@ button {
   background: #128c7e;
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgb(37 211 102 / 25%);
+}
+
+.service-option-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.service-option-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.service-option-card__body .whatsapp-cta {
+  width: 100%;
+  margin-top: auto;
+  justify-content: center;
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -5352,21 +5388,29 @@ button {
   }
 
   .home-featured-boats__rail {
+    --featured-card-width: min(82vw, 320px);
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(280px, 42vw);
+    grid-auto-columns: var(--featured-card-width);
     grid-template-columns: none;
+    justify-content: start;
+    gap: 22px;
     overflow-x: auto;
     margin-inline: -16px;
-    padding: 0 16px 14px;
+    padding: 0 max(24px, calc((100vw - var(--featured-card-width)) / 2));
     scroll-snap-type: x mandatory;
+    scroll-padding-inline: max(24px, calc((100vw - var(--featured-card-width)) / 2));
     overscroll-behavior-inline: contain;
+    scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    scrollbar-color: var(--color-accent) rgb(217 226 229 / 70%);
+  }
+
+  .home-featured-boats__rail::-webkit-scrollbar {
+    display: none;
   }
 
   .home-featured-boats__rail .boat-card {
-    scroll-snap-align: start;
+    scroll-snap-align: center;
   }
 
   .faq-section__inner {
@@ -5626,8 +5670,8 @@ button {
   }
 
   .home-featured-boats__rail {
-    grid-auto-columns: minmax(258px, 84vw);
-    gap: 18px;
+    --featured-card-width: min(82vw, 320px);
+    gap: 22px;
   }
 
   .boat-card h2 {
@@ -5651,7 +5695,7 @@ button {
   }
 
   .boat-card__actions {
-    margin-top: 16px;
+    padding-top: 16px;
   }
 
   .boat-card__btn {

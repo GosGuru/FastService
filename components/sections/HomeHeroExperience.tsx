@@ -238,7 +238,6 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
       </div>
       <div className="hero-section__overlay" />
       <div className="container hero-section__content">
-        <p className="hero-trust-pill">{copy.pill}</p>
         <h1>Ibiza Lifestyle Management</h1>
         <p>{copy.text}</p>
         <div className="hero-section__actions">
