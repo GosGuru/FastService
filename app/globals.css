@@ -5683,7 +5683,29 @@ button {
   }
 
   .home-collection-stack {
-    gap: 18px;
+    --mobile-card-width: min(84vw, 340px);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--mobile-card-width);
+    grid-template-columns: none;
+    justify-content: start;
+    gap: 22px;
+    overflow-x: auto;
+    margin-inline: -16px;
+    padding: 0 max(24px, calc((100vw - var(--mobile-card-width)) / 2));
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: max(24px, calc((100vw - var(--mobile-card-width)) / 2));
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-collection-stack::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-collection-stack .home-collection-panel {
+    scroll-snap-align: center;
   }
 
   .home-collection-panel__content {
@@ -5844,6 +5866,32 @@ button {
   .site-footer__grid,
   .contact-panel {
     grid-template-columns: 1fr;
+  }
+
+  .content-grid--three {
+    --mobile-card-width: min(82vw, 320px);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--mobile-card-width);
+    grid-template-columns: none;
+    justify-content: start;
+    gap: 22px;
+    overflow-x: auto;
+    margin-inline: -16px;
+    padding: 0 max(24px, calc((100vw - var(--mobile-card-width)) / 2));
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: max(24px, calc((100vw - var(--mobile-card-width)) / 2));
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .content-grid--three::-webkit-scrollbar {
+    display: none;
+  }
+
+  .content-grid--three > * {
+    scroll-snap-align: center;
   }
 
   .service-card {
