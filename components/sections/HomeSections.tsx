@@ -3,6 +3,7 @@ import { FiArrowRight } from "react-icons/fi";
 import { BoatCard } from "@/components/boats/BoatCard";
 import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
+import { HomeCardRail } from "@/components/sections/HomeCardRail";
 import { HomeHeroExperience } from "@/components/sections/HomeHeroExperience";
 import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
 import { NoWidowAccent, NoWidowText } from "@/components/typography/NoWidowText";
@@ -19,15 +20,16 @@ export function HomeHero({ locale }: HomeSectionsProps) {
   return <HomeHeroExperience locale={locale} />;
 }
 
-const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: string; first: string; second: string; cta: string; message: string }> = {
+const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: string; first: string; second: string; third?: string; cta: string; message: string }> = {
   es: {
     eyebrow: "FastServices Ibiza",
-    title: "Alquiler de yates",
-    italic: "Ibiza",
-    first: "Vive una experiencia privada en el mar con una selección cuidada de yates, megayates y lanchas para Ibiza y Formentera.",
-    second: "Si es tu primera vez reservando, te acompaño desde la idea hasta la confirmación: barco adecuado, ruta, horarios, extras y logística clara por WhatsApp.",
-    cta: "Ponte en contacto",
-    message: "Hola, quiero que me ayudes a elegir una experiencia en barco en Ibiza."
+    title: "¿No sabes qué barco elegir?",
+    italic: "Nosotros te asesoramos.",
+    first: "Accede a una selección exclusiva de yates, lanchas y catamaranes en Ibiza, Formentera y Mallorca.",
+    second: "Comparamos opciones, resolvemos tus dudas y organizamos toda la experiencia para que reserves con total confianza, de forma rápida y sin complicaciones.",
+    third: "Contacta ahora y recibe recomendaciones personalizadas para tu día perfecto en el mar.",
+    cta: "Contacta ahora",
+    message: "Hola, quiero recibir recomendaciones personalizadas para mi día perfecto en el mar."
   },
   en: {
     eyebrow: "FastServices Ibiza",
@@ -166,6 +168,7 @@ export function HomeIntroSection({ locale }: HomeSectionsProps) {
         <div className="home-intro__copy">
           <p>{copy.first}</p>
           <p>{copy.second}</p>
+          {copy.third ? <p>{copy.third}</p> : null}
           <WhatsAppCta locale={locale} label={copy.cta} message={copy.message} />
         </div>
       </div>
@@ -276,11 +279,11 @@ export function TransferSection({ locale, servicePages, vehicles }: HomeSections
               : "Professional chauffeurs, premium vehicles and coordination for airport, villas, marinas, events and beach clubs."}
           </p>
         </div>
-        <div className="content-grid content-grid--three">
+        <HomeCardRail>
           {vehicles.map((vehicle) => (
             <VehicleCard vehicle={vehicle} locale={locale} sectionSlug={transferSectionSlug} key={vehicle.id} />
           ))}
-        </div>
+        </HomeCardRail>
       </div>
     </section>
   );
@@ -301,11 +304,11 @@ export function WaterToysSection({ locale, servicePages, waterToys }: HomeSectio
               : "No published prices: we guide you by WhatsApp so the team can close availability and logistics by phone."}
           </p>
         </div>
-        <div className="content-grid content-grid--three">
+        <HomeCardRail>
           {waterToys.map((toy) => (
             <WaterToyCard toy={toy} locale={locale} sectionSlug={waterToysSectionSlug} key={toy.id} />
           ))}
-        </div>
+        </HomeCardRail>
       </div>
     </section>
   );
@@ -341,11 +344,11 @@ export function SecuritySection({ locale, servicePages }: HomeSectionsProps & { 
             <NoWidowText text={description} />
           </p>
         </div>
-        <div className="content-grid content-grid--three">
+        <HomeCardRail>
           {securityOptions.map((service) => (
             <ServiceOptionCard option={service} locale={locale} detailHref={`/${locale}/${securitySlug}#${service.id}`} key={service.id} />
           ))}
-        </div>
+        </HomeCardRail>
       </div>
     </section>
   );
@@ -377,11 +380,11 @@ export function SelfDriveVehiclesSection({ locale, servicePages }: HomeSectionsP
             <NoWidowText text={description} lockWords={3} />
           </p>
         </div>
-        <div className="content-grid content-grid--three">
+        <HomeCardRail>
           {selfDriveOptions.map((vehicle) => (
             <ServiceOptionCard option={vehicle} locale={locale} detailHref={`/${locale}/${selfDriveSlug}#${vehicle.id}`} key={vehicle.id} />
           ))}
-        </div>
+        </HomeCardRail>
       </div>
     </section>
   );

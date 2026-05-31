@@ -153,7 +153,7 @@ export default async function DynamicPage({ params }: Props) {
               <p className="eyebrow">{locale === "es" ? "Descubre nuestra flota" : "Discover our fleet"}</p>
               <h2>{locale === "es" ? "Vehículos con chófer para cada momento" : "Chauffeur vehicles for every moment"}</h2>
             </div>
-            <div className="content-grid content-grid--three">
+            <div className="content-grid content-grid--three catalog-grid">
               {content.vehicles.map((vehicle) => (
                 <VehicleCard vehicle={vehicle} locale={locale} sectionSlug={sectionSlug} key={vehicle.id} />
               ))}
@@ -176,7 +176,7 @@ export default async function DynamicPage({ params }: Props) {
               <h2>{locale === "es" ? "Consulta disponibilidad por WhatsApp" : "Check availability by WhatsApp"}</h2>
               <p>{locale === "es" ? "Cada juguete depende de logística, fecha, barco y condiciones. Te lo confirmamos directamente por WhatsApp." : "Each toy depends on logistics, date, boat and conditions. We confirm it directly by WhatsApp."}</p>
             </div>
-            <div className="content-grid content-grid--three">
+            <div className="content-grid content-grid--three catalog-grid">
               {content.waterToys.map((toy) => (
                 <WaterToyCard toy={toy} locale={locale} sectionSlug={sectionSlug} key={toy.id} />
               ))}
@@ -260,7 +260,7 @@ function ServiceOptionsGrid({
           <h2>{title}</h2>
           <p>{description}</p>
         </div>
-        <div className="content-grid content-grid--three">
+        <div className="content-grid content-grid--three catalog-grid">
           {options.map((option) => (
             <ServiceOptionCard option={option} locale={locale} key={option.id} />
           ))}

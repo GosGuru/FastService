@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: locale === "es" ? "Ibiza Lifestyle Management" : "Ibiza Lifestyle Management",
     description:
       locale === "es"
-        ? "Barcos, transfers privados, juguetes náuticos, seguridad y vehículos sin conductor coordinados por FastServices Ibiza."
-        : "Boats, private transfers, water toys, security and self-drive vehicles coordinated by FastServices Ibiza.",
+        ? "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación con Rodrigo."
+        : "Boats, private transfers and water toys coordinated from one conversation with Rodrigo.",
     alternates: {
       canonical: `${siteUrl}/${locale}`,
       languages: buildHomeAlternates()

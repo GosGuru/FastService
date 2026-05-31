@@ -9,7 +9,7 @@ interface BoatGridProps {
 
 export function BoatGrid({ boats, locale }: BoatGridProps) {
   return (
-    <div className="content-grid content-grid--three boat-grid">
+    <div className="content-grid content-grid--three boat-grid catalog-grid">
       {boats.map((boat) => (
         <BoatCard boat={boat} locale={locale} key={boat.id} href={`/${locale}/boat/${getLocalizedSlug(boat.categorySlugsByLocale, locale)}/${getLocalizedSlug(boat.slugsByLocale, locale)}`} />
       ))}

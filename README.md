@@ -34,6 +34,7 @@ El frontend lee primero `content_items` publicados desde Supabase. Si Supabase e
 3. Confirma que `NEXT_PUBLIC_SUPABASE_URL` apunta al proyecto correcto. La configuracion de `next/image` usa ese host para mostrar imagenes de Storage.
 4. Confirma que `NEXT_PUBLIC_SUPABASE_GALLERY_BUCKET` coincide con el bucket publico usado por el uploader.
 5. Si el panel muestra un error de RLS/permisos, vuelve a ejecutar las politicas del schema y reinicia sesion en `/admin/login`.
+6. Si solo falla la subida de fotos/videos con `403` o `new row violates row-level security policy`, ejecuta `supabase/repair-gallery-storage-policies.sql` en Supabase SQL Editor y vuelve a iniciar sesion.
 
 ### Flujo recomendado para barcos
 

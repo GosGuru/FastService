@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiArrowRight, FiChevronDown, FiGlobe, FiMenu, FiX } from "react-icons/fi";
 import { MediaImage } from "@/components/MediaImage";
 import { getBoatNavigation, getMobilePageNavigation } from "@/data/navigation";
 import { languageOptions, uiLabels, getLocalizedSlug, type Locale } from "@/lib/i18n";
+import { resolveLocalizedPath, type LanguageRouteMap } from "@/lib/language-routing";
 import type { BoatCollection, ServicePage } from "@/types/content";
 
 interface MobileMenuProps {
   locale: Locale;
   boatCollections: BoatCollection[];
   servicePages: ServicePage[];
+  languageRoutes?: LanguageRouteMap;
 }
 
 type MobileTab = "boats" | "pages";
@@ -23,10 +26,11 @@ const boatCardPrefixes: Record<Locale, string> = {
   nl: "Huur"
 };
 
-export function MobileMenu({ locale, boatCollections, servicePages }: MobileMenuProps) {
+export function MobileMenu({ locale, boatCollections, servicePages, languageRoutes }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<MobileTab>("boats");
   const [languageOpen, setLanguageOpen] = useState(false);
+  const pathname = usePathname();
   const labels = uiLabels[locale];
   const boatItems = getBoatNavigation(locale, { boatCollections });
   const pageItems = getMobilePageNavigation(locale, { servicePages });
@@ -100,7 +104,7 @@ export function MobileMenu({ locale, boatCollections, servicePages }: MobileMenu
                   {languageOptions.map((item) => (
                     <Link
                       key={item.locale}
-                      href={`/${item.locale}`}
+                      href={resolveLocalizedPath(pathname, locale, item.locale, languageRoutes)}
                       onClick={closeMenu}
                       className={item.locale === locale ? "active" : ""}
                     >

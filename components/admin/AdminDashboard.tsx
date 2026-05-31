@@ -240,17 +240,72 @@ function getRichTextValue(value: RichTextByLocale | undefined, locale: Locale, f
 }
 
 async function uploadRichTextImage(file: File, prefix: string): Promise<string> {
+  const asset = await uploadAdminStorageFile(file, prefix);
+
+  return asset.src;
+}
+
+function getUploadErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message;
+
+  if (error && typeof error === "object") {
+    const storageError = error as { message?: string; error?: string; code?: string; statusCode?: string; status?: number };
+    const parts = [storageError.message, storageError.error, storageError.code, storageError.statusCode, storageError.status ? `Status ${storageError.status}` : undefined].filter(Boolean);
+
+    if (parts.length) return parts.join(" ");
+  }
+
+  return "No se pudo subir el archivo a Supabase Storage.";
+}
+
+async function readErrorResponse(response: Response) {
+  try {
+    const payload = await response.json() as { message?: string };
+    if (payload.message) return payload.message;
+  } catch {
+    // Fall through to the status-based message.
+  }
+
+  return `No se pudo preparar la subida. HTTP ${response.status}.`;
+}
+
+async function getSignedUpload(file: File, prefix: string) {
+  const response = await fetch("/admin/storage/sign-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type,
+      prefix
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorResponse(response));
+  }
+
+  return response.json() as Promise<{ path: string; token: string; publicUrl: string }>;
+}
+
+async function uploadAdminStorageFile(file: File, prefix: string): Promise<MediaAsset> {
+  const signedUpload = await getSignedUpload(file, prefix);
   const supabase = createSupabaseBrowserClient();
-  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const storagePath = `${new Date().getFullYear()}/${createId(prefix)}.${extension}`;
-  const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
+  const { error } = await supabase.storage.from(supabaseGalleryBucket).uploadToSignedUrl(signedUpload.path, signedUpload.token, file, {
     cacheControl: "31536000",
     contentType: file.type || undefined,
     upsert: false
   });
-  if (error) throw error;
-  const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
-  return data.publicUrl;
+
+  if (error) {
+    throw new Error(`Supabase Storage rechazo el archivo firmado: ${getUploadErrorMessage(error)}`);
+  }
+
+  return {
+    src: signedUpload.publicUrl,
+    alt: localized(""),
+    source: "supabase",
+    storagePath: signedUpload.path
+  };
 }
 
 function getItemTitle(item: AdminItem, locale: Locale) {
@@ -1012,17 +1067,9 @@ function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; on
   const richValue = boat.description?.[locale] ?? boat.description?.es ?? { html: "", text: "" };
 
   async function uploadImageForDescription(file: File): Promise<string> {
-    const supabase = createSupabaseBrowserClient();
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const storagePath = `${new Date().getFullYear()}/${createId("boat-body")}.${extension}`;
-    const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
-      cacheControl: "31536000",
-      contentType: file.type || undefined,
-      upsert: false
-    });
-    if (error) throw error;
-    const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
-    return data.publicUrl;
+    const asset = await uploadAdminStorageFile(file, "boat-body");
+
+    return asset.src;
   }
 
   return (
@@ -1309,17 +1356,9 @@ function SeoPageEditor({ page, locale, onChange }: { page: SeoPage; locale: Loca
   const richValue = page.body[locale] ?? page.body.es;
 
   async function uploadImageForBody(file: File): Promise<string> {
-    const supabase = createSupabaseBrowserClient();
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const storagePath = `${new Date().getFullYear()}/${createId("body")}.${extension}`;
-    const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
-      cacheControl: "31536000",
-      contentType: file.type || undefined,
-      upsert: false
-    });
-    if (error) throw error;
-    const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
-    return data.publicUrl;
+    const asset = await uploadAdminStorageFile(file, "body");
+
+    return asset.src;
   }
 
   return (
@@ -1461,24 +1500,13 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
     setStatus("Subiendo video a Supabase Storage...");
 
     try {
-      const supabase = createSupabaseBrowserClient();
-      const extension = file.name.split(".").pop()?.toLowerCase() ?? "mp4";
-      const storagePath = `${new Date().getFullYear()}/${createId("boat-video")}.${extension}`;
-      const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
-        cacheControl: "31536000",
-        contentType: file.type || undefined,
-        upsert: false
-      });
-
-      if (error) throw error;
-
-      const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
+      const asset = await uploadAdminStorageFile(file, "boat-video");
 
       onChange({
-        src: data.publicUrl,
+        src: asset.src,
         title: currentTitle,
         source: "supabase",
-        storagePath,
+        storagePath: asset.storagePath,
         mimeType: file.type || undefined
       });
       setStatusTone("success");
@@ -1695,7 +1723,6 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
     setUploadStatus(`Subiendo ${files.length} ${files.length === 1 ? "imagen" : "imagenes"} a Supabase Storage...`);
 
     try {
-      const supabase = createSupabaseBrowserClient();
       const uploadedAssets: MediaAsset[] = [];
       const uploadErrors: string[] = [];
       const suggestedAlt = getSuggestedAlt(image.alt, itemLabel ?? "", locale);
@@ -1705,29 +1732,21 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
 
         updateQueueItem(queueItem.id, { status: "uploading", message: "Subiendo al bucket" });
 
-        const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-        const storagePath = `${new Date().getFullYear()}/${createId("media")}.${extension}`;
-        const { error } = await supabase.storage.from(supabaseGalleryBucket).upload(storagePath, file, {
-          cacheControl: "31536000",
-          contentType: file.type || undefined,
-          upsert: false
-        });
+        let uploadedAsset: MediaAsset;
 
-        if (error) {
-          const message = error.message || "No se pudo subir esta imagen.";
+        try {
+          uploadedAsset = await uploadAdminStorageFile(file, "media");
+        } catch (error) {
+          const message = getUploadErrorMessage(error);
 
           uploadErrors.push(`${file.name}: ${message}`);
           updateQueueItem(queueItem.id, { status: "error", message });
           continue;
         }
 
-        const { data } = supabase.storage.from(supabaseGalleryBucket).getPublicUrl(storagePath);
-
         uploadedAssets.push({
-          src: data.publicUrl,
+          ...uploadedAsset,
           alt: suggestedAlt,
-          source: "supabase",
-          storagePath
         });
         updateQueueItem(queueItem.id, { status: "done", message: "Lista para publicar" });
       }
@@ -1741,7 +1760,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
 
       if (uploadErrors.length) {
         setUploadTone("error");
-        setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"}; ${uploadErrors.length} con error. Guarda solo si las fotos correctas ya aparecen abajo.`);
+        setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"}; ${uploadErrors.length} con error. ${uploadErrors[0]}`);
         return;
       }
 

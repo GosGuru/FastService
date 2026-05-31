@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin FastServices",
+  title: "FastService Management",
   description: "Panel interno de gestión de contenido FastServices.",
   robots: {
     index: false,

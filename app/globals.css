@@ -1139,7 +1139,7 @@ button {
   height: 100dvh;
   max-height: 100dvh;
   padding: 4px 20px 30px;
-  background: color-mix(in srgb, var(--color-brand-deep) 80%, transparent);
+  background: var(--color-brand-deep);
   color: #fff;
   opacity: 0;
   pointer-events: none;
@@ -1833,6 +1833,10 @@ button {
 
 .content-grid.boat-grid {
   gap: var(--boat-grid-gap);
+}
+
+.catalog-grid {
+  gap: clamp(20px, 2vw, 30px);
 }
 
 .boat-grid-section {
@@ -4679,40 +4683,82 @@ button {
 
 .admin-login-page {
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: radial-gradient(circle at top left, rgb(217 244 249 / 90%), transparent 36%), #eef4f5;
+  padding: 0;
+  background: #eef4f5;
 }
 
 .admin-login-wrapper {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(360px, 500px) minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.admin-login-panel {
+  position: relative;
+  z-index: 1;
   display: flex;
+  align-items: flex-start;
   flex-direction: column;
-  gap: 14px;
-  width: min(100%, 440px);
+  justify-content: center;
+  gap: 18px;
+  min-height: 100dvh;
+  padding: clamp(24px, 5vw, 64px);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%);
+  box-shadow: 22px 0 70px rgb(31 71 88 / 12%);
 }
 
 .admin-login-card {
   width: 100%;
+  max-width: 390px;
   display: grid;
   gap: 18px;
-  padding: 28px;
-  border: 1px solid rgb(217 226 229 / 86%);
-  border-radius: var(--radius-card);
-  background: #fff;
-  box-shadow: 0 24px 70px rgb(80 133 158 / 14%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .admin-login-card h1 {
   margin: 0;
   font-family: var(--font-marcellus), serif;
-  font-size: 42px;
+  font-size: clamp(38px, 5vw, 54px);
   line-height: 1.05;
+  color: var(--color-accent);
+  text-wrap: balance;
 }
 
 .admin-login-card p {
   margin: 6px 0 0;
   color: var(--color-muted);
+}
+
+.admin-login-card__brand {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+}
+
+.admin-login-card__logo {
+  width: min(100%, 230px);
+  height: auto;
+}
+
+.admin-login-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgb(80 133 158 / 18%);
+  border-radius: 999px;
+  background: rgb(240 247 250 / 92%);
+  color: var(--color-brand-deep);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .admin-login-card__icon {
@@ -4734,6 +4780,7 @@ button {
 }
 
 .admin-login-card__home-link {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4746,6 +4793,90 @@ button {
 
 .admin-login-card__home-link:hover {
   color: var(--color-brand);
+}
+
+.admin-login-visual {
+  position: relative;
+  min-height: 100dvh;
+  background:
+    linear-gradient(90deg, rgb(238 244 245 / 86%) 0%, rgb(238 244 245 / 26%) 28%, rgb(31 71 88 / 36%) 100%),
+    url("/admin-login-yacht.jpg") center right / cover no-repeat;
+}
+
+.admin-login-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 70% 22%, rgb(255 255 255 / 22%), transparent 24%),
+    linear-gradient(180deg, transparent 0%, rgb(31 71 88 / 24%) 100%);
+}
+
+@media (max-width: 840px) {
+  .admin-login-wrapper {
+    position: relative;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-login-panel {
+    align-items: stretch;
+    min-height: 100dvh;
+    padding: 22px;
+    background: rgb(247 251 253 / 88%);
+    box-shadow: none;
+  }
+
+  .admin-login-card {
+    width: min(calc(100vw - 44px), 430px);
+    max-width: none;
+    margin-inline: auto;
+    padding: 26px;
+    border: 1px solid rgb(217 226 229 / 86%);
+    border-radius: var(--radius-card);
+    background: rgb(255 255 255 / 94%);
+    box-shadow: 0 24px 70px rgb(80 133 158 / 14%);
+    backdrop-filter: blur(14px);
+  }
+
+  .admin-login-card__home-link {
+    width: min(calc(100vw - 44px), 430px);
+    margin-inline: auto;
+  }
+
+  .admin-login-visual {
+    position: absolute;
+    inset: 0;
+    min-height: 100%;
+    opacity: 0.28;
+    background-position: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-login-card,
+  .admin-login-card__home-link {
+    align-self: stretch;
+    width: min(calc(100vw - 44px), 346px);
+    max-width: 346px;
+    min-width: 0;
+    margin-inline: 0;
+  }
+
+  .admin-login-card {
+    overflow: hidden;
+  }
+
+  .admin-login-card h1,
+  .admin-field,
+  .admin-field input,
+  .admin-button {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-button {
+    width: 100%;
+  }
 }
 
 .admin-upload-status {
@@ -5459,9 +5590,33 @@ button {
 
   .desktop-nav,
   .language-switcher,
-  .lang-dropdown,
   .header-contact {
     display: none;
+  }
+
+  .site-header__actions {
+    gap: 10px;
+  }
+
+  .site-header__actions .lang-dropdown {
+    display: block;
+  }
+
+  .site-header__actions .lang-dropdown__trigger {
+    min-width: 66px;
+    min-height: 44px;
+    padding: 0 4px;
+    gap: 5px;
+    font-size: 0.92rem;
+  }
+
+  .site-header__actions .lang-dropdown__trigger svg {
+    font-size: 1rem;
+  }
+
+  .site-header__actions .lang-dropdown__menu {
+    top: calc(100% + 8px);
+    right: 0;
   }
 
   .mobile-menu-button {
@@ -5685,6 +5840,7 @@ button {
 
   .site-header__inner {
     min-height: 52px;
+    gap: 10px;
   }
 
   .brand {
@@ -5692,7 +5848,20 @@ button {
   }
 
   .brand__logo {
-    width: 168px;
+    width: clamp(144px, 44vw, 168px);
+  }
+
+  .site-header__actions {
+    gap: 8px;
+  }
+
+  .site-header__actions .lang-dropdown__trigger {
+    min-width: 58px;
+    gap: 4px;
+  }
+
+  .site-header__actions .lang-dropdown__trigger svg:last-child {
+    display: none;
   }
 
   .page-hero {
@@ -5948,7 +6117,7 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .content-grid--three {
+  .home-card-rail {
     --mobile-card-width: min(82vw, 320px);
     display: grid;
     grid-auto-flow: column;
@@ -5966,12 +6135,16 @@ button {
     -webkit-overflow-scrolling: touch;
   }
 
-  .content-grid--three::-webkit-scrollbar {
+  .home-card-rail::-webkit-scrollbar {
     display: none;
   }
 
-  .content-grid--three > * {
+  .home-card-rail > * {
     scroll-snap-align: center;
+  }
+
+  .catalog-grid {
+    gap: 30px;
   }
 
   .service-card {
@@ -6031,9 +6204,10 @@ button {
 }
 
 body.mobile-menu-open .floating-whatsapp {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.9);
+  z-index: 130;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
 }
 
 body.mobile-menu-open .site-header__inner > .brand,

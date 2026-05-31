@@ -9,6 +9,7 @@ import { DesktopServicesDropdown } from "@/components/layout/DesktopServicesDrop
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
+import type { LanguageRouteMap } from "@/lib/language-routing";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { BoatCollection, ServicePage } from "@/types/content";
 
@@ -16,6 +17,7 @@ interface SiteHeaderProps {
   locale: Locale;
   boatCollections: BoatCollection[];
   servicePages: ServicePage[];
+  languageRoutes?: LanguageRouteMap;
 }
 
 function subscribeToScroll(callback: () => void) {
@@ -32,7 +34,7 @@ function getServerScrollSnapshot() {
   return false;
 }
 
-export function SiteHeader({ locale, boatCollections, servicePages }: SiteHeaderProps) {
+export function SiteHeader({ locale, boatCollections, servicePages, languageRoutes }: SiteHeaderProps) {
   const isScrolled = useSyncExternalStore(subscribeToScroll, getScrollSnapshot, getServerScrollSnapshot);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
@@ -77,11 +79,11 @@ export function SiteHeader({ locale, boatCollections, servicePages }: SiteHeader
           <DesktopServicesDropdown locale={locale} open={isServicesDropdownOpen} onOpenChange={handleServicesDropdownOpenChange} servicePages={servicePages} />
         </nav>
         <div className="site-header__actions">
-          <LanguageSwitcher locale={locale} />
+          <LanguageSwitcher locale={locale} routes={languageRoutes} />
           <Link href={contactHref} className="header-contact">
             {labels.contact}
           </Link>
-          <MobileMenu locale={locale} boatCollections={boatCollections} servicePages={servicePages} />
+          <MobileMenu locale={locale} boatCollections={boatCollections} servicePages={servicePages} languageRoutes={languageRoutes} />
         </div>
       </div>
     </header>
