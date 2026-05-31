@@ -126,10 +126,10 @@ function snapshotFromRows(rows: ContentRow[], fallback = createInitialAdminSnaps
 }
 
 async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
-  const fallback = selectAll ? createInitialAdminSnapshot() : createPublicFallbackSnapshot();
+  const unavailableFallback = selectAll ? createInitialAdminSnapshot() : createPublicFallbackSnapshot();
 
   if (!hasSupabaseConfig()) {
-    return { snapshot: fallback, source: "static", message: "Supabase no esta configurado; usando contenido local." };
+    return { snapshot: unavailableFallback, source: "static", message: "Supabase no esta configurado; usando contenido local." };
   }
 
   try {
@@ -143,16 +143,20 @@ async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
     const { data, error } = await query;
 
     if (error) {
-      return { snapshot: fallback, source: "static", message: `Supabase no pudo leer content_items: ${getSupabaseErrorText(error)}` };
+      return { snapshot: unavailableFallback, source: "static", message: `Supabase no pudo leer content_items: ${getSupabaseErrorText(error)}` };
     }
 
     if (!data?.length) {
-      return { snapshot: fallback, source: "static", message: "Supabase esta vacio; usando seed local hasta guardar el contenido." };
+      return {
+        snapshot: createEmptySnapshot(),
+        source: "supabase",
+        message: selectAll ? "Supabase esta vacio; panel listo para cargar contenido manualmente." : "Supabase esta vacio; no hay contenido publicado."
+      };
     }
 
-    return { snapshot: snapshotFromRows(data as ContentRow[], selectAll ? fallback : createEmptySnapshot()), source: "supabase" };
+    return { snapshot: snapshotFromRows(data as ContentRow[], createEmptySnapshot()), source: "supabase" };
   } catch (error) {
-    return { snapshot: fallback, source: "static", message: error instanceof Error ? error.message : "No se pudo leer Supabase." };
+    return { snapshot: unavailableFallback, source: "static", message: error instanceof Error ? error.message : "No se pudo leer Supabase." };
   }
 }
 

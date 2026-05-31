@@ -48,6 +48,8 @@ const defaultImage: MediaAsset = {
   source: "unsplash"
 };
 
+const blankImage: MediaAsset = { src: "", alt: { es: "", en: "", de: "", nl: "" }, source: "local" };
+
 const categorySlugsByCollection: Record<Boat["collectionId"], LocalizedText> = {
   "yachts-xl": { es: "yates-xl", en: "xl-yachts", de: "xl-yachten", nl: "xl-jachten" },
   yachts: { es: "yates", en: "yachts", de: "yachten", nl: "jachten" },
@@ -126,6 +128,15 @@ function validatePrimaryImage(errors: string[], label: string, item: { image: Me
 
 function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
   const errors: string[] = [];
+  const collectionSlugKeys = new Set<string>();
+
+  snapshot.content.boatCollections.forEach((collection, index) => {
+    const label = getLocalizedValue(collection.title, "es").trim() || collection.id || `Colección ${index + 1}`;
+
+    validateLocalizedSlug(errors, collectionSlugKeys, label, collection.slugsByLocale, "boatCollections");
+    validatePrimaryImage(errors, label, collection);
+  });
+
   const boatSlugKeys = new Set<string>();
 
   snapshot.content.boats.forEach((boat, index) => {
@@ -262,6 +273,10 @@ function touch<T extends AdminItem>(item: T): T {
   return item;
 }
 
+function snapshotFingerprint(snapshot: AdminContentSnapshot) {
+  return JSON.stringify(snapshot.content);
+}
+
 function getServicePageHref(snapshot: AdminContentSnapshot, serviceId: FaqItem["serviceId"], locale: Locale) {
   const page = snapshot.content.servicePages.find((item) => item.serviceId === serviceId);
   return page ? `/${locale}/${getLocalizedSlug(page.slugsByLocale, locale)}` : null;
@@ -348,6 +363,135 @@ function createBoat(): Boat {
   };
 }
 
+function createBoatCollection(): BoatCollection {
+  const id = createId("collection");
+  const title = "Nueva colección";
+  const date = new Date().toISOString().slice(0, 10);
+
+  return {
+    id,
+    kind: "boatCollection",
+    collectionId: "yachts",
+    status: "published",
+    visibility: "listed",
+    robotsIndex: true,
+    slugsByLocale: localized(id),
+    title: localized(title),
+    eyebrow: localized("Alquiler de barcos"),
+    description: localized("Describe esta colección de barcos."),
+    image: blankImage,
+    countTarget: 0,
+    hiddenPage: true,
+    selectionNote: localized("Notas internas de selección."),
+    seoTitle: localized(`${title} en Ibiza`),
+    seoDescription: localized("Descripción SEO de la colección de barcos."),
+    publishedAt: date,
+    updatedAt: date,
+    schemaType: "CollectionPage",
+    whatsappMessage: localized("Hola, quiero consultar esta colección de barcos en Ibiza.")
+  };
+}
+
+function createVehicle(): Vehicle {
+  const id = createId("vehicle");
+  const date = new Date().toISOString().slice(0, 10);
+
+  return {
+    id,
+    kind: "vehicle",
+    name: "Nuevo transfer",
+    status: "published",
+    visibility: "listed",
+    robotsIndex: true,
+    slugsByLocale: localized(id),
+    image: blankImage,
+    gallery: [],
+    specs: [],
+    overview: localized("Resumen breve para la tarjeta del transfer."),
+    services: [],
+    amenities: [],
+    richDescription: {
+      es: richTextFromPlainText("Descripción completa del transfer."),
+      en: richTextFromPlainText("Full transfer description.")
+    },
+    marina: localized(""),
+    priceLabel: localized("Consultar disponibilidad"),
+    seoTitle: localized("Nuevo transfer en Ibiza"),
+    seoDescription: localized("Descripción SEO del nuevo transfer en Ibiza."),
+    publishedAt: date,
+    updatedAt: date,
+    schemaType: "Product",
+    whatsappMessage: localized("Hola, quiero consultar disponibilidad de este transfer en Ibiza.")
+  };
+}
+
+function createWaterToy(): WaterToy {
+  const id = createId("water-toy");
+  const date = new Date().toISOString().slice(0, 10);
+
+  return {
+    id,
+    kind: "waterToy",
+    status: "published",
+    visibility: "listed",
+    robotsIndex: true,
+    slugsByLocale: localized(id),
+    name: localized("Nuevo juguete náutico"),
+    image: blankImage,
+    gallery: [],
+    description: localized("Resumen breve para la tarjeta del juguete náutico."),
+    details: localized("Texto breve de ficha para el juguete náutico."),
+    specs: [],
+    amenities: [],
+    richDescription: {
+      es: richTextFromPlainText("Descripción completa del juguete náutico."),
+      en: richTextFromPlainText("Full water toy description.")
+    },
+    marina: localized(""),
+    priceLabel: localized("Consultar disponibilidad"),
+    seoTitle: localized("Nuevo juguete náutico en Ibiza"),
+    seoDescription: localized("Descripción SEO del nuevo juguete náutico en Ibiza."),
+    publishedAt: date,
+    updatedAt: date,
+    schemaType: "Product",
+    whatsappMessage: localized("Hola, quiero consultar disponibilidad de este juguete náutico en Ibiza.")
+  };
+}
+
+function createServicePage(): ServicePage {
+  const id = createId("service");
+  const date = new Date().toISOString().slice(0, 10);
+
+  return {
+    id,
+    kind: "service",
+    serviceId: id,
+    status: "published",
+    visibility: "listed",
+    robotsIndex: true,
+    slugsByLocale: localized(id),
+    title: localized("Nuevo servicio"),
+    eyebrow: localized("Servicio personalizado"),
+    description: localized("Resumen del servicio para el hero."),
+    image: blankImage,
+    gallery: [],
+    specs: [],
+    amenities: [],
+    richDescription: {
+      es: richTextFromPlainText("Descripción completa del servicio."),
+      en: richTextFromPlainText("Full service description.")
+    },
+    marina: localized(""),
+    priceLabel: localized("Consultar disponibilidad"),
+    seoTitle: localized("Nuevo servicio en Ibiza"),
+    seoDescription: localized("Descripción SEO del nuevo servicio en Ibiza."),
+    publishedAt: date,
+    updatedAt: date,
+    schemaType: "Service",
+    whatsappMessage: localized("Hola, quiero consultar este servicio en Ibiza.")
+  };
+}
+
 function createSeoPage(): SeoPage {
   const id = createId("seo");
 
@@ -375,6 +519,36 @@ function createSeoPage(): SeoPage {
   };
 }
 
+function createFaq(): FaqItem {
+  const id = createId("faq");
+
+  return {
+    id,
+    serviceId: "boats",
+    question: localized("Nueva pregunta frecuente"),
+    answer: localized("Escribe la respuesta.")
+  };
+}
+
+function createItemForSection(section: AdminContentKey): AdminItem {
+  switch (section) {
+    case "boats":
+      return createBoat();
+    case "boatCollections":
+      return createBoatCollection();
+    case "vehicles":
+      return createVehicle();
+    case "waterToys":
+      return createWaterToy();
+    case "servicePages":
+      return createServicePage();
+    case "seoPages":
+      return createSeoPage();
+    case "faqs":
+      return createFaq();
+  }
+}
+
 interface AdminDashboardProps {
   initialSnapshot: AdminContentSnapshot;
   initialSource: "supabase" | "static";
@@ -386,6 +560,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ initialSnapshot, initialSource, initialMessage, adminEmail, saveSnapshotAction, signOutAction }: AdminDashboardProps) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
+  const [lastSavedFingerprint, setLastSavedFingerprint] = useState(() => snapshotFingerprint(initialSnapshot));
   const [activeSection, setActiveSection] = useState<AdminContentKey>("boats");
   const [selectedId, setSelectedId] = useState(initialSnapshot.content.boats[0]?.id ?? "");
   const [mobileView, setMobileView] = useState<"list" | "editor">("list");
@@ -402,12 +577,26 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const selectedItem = items.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items[0];
   const visitTarget = selectedItem ? getVisitTarget(activeSection, selectedItem, snapshot, locale) : null;
   const SaveStatusIcon = isSaving ? FiLoader : saveStatus.tone === "success" ? FiCheckCircle : saveStatus.tone === "error" ? FiAlertCircle : FiSave;
+  const currentFingerprint = useMemo(() => snapshotFingerprint(snapshot), [snapshot]);
+  const hasUnsavedChanges = currentFingerprint !== lastSavedFingerprint;
 
   useEffect(() => {
     if (saveStatus.tone === "error") {
       saveStatusRef.current?.focus();
     }
   }, [saveStatus]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const counters = useMemo(() => {
     const boats = snapshot.content.boats;
@@ -429,6 +618,12 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       { label: "Imágenes", value: mediaCount, note: "con alt por idioma" }
     ];
   }, [snapshot]);
+
+  function confirmDiscardUnsavedChanges() {
+    if (!hasUnsavedChanges) return true;
+
+    return window.confirm("Tienes cambios sin guardar. Si sales ahora, se perderan. ¿Quieres continuar sin guardar?");
+  }
 
   function selectSection(key: AdminContentKey) {
     const nextItems = snapshot.content[key] as AdminItem[];
@@ -473,9 +668,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }
 
   function addItem() {
-    const newItem = activeSection === "boats" ? createBoat() : activeSection === "seoPages" ? createSeoPage() : selectedItem ? normalizeItemForActiveSection({ ...selectedItem, id: createId(activeSection) } as AdminItem) : null;
-
-    if (!newItem) return;
+    const newItem = normalizeItemForActiveSection(createItemForSection(activeSection));
 
     updateSnapshot(activeSection, (currentItems) => [newItem as AdminItem, ...currentItems]);
     selectItem(newItem.id);
@@ -501,6 +694,11 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
   function deleteItem() {
     if (!selectedItem) return;
+
+    if (!window.confirm(`Eliminar "${getItemTitle(selectedItem, locale)}"? Guarda en Supabase despues para aplicar el borrado.`)) {
+      return;
+    }
+
     const nextItems = items.filter((item) => item.id !== selectedItem.id);
 
     updateSnapshot(activeSection, () => nextItems);
@@ -547,6 +745,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
       if (result.ok && result.snapshot) {
         setSnapshot(result.snapshot);
+        setLastSavedFingerprint(snapshotFingerprint(result.snapshot));
       }
     } catch (error) {
       setSaveStatus({
@@ -615,10 +814,16 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
             </div>
           </div>
           <div className="admin-actions">
+            {hasUnsavedChanges ? <span className="admin-unsaved-pill">Cambios sin guardar</span> : null}
             <button type="button" className="admin-button admin-button--primary" onClick={() => void saveToSupabase()} disabled={isSaving} aria-busy={isSaving}>
               {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Guardando" : "Guardar Supabase"}
             </button>
-            <form action={signOutAction}>
+            <form
+              action={signOutAction}
+              onSubmit={(event) => {
+                if (!confirmDiscardUnsavedChanges()) event.preventDefault();
+              }}
+            >
               <button type="submit" className="admin-button admin-button--ghost"><FiLogOut aria-hidden="true" /> Salir</button>
             </form>
           </div>
@@ -663,7 +868,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                       <small>{getItemDescription(item, locale)}</small>
                     </button>
                     {itemVisitTarget ? (
-                      <a className="admin-list-item__visit" href={itemVisitTarget.href} target="_blank" rel="noreferrer" title="Ver página pública">
+                      <a className="admin-list-item__visit" href={itemVisitTarget.href} target="_blank" rel="noreferrer" title="Ver página pública" onClick={(event) => { if (!confirmDiscardUnsavedChanges()) event.preventDefault(); }}>
                         <FiExternalLink aria-hidden="true" />
                         <span>Ver</span>
                       </a>
@@ -688,7 +893,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                   </div>
                   <div className="admin-actions admin-actions--compact">
                     {visitTarget ? (
-                      <a className="admin-button admin-button--ghost" href={visitTarget.href} target="_blank" rel="noreferrer" title="Abre la versión pública guardada">
+                      <a className="admin-button admin-button--ghost" href={visitTarget.href} target="_blank" rel="noreferrer" title="Abre la versión pública guardada" onClick={(event) => { if (!confirmDiscardUnsavedChanges()) event.preventDefault(); }}>
                         <FiExternalLink aria-hidden="true" /> {visitTarget.label}
                       </a>
                     ) : null}
@@ -739,6 +944,10 @@ function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: 
     return <BoatEditor boat={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }
 
+  if (activeSection === "boatCollections" && "kind" in item && item.kind === "boatCollection") {
+    return <BoatCollectionEditor collection={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
+  }
+
   if (activeSection === "vehicles" && "kind" in item && item.kind === "vehicle") {
     return <VehicleEditor vehicle={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }
@@ -760,6 +969,37 @@ function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: 
   }
 
   return isGenericContentItem(item) ? <GenericContentEditor item={item} locale={locale} onChange={onChange} /> : null;
+}
+
+function BoatCollectionEditor({ collection, locale, onChange }: { collection: BoatCollection; locale: Locale; onChange: (patch: Partial<BoatCollection>) => void }) {
+  return (
+    <div className="admin-form">
+      <div className="admin-form-grid admin-form-grid--three">
+        <label className="admin-field">
+          <span>Tipo de colección</span>
+          <select value={collection.collectionId} onChange={(event) => onChange({ collectionId: event.target.value as BoatCollection["collectionId"] })}>
+            <option value="yachts-xl">Yates XL</option>
+            <option value="yachts">Yates</option>
+            <option value="fast-boats">Embarcaciones rápidas</option>
+          </select>
+        </label>
+        <TextField label="Objetivo de barcos" value={String(collection.countTarget ?? 0)} onChange={(value) => onChange({ countTarget: Number.parseInt(value, 10) || 0 })} />
+        <label className="admin-check-field">
+          <input type="checkbox" checked={collection.hiddenPage} onChange={(event) => onChange({ hiddenPage: event.target.checked })} />
+          <span>Página oculta en menú</span>
+        </label>
+      </div>
+      <MediaEditor image={collection.image} gallery={[]} locale={locale} itemLabel={getLocalizedValue(collection.title, locale)} onChange={(image) => onChange({ image })} />
+      <LocalizedTextEditor label="Título" value={collection.title} locale={locale} onChange={(value) => onChange({ title: value })} />
+      <LocalizedTextEditor label="Eyebrow" value={collection.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
+      <LocalizedTextEditor label="Descripción" value={collection.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
+      <LocalizedTextEditor label="Slug por idioma" value={collection.slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
+      <LocalizedTextEditor label="Nota de selección" value={collection.selectionNote} locale={locale} multiline onChange={(value) => onChange({ selectionNote: value })} />
+      <LocalizedTextEditor label="Título SEO" value={collection.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value })} />
+      <LocalizedTextEditor label="Descripción SEO" value={collection.seoDescription} locale={locale} multiline onChange={(value) => onChange({ seoDescription: value })} />
+      <LocalizedTextEditor label="Mensaje WhatsApp" value={collection.whatsappMessage} locale={locale} multiline onChange={(value) => onChange({ whatsappMessage: value })} />
+    </div>
+  );
 }
 
 function BoatEditor({ boat, locale, onChange }: { boat: Boat; locale: Locale; onChange: (patch: Partial<Boat>) => void }) {
@@ -944,6 +1184,7 @@ function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; loca
 
   return (
     <div className="admin-form">
+      <TextField label="ID interno del servicio" value={page.serviceId} onChange={(value) => onChange({ serviceId: value.trim() || page.id })} />
       <LocalizedTextEditor label="Título H1" value={page.title} locale={locale} onChange={(value) => onChange({ title: value })} />
       <LocalizedTextEditor label="Eyebrow" value={page.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
       <LocalizedTextEditor label="Resumen del hero" value={page.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
@@ -1014,7 +1255,17 @@ function FaqEditor({ faq, locale, onChange }: { faq: FaqItem; locale: Locale; on
     <div className="admin-form">
       <LocalizedTextEditor label="Pregunta" value={faq.question} locale={locale} onChange={(value) => onChange({ question: value })} />
       <LocalizedTextEditor label="Respuesta" value={faq.answer} locale={locale} multiline onChange={(value) => onChange({ answer: value })} />
-      <TextField label="Servicio asociado" value={faq.serviceId ?? ""} onChange={(value) => onChange({ serviceId: value ? value as FaqItem["serviceId"] : undefined })} />
+      <label className="admin-field">
+        <span>Servicio asociado</span>
+        <select value={faq.serviceId ?? ""} onChange={(event) => onChange({ serviceId: event.target.value ? event.target.value as FaqItem["serviceId"] : undefined })}>
+          <option value="">General</option>
+          <option value="boats">Barcos</option>
+          <option value="transfers">Transfer</option>
+          <option value="water-toys">Juguetes náuticos</option>
+          <option value="security">Seguridad</option>
+          <option value="self-drive">Vehículos sin conductor</option>
+        </select>
+      </label>
     </div>
   );
 }
@@ -1243,8 +1494,6 @@ function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: L
     </section>
   );
 }
-
-const blankImage: MediaAsset = { src: "", alt: { es: "", en: "", de: "", nl: "" }, source: "local" };
 
 function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: MediaAsset; gallery: MediaAsset[]; locale: Locale; itemLabel?: string; onChange: (image: MediaAsset, gallery: MediaAsset[]) => void }) {
   const [uploadStatus, setUploadStatus] = useState("");

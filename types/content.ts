@@ -104,7 +104,7 @@ export interface ManagedDetailFields {
 
 export interface ServicePage extends BaseContent, ManagedDetailFields {
   kind: "service";
-  serviceId: ServiceId | "contact";
+  serviceId: string;
   title: LocalizedText;
   eyebrow: LocalizedText;
   description: LocalizedText;

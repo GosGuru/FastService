@@ -3933,6 +3933,7 @@ button {
   display: grid;
   align-content: start;
   gap: 24px;
+  min-width: 0;
   padding: 28px clamp(20px, 4vw, 48px) 44px;
 }
 
@@ -3955,6 +3956,15 @@ button {
   gap: 18px;
 }
 
+.admin-topbar {
+  flex-wrap: wrap;
+}
+
+.admin-topbar > div:first-child {
+  flex: 1 1 300px;
+  min-width: 0;
+}
+
 .admin-topbar h1,
 .admin-panel-heading h2,
 .admin-empty-state h2 {
@@ -3964,7 +3974,7 @@ button {
 }
 
 .admin-topbar h1 {
-  font-size: 48px;
+  font-size: clamp(38px, 4.2vw, 48px);
 }
 
 .admin-topbar p,
@@ -4082,13 +4092,27 @@ button {
   font-weight: 900;
 }
 
+.admin-unsaved-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgb(127 83 22 / 18%);
+  border-radius: 999px;
+  background: rgb(255 243 206 / 78%);
+  color: #76510d;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .admin-save-status {
-  flex: 1 1 min(100%, 520px);
+  flex: 1 1 360px;
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
   gap: 12px;
   max-width: 620px;
-  min-width: min(100%, 320px);
+  min-width: min(100%, 280px);
   padding: 12px 14px;
   border: 1px solid rgb(80 133 158 / 14%);
   border-radius: 14px;
@@ -4217,6 +4241,7 @@ button {
 .admin-workspace {
   align-items: stretch;
   gap: 20px;
+  min-width: 0;
   --admin-section-accent: var(--color-brand);
   --admin-section-soft: var(--color-aqua);
 }
@@ -4967,6 +4992,61 @@ button {
   place-items: center;
   padding: 24px;
   text-align: center;
+}
+
+@media (max-width: 1180px) and (min-width: 769px) {
+  .admin-shell {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .admin-sidebar {
+    padding: 24px 12px;
+  }
+
+  .admin-sidebar__nav button {
+    grid-template-columns: 38px minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .admin-main {
+    padding: 24px;
+  }
+
+  .admin-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-topbar h1 {
+    max-width: 520px;
+  }
+
+  .admin-save-status {
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-workspace {
+    flex-direction: column;
+  }
+
+  .admin-list-panel,
+  .admin-editor-panel {
+    width: 100%;
+    flex: none;
+  }
+
+  .admin-list {
+    max-height: 360px;
+  }
 }
 
 @media (max-width: 768px) {

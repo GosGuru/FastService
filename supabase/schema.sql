@@ -1,3 +1,7 @@
+-- FastService blank Supabase schema.
+-- Ejecutar completo en una base nueva: crea estructura, permisos, RLS y Storage.
+-- No inserta contenido en content_items; el panel de admin arranca vacio.
+
 create extension if not exists pgcrypto;
 
 create table if not exists public.admin_users (

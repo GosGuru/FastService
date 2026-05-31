@@ -12,12 +12,12 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable__jumyJ8mM8facfXfnum4KA_IX0YM
 NEXT_PUBLIC_SUPABASE_GALLERY_BUCKET=fastservice-gallery
 ```
 
-Para activar la base:
+Para activar una base nueva y dejar el panel de admin sin contenido:
 
 1. En Supabase SQL Editor, ejecuta `supabase/schema.sql`.
 2. Crea el usuario admin en Supabase Auth.
 3. Ejecuta el bloque bootstrap del final de `supabase/schema.sql`, cambiando el email por el del admin.
-4. Entra en `/admin/login`, inicia sesion y pulsa `Guardar Supabase` para sembrar el contenido local inicial en `content_items`.
+4. Entra en `/admin/login`. Si `content_items` esta vacia, el panel queda vacio para cargar todo manualmente.
 
 Para agregar las paginas nuevas de `Seguridad` y `Alquiler vehiculos sin conductor` en una base que ya tiene contenido guardado, ejecuta tambien:
 
@@ -25,7 +25,7 @@ Para agregar las paginas nuevas de `Seguridad` y `Alquiler vehiculos sin conduct
 supabase/add-security-self-drive-services.sql
 ```
 
-El frontend lee primero `content_items` publicados desde Supabase. Si la tabla esta vacia o aun no existe, usa el contenido local como fallback para no dejar la web en blanco.
+El frontend lee primero `content_items` publicados desde Supabase. Si Supabase esta configurado y la tabla esta vacia, muestra el contenido vacio; si Supabase no esta configurado o falla la lectura, usa el contenido local como fallback.
 
 ### Checklist si falla `Guardar Supabase`
 
