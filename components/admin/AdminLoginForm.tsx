@@ -1,61 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { FormEvent } from "react";
-import { useState, useTransition } from "react";
+import { useActionState } from "react";
 import { FiArrowLeft, FiLock, FiLogIn } from "react-icons/fi";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { signInAdminAction, type AdminLoginState } from "@/app/admin/login/actions";
+
+const initialLoginState: AdminLoginState = {
+  message: "",
+  email: ""
+};
 
 export function AdminLoginForm({ nextPath }: { nextPath: string }) {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isPending, startTransition] = useTransition();
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorMessage("");
-
-    startTransition(() => {
-      void (async () => {
-        try {
-          const supabase = createSupabaseBrowserClient();
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-          if (error || !data.user) {
-            setErrorMessage("Email o contrasena incorrectos.");
-            return;
-          }
-
-          const { data: adminUser, error: adminError } = await supabase
-            .from("admin_users")
-            .select("user_id")
-            .eq("user_id", data.user.id)
-            .maybeSingle();
-
-          if (adminError || !adminUser) {
-            await supabase.auth.signOut();
-            setErrorMessage("Este usuario no tiene permisos de administrador.");
-            return;
-          }
-
-          router.replace(nextPath);
-          router.refresh();
-        } catch (error) {
-          setErrorMessage(error instanceof Error ? error.message : "No se pudo iniciar sesion.");
-        }
-      })();
-    });
-  }
+  const [state, formAction, isPending] = useActionState(signInAdminAction, initialLoginState);
 
   return (
     <div className="admin-login-wrapper">
       <Link href="/es" className="admin-login-card__home-link">
         <FiArrowLeft aria-hidden="true" /> Volver al inicio
       </Link>
-      <form className="admin-login-card" onSubmit={handleSubmit}>
+      <form className="admin-login-card" action={formAction}>
+        <input type="hidden" name="nextPath" value={nextPath} />
         <span className="admin-login-card__icon">
           <FiLock aria-hidden="true" />
         </span>
@@ -66,13 +30,13 @@ export function AdminLoginForm({ nextPath }: { nextPath: string }) {
         </div>
         <label className="admin-field">
           <span>Email</span>
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
+          <input type="email" name="email" defaultValue={state.email} autoComplete="email" required />
         </label>
         <label className="admin-field">
           <span>Contrasena</span>
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
+          <input type="password" name="password" autoComplete="current-password" required />
         </label>
-        {errorMessage ? <p className="admin-login-card__error">{errorMessage}</p> : null}
+        {state.message ? <p className="admin-login-card__error">{state.message}</p> : null}
         <button type="submit" className="admin-button admin-button--primary" disabled={isPending}>
           <FiLogIn aria-hidden="true" /> {isPending ? "Entrando..." : "Entrar"}
         </button>

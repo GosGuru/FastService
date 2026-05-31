@@ -7,8 +7,8 @@ El proyecto ya esta preparado para usar Supabase como fuente de contenido, Auth 
 Variables locales usadas por la app:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://uuvpspxnijthjwmksrer.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable__jumyJ8mM8facfXfnum4KA_IX0YM9vy
+NEXT_PUBLIC_SUPABASE_URL=https://srmdwudjynqovzoejcay.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<tu_publishable_key>
 NEXT_PUBLIC_SUPABASE_GALLERY_BUCKET=fastservice-gallery
 ```
 
