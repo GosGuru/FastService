@@ -1,6 +1,7 @@
 import { boatCollections } from "@/data/boatCollections";
 import { boats } from "@/data/boats";
 import { faqs } from "@/data/faqs";
+import { securityServices, selfDriveVehicles } from "@/data/serviceOptions";
 import { servicePages } from "@/data/services";
 import { vehicles } from "@/data/vehicles";
 import { waterToys } from "@/data/waterToys";
@@ -146,8 +147,16 @@ function normalizeServicePage(page: ServicePage): ServicePage {
     specs: normalizeSpecs(page.specs),
     richDescription: page.richDescription,
     amenities: page.amenities ?? [],
-    marina: page.marina ?? localized("")
+    marina: page.marina ?? localized(""),
+    options: Array.isArray(page.options) ? page.options : getDefaultServiceOptions(page.serviceId)
   };
+}
+
+function getDefaultServiceOptions(serviceId: string) {
+  if (serviceId === "security") return securityServices;
+  if (serviceId === "self-drive") return selfDriveVehicles;
+
+  return undefined;
 }
 
 export function normalizeAdminContentSnapshot(snapshot: AdminContentSnapshot): AdminContentSnapshot {

@@ -102,6 +102,15 @@ export interface ManagedDetailFields {
   marina?: LocalizedText;
 }
 
+export interface ServiceOption {
+  id: string;
+  name: LocalizedText;
+  description: LocalizedText;
+  details: LocalizedText;
+  image: MediaAsset;
+  whatsappMessage: LocalizedText;
+}
+
 export interface ServicePage extends BaseContent, ManagedDetailFields {
   kind: "service";
   serviceId: string;
@@ -110,6 +119,7 @@ export interface ServicePage extends BaseContent, ManagedDetailFields {
   description: LocalizedText;
   image: MediaAsset;
   whatsappMessage: LocalizedText;
+  options?: ServiceOption[];
 }
 
 export interface Vehicle extends BaseContent, ManagedDetailFields {

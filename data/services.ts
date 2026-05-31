@@ -1,4 +1,5 @@
 import type { ServicePage } from "@/types/content";
+import { securityServices, selfDriveVehicles } from "@/data/serviceOptions";
 
 export const servicePages: ServicePage[] = [
   {
@@ -86,6 +87,7 @@ export const servicePages: ServicePage[] = [
     publishedAt: "2026-05-25",
     updatedAt: "2026-05-25",
     schemaType: "Service",
+    options: securityServices,
     whatsappMessage: {
       es: "Hola, quiero consultar servicios de seguridad privada y escolta en Ibiza.",
       en: "Hello, I would like to check private security and escort services in Ibiza."
@@ -116,6 +118,7 @@ export const servicePages: ServicePage[] = [
     publishedAt: "2026-05-25",
     updatedAt: "2026-05-25",
     schemaType: "Service",
+    options: selfDriveVehicles,
     whatsappMessage: {
       es: "Hola, quiero consultar alquiler de vehículos sin conductor en Ibiza.",
       en: "Hello, I would like to check self-drive vehicle rental in Ibiza."

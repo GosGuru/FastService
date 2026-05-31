@@ -3,13 +3,14 @@ import { FaWhatsapp } from "react-icons/fa";
 import { NoWidowText } from "@/components/typography/NoWidowText";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
-import { servicePages } from "@/data/services";
+import type { ServicePage } from "@/types/content";
 
 interface FooterProps {
   locale: Locale;
+  servicePages: ServicePage[];
 }
 
-export function Footer({ locale }: FooterProps) {
+export function Footer({ locale, servicePages }: FooterProps) {
   const labels = uiLabels[locale];
   const transfers = servicePages.find((page) => page.serviceId === "transfers");
   const waterToys = servicePages.find((page) => page.serviceId === "water-toys");

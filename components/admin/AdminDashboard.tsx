@@ -10,7 +10,7 @@ import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentS
 import { getLocalizedSlug, getLocalizedValue, locales, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
-import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, RichTextByLocale, SeoPage, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
+import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, RichTextByLocale, SeoPage, ServiceOption, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
 type GenericContentItem = BoatCollection;
@@ -176,6 +176,12 @@ function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
 
     validateLocalizedSlug(errors, serviceSlugKeys, label, page.slugsByLocale, "servicePages");
     validatePrimaryImage(errors, label, page);
+
+    page.options?.forEach((option, optionIndex) => {
+      const optionLabel = getLocalizedValue(option.name, "es").trim() || option.id || `Opcion ${optionIndex + 1}`;
+
+      validatePrimaryImage(errors, `${label} / ${optionLabel}`, option);
+    });
   });
 
   if (errors.length <= 8) return errors;
@@ -1207,7 +1213,95 @@ function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; loca
         uploadPrefix="service-body"
         onChange={(patch) => onChange(patch as Partial<ServicePage>)}
       />
+      <ServiceOptionsEditor
+        serviceId={page.serviceId}
+        options={page.options ?? []}
+        locale={locale}
+        onChange={(options) => onChange({ options })}
+      />
     </div>
+  );
+}
+
+function createServiceOption(serviceId: string): ServiceOption {
+  const baseId = serviceId ? `${serviceId}-option` : "service-option";
+
+  return {
+    id: createId(baseId),
+    name: localized("Nueva opcion"),
+    description: localized("Descripcion breve para la tarjeta."),
+    details: localized("Detalle operativo para explicar disponibilidad, condiciones o logistica."),
+    image: { ...blankImage, alt: localized("") },
+    whatsappMessage: localized("Hola, quiero consultar disponibilidad para este servicio en Ibiza.")
+  };
+}
+
+function ServiceOptionsEditor({
+  serviceId,
+  options,
+  locale,
+  onChange
+}: {
+  serviceId: string;
+  options: ServiceOption[];
+  locale: Locale;
+  onChange: (options: ServiceOption[]) => void;
+}) {
+  function updateOption(index: number, patch: Partial<ServiceOption>) {
+    onChange(options.map((option, optionIndex) => (optionIndex === index ? { ...option, ...patch } : option)));
+  }
+
+  function addOption() {
+    onChange([...options, createServiceOption(serviceId)]);
+  }
+
+  function removeOption(index: number) {
+    onChange(options.filter((_, optionIndex) => optionIndex !== index));
+  }
+
+  return (
+    <section className="admin-subpanel">
+      <div className="admin-panel-heading admin-panel-heading--compact">
+        <h3><FiLayers aria-hidden="true" /> Opciones de la home y ficha</h3>
+        <button type="button" className="admin-icon-button" onClick={addOption} aria-label="Agregar opcion de servicio">
+          <FiPlus aria-hidden="true" />
+        </button>
+      </div>
+      {!options.length ? (
+        <div className="admin-gallery-empty">
+          <FiBriefcase aria-hidden="true" />
+          <span>Agrega opciones para que esta seccion aparezca con tarjetas en la home y en su ficha.</span>
+        </div>
+      ) : null}
+      <div className="admin-form">
+        {options.map((option, index) => {
+          const optionLabel = getLocalizedValue(option.name, locale) || `Opcion ${index + 1}`;
+
+          return (
+            <section className="admin-subpanel" key={option.id || index}>
+              <div className="admin-panel-heading admin-panel-heading--compact">
+                <h3>{optionLabel}</h3>
+                <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => removeOption(index)} aria-label="Eliminar opcion de servicio">
+                  <FiTrash2 aria-hidden="true" />
+                </button>
+              </div>
+              <TextField label="ID/ancla interna" value={option.id} onChange={(value) => updateOption(index, { id: value.trim() })} />
+              <LocalizedTextEditor label="Nombre" value={option.name} locale={locale} onChange={(value) => updateOption(index, { name: value })} />
+              <LocalizedTextEditor label="Descripcion de tarjeta" value={option.description} locale={locale} multiline onChange={(value) => updateOption(index, { description: value })} />
+              <LocalizedTextEditor label="Detalle operativo" value={option.details} locale={locale} multiline onChange={(value) => updateOption(index, { details: value })} />
+              <LocalizedTextEditor label="Mensaje WhatsApp" value={option.whatsappMessage} locale={locale} multiline onChange={(value) => updateOption(index, { whatsappMessage: value })} />
+              <MediaEditor
+                image={option.image}
+                gallery={[]}
+                locale={locale}
+                itemLabel={optionLabel}
+                onChange={(image) => updateOption(index, { image })}
+              />
+            </section>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

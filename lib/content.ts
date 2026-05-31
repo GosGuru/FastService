@@ -16,18 +16,26 @@ export function t(value: LocalizedText, locale: Locale) {
 export async function getPublicContent() {
   const result = await loadPublicContentSnapshot();
 
-  return withStaticServicePages(result.snapshot.content);
+  return withStaticRoutePages(result.snapshot.content);
 }
 
-function withStaticServicePages(content: AdminContentSnapshot["content"]) {
-  const existingServicePageIds = new Set(content.servicePages.map((page) => page.id));
-  const missingServicePages = servicePages.filter((page) => !existingServicePageIds.has(page.id));
+function mergeMissingById<T extends { id: string }>(currentItems: T[], fallbackItems: T[]) {
+  const existingIds = new Set(currentItems.map((item) => item.id));
+  const missingItems = fallbackItems.filter((item) => !existingIds.has(item.id));
 
-  if (!missingServicePages.length) return content;
+  return missingItems.length ? [...currentItems, ...missingItems] : currentItems;
+}
+
+function withStaticRoutePages(content: AdminContentSnapshot["content"]) {
+  const boatCollectionPages = mergeMissingById(content.boatCollections, boatCollections);
+  const serviceRoutePages = mergeMissingById(content.servicePages, servicePages);
+
+  if (boatCollectionPages === content.boatCollections && serviceRoutePages === content.servicePages) return content;
 
   return {
     ...content,
-    servicePages: [...content.servicePages, ...missingServicePages]
+    boatCollections: boatCollectionPages,
+    servicePages: serviceRoutePages
   };
 }
 

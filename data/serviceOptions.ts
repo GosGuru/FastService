@@ -1,13 +1,4 @@
-import type { LocalizedText, MediaAsset } from "@/types/content";
-
-export interface ServiceOption {
-  id: string;
-  name: LocalizedText;
-  description: LocalizedText;
-  details: LocalizedText;
-  image: MediaAsset;
-  whatsappMessage: LocalizedText;
-}
+import type { ServiceOption } from "@/types/content";
 
 export const securityServices: ServiceOption[] = [
   {

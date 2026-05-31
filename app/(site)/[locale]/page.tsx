@@ -38,8 +38,8 @@ export default async function HomePage({ params }: Props) {
       <FeaturedBoatsSection boats={content.boats} locale={locale} />
       <TransferSection servicePages={content.servicePages} vehicles={content.vehicles} locale={locale} />
       <WaterToysSection servicePages={content.servicePages} waterToys={content.waterToys} locale={locale} />
-      <SecuritySection locale={locale} />
-      <SelfDriveVehiclesSection locale={locale} />
+      <SecuritySection servicePages={content.servicePages} locale={locale} />
+      <SelfDriveVehiclesSection servicePages={content.servicePages} locale={locale} />
       <ContactFormSection locale={locale} />
     </main>
   );

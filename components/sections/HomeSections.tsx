@@ -8,9 +8,7 @@ import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
 import { NoWidowAccent, NoWidowText } from "@/components/typography/NoWidowText";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
-import { securityServices, selfDriveVehicles } from "@/data/serviceOptions";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
-import { getServiceSectionSlug } from "@/lib/routes";
 import type { Boat, BoatCollection, BoatCollectionId, ServicePage, Vehicle, WaterToy } from "@/types/content";
 
 interface HomeSectionsProps {
@@ -313,32 +311,38 @@ export function WaterToysSection({ locale, servicePages, waterToys }: HomeSectio
   );
 }
 
-export function SecuritySection({ locale }: HomeSectionsProps) {
-  const securitySlug = getServiceSectionSlug("security", locale);
+function getServicePage(servicePages: ServicePage[], serviceId: string) {
+  return servicePages.find((page) => page.serviceId === serviceId);
+}
+
+export function SecuritySection({ locale, servicePages }: HomeSectionsProps & { servicePages: ServicePage[] }) {
+  const securityPage = getServicePage(servicePages, "security");
+  const securitySlug = getLocalizedSlug(securityPage?.slugsByLocale ?? { es: "seguridad", en: "security" }, locale);
+  const securityOptions = securityPage?.options ?? [];
+  const title = securityPage ? getLocalizedValue(securityPage.title, locale) : locale === "es" ? "Seguridad privada, escolta y acompañamiento" : "Private security, escort and accompaniment";
+  const eyebrow = securityPage ? getLocalizedValue(securityPage.eyebrow, locale) : locale === "es" ? "Seguridad" : "Security";
+  const description = securityPage
+    ? getLocalizedValue(securityPage.description, locale)
+    : locale === "es"
+      ? "Protección de bienes en villas, escolta diurna y cobertura nocturna o clubbing coordinada de forma discreta."
+      : "Asset protection for villas, daytime escort and discreet night or clubbing coverage.";
+
+  if (!securityOptions.length) return null;
 
   return (
     <section className="section section--soft" id="seguridad">
       <div className="container">
         <div className="section-heading section-heading--center">
-          <p className="eyebrow">4. {locale === "es" ? "Seguridad" : "Security"}</p>
+          <p className="eyebrow">4. {eyebrow}</p>
           <h2>
-            <NoWidowText
-              text={locale === "es" ? "Seguridad privada, escolta y acompañamiento" : "Private security, escort and accompaniment"}
-              lockWords={2}
-            />
+            <NoWidowText text={title} lockWords={2} />
           </h2>
           <p>
-            <NoWidowText
-              text={
-                locale === "es"
-                  ? "Protección de bienes en villas, escolta diurna y cobertura nocturna o clubbing coordinada de forma discreta."
-                  : "Asset protection for villas, daytime escort and discreet night or clubbing coverage."
-              }
-            />
+            <NoWidowText text={description} />
           </p>
         </div>
         <div className="content-grid content-grid--three">
-          {securityServices.map((service) => (
+          {securityOptions.map((service) => (
             <ServiceOptionCard option={service} locale={locale} detailHref={`/${locale}/${securitySlug}#${service.id}`} key={service.id} />
           ))}
         </div>
@@ -347,33 +351,34 @@ export function SecuritySection({ locale }: HomeSectionsProps) {
   );
 }
 
-export function SelfDriveVehiclesSection({ locale }: HomeSectionsProps) {
-  const selfDriveSlug = getServiceSectionSlug("self-drive", locale);
+export function SelfDriveVehiclesSection({ locale, servicePages }: HomeSectionsProps & { servicePages: ServicePage[] }) {
+  const selfDrivePage = getServicePage(servicePages, "self-drive");
+  const selfDriveSlug = getLocalizedSlug(selfDrivePage?.slugsByLocale ?? { es: "alquiler-vehiculos-sin-conductor", en: "self-drive-car-rental" }, locale);
+  const selfDriveOptions = selfDrivePage?.options ?? [];
+  const title = selfDrivePage ? getLocalizedValue(selfDrivePage.title, locale) : locale === "es" ? "Tres opciones para moverte a tu ritmo" : "Three options to move at your own pace";
+  const eyebrow = selfDrivePage ? getLocalizedValue(selfDrivePage.eyebrow, locale) : locale === "es" ? "Alquiler vehículos sin conductor" : "Self-drive vehicle rental";
+  const description = selfDrivePage
+    ? getLocalizedValue(selfDrivePage.description, locale)
+    : locale === "es"
+      ? "Mismo flujo que juguetes náuticos: sin precios publicados, consulta por WhatsApp y confirmación según fechas, entrega y disponibilidad."
+      : "Same flow as water toys: no published prices, WhatsApp request and confirmation based on dates, delivery and availability.";
+
+  if (!selfDriveOptions.length) return null;
 
   return (
     <section className="section" id="alquiler-vehiculos-sin-conductor">
       <div className="container">
         <div className="section-heading">
-          <p className="eyebrow">5. {locale === "es" ? "Alquiler vehículos sin conductor" : "Self-drive vehicle rental"}</p>
+          <p className="eyebrow">5. {eyebrow}</p>
           <h2>
-            <NoWidowText
-              text={locale === "es" ? "Tres opciones para moverte a tu ritmo" : "Three options to move at your own pace"}
-              lockWords={2}
-            />
+            <NoWidowText text={title} lockWords={2} />
           </h2>
           <p>
-            <NoWidowText
-              text={
-                locale === "es"
-                  ? "Mismo flujo que juguetes náuticos: sin precios publicados, consulta por WhatsApp y confirmación según fechas, entrega y disponibilidad."
-                  : "Same flow as water toys: no published prices, WhatsApp request and confirmation based on dates, delivery and availability."
-              }
-              lockWords={3}
-            />
+            <NoWidowText text={description} lockWords={3} />
           </p>
         </div>
         <div className="content-grid content-grid--three">
-          {selfDriveVehicles.map((vehicle) => (
+          {selfDriveOptions.map((vehicle) => (
             <ServiceOptionCard option={vehicle} locale={locale} detailHref={`/${locale}/${selfDriveSlug}#${vehicle.id}`} key={vehicle.id} />
           ))}
         </div>

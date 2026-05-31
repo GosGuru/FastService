@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { FiArrowRight, FiChevronDown, FiGlobe, FiMenu, FiX } from "react-icons/fi";
 import { MediaImage } from "@/components/MediaImage";
 import { getBoatNavigation, getMobilePageNavigation } from "@/data/navigation";
-import { servicePages } from "@/data/services";
 import { languageOptions, uiLabels, getLocalizedSlug, type Locale } from "@/lib/i18n";
+import type { BoatCollection, ServicePage } from "@/types/content";
 
 interface MobileMenuProps {
   locale: Locale;
+  boatCollections: BoatCollection[];
+  servicePages: ServicePage[];
 }
 
 type MobileTab = "boats" | "pages";
@@ -21,13 +23,13 @@ const boatCardPrefixes: Record<Locale, string> = {
   nl: "Huur"
 };
 
-export function MobileMenu({ locale }: MobileMenuProps) {
+export function MobileMenu({ locale, boatCollections, servicePages }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<MobileTab>("boats");
   const [languageOpen, setLanguageOpen] = useState(false);
   const labels = uiLabels[locale];
-  const boatItems = getBoatNavigation(locale);
-  const pageItems = getMobilePageNavigation(locale);
+  const boatItems = getBoatNavigation(locale, { boatCollections });
+  const pageItems = getMobilePageNavigation(locale, { servicePages });
   const activeLanguage = languageOptions.find((item) => item.locale === locale) ?? languageOptions[0];
 
   const contactPage = servicePages.find((page) => page.serviceId === "contact");

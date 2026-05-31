@@ -82,7 +82,7 @@ export default async function BoatPage({ params }: Props) {
   );
 
   const collectionLabel = collectionLabels[boat.collectionId]?.[locale] ?? collectionLabels[boat.collectionId]?.es ?? "";
-  const collectionHref = `/${locale}/boat/${categorySlug}`;
+  const collectionHref = `/${locale}/${categorySlug}`;
   const descriptionRich = boat.description?.[locale] ?? boat.description?.es;
   const marina = boat.marina ? getLocalizedValue(boat.marina, locale) : null;
   const galleryImages = [boat.image, ...boat.gallery].filter(Boolean);

@@ -2,7 +2,7 @@ import { CardActions } from "@/components/cards/CardActions";
 import { MediaImage } from "@/components/MediaImage";
 import { NoWidowText } from "@/components/typography/NoWidowText";
 import { getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
-import type { ServiceOption } from "@/data/serviceOptions";
+import type { ServiceOption } from "@/types/content";
 
 interface ServiceOptionCardProps {
   option: ServiceOption;

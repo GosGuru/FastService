@@ -1,34 +1,37 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import Link from "next/link";
 import { FiChevronDown } from "react-icons/fi";
 import { MediaImage } from "@/components/MediaImage";
 import { getBoatNavigation } from "@/data/navigation";
 import type { Locale } from "@/lib/i18n";
+import type { BoatCollection } from "@/types/content";
 
 interface DesktopMegaMenuProps {
   locale: Locale;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  boatCollections: BoatCollection[];
 }
 
-export function DesktopMegaMenu({ locale, open, onOpenChange }: DesktopMegaMenuProps) {
+export function DesktopMegaMenu({ locale, open, onOpenChange, boatCollections }: DesktopMegaMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const items = getBoatNavigation(locale);
+  const items = getBoatNavigation(locale, { boatCollections });
+  const handleOpenChange = useEffectEvent(onOpenChange);
 
   useEffect(() => {
     if (!open) return;
 
     function onPointerDown(event: PointerEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        onOpenChange(false);
+        handleOpenChange(false);
       }
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        onOpenChange(false);
+        handleOpenChange(false);
       }
     }
 
@@ -39,7 +42,7 @@ export function DesktopMegaMenu({ locale, open, onOpenChange }: DesktopMegaMenuP
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, onOpenChange]);
+  }, [open]);
 
   return (
     <div className="nav-dropdown" ref={ref}>

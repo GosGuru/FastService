@@ -1,13 +1,31 @@
 import { boatCollections } from "@/data/boatCollections";
 import { servicePages } from "@/data/services";
 import { getLocalizedSlug, getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
+import type { BoatCollection, ServicePage } from "@/types/content";
 
-export function getPrimaryNavigation(locale: Locale) {
-  const transfers = servicePages.find((page) => page.serviceId === "transfers");
-  const waterToys = servicePages.find((page) => page.serviceId === "water-toys");
-  const security = servicePages.find((page) => page.serviceId === "security");
-  const selfDrive = servicePages.find((page) => page.serviceId === "self-drive");
-  const contact = servicePages.find((page) => page.serviceId === "contact");
+interface NavigationContent {
+  boatCollections?: BoatCollection[];
+  servicePages?: ServicePage[];
+}
+
+function getBoatCollectionSource(content?: NavigationContent) {
+  return content?.boatCollections?.length ? content.boatCollections : boatCollections;
+}
+
+function getServicePageSource(content?: NavigationContent) {
+  return content?.servicePages?.length ? content.servicePages : servicePages;
+}
+
+function getServicePage(content: NavigationContent | undefined, serviceId: string) {
+  return getServicePageSource(content).find((page) => page.serviceId === serviceId);
+}
+
+export function getPrimaryNavigation(locale: Locale, content?: NavigationContent) {
+  const transfers = getServicePage(content, "transfers");
+  const waterToys = getServicePage(content, "water-toys");
+  const security = getServicePage(content, "security");
+  const selfDrive = getServicePage(content, "self-drive");
+  const contact = getServicePage(content, "contact");
   const labels = uiLabels[locale];
 
   return [
@@ -20,11 +38,11 @@ export function getPrimaryNavigation(locale: Locale) {
   ];
 }
 
-export function getMobilePageNavigation(locale: Locale) {
-  const transfers = servicePages.find((page) => page.serviceId === "transfers");
-  const waterToys = servicePages.find((page) => page.serviceId === "water-toys");
-  const security = servicePages.find((page) => page.serviceId === "security");
-  const selfDrive = servicePages.find((page) => page.serviceId === "self-drive");
+export function getMobilePageNavigation(locale: Locale, content?: NavigationContent) {
+  const transfers = getServicePage(content, "transfers");
+  const waterToys = getServicePage(content, "water-toys");
+  const security = getServicePage(content, "security");
+  const selfDrive = getServicePage(content, "self-drive");
   const transfersHref = `/${locale}/${transfers ? getLocalizedSlug(transfers.slugsByLocale, locale) : "transfer"}`;
   const waterToysHref = `/${locale}/${waterToys ? getLocalizedSlug(waterToys.slugsByLocale, locale) : "water-toys"}`;
   const securityHref = `/${locale}/${security ? getLocalizedSlug(security.slugsByLocale, locale) : "security"}`;
@@ -40,11 +58,11 @@ export function getMobilePageNavigation(locale: Locale) {
     ];
   }
 
-  return getPrimaryNavigation(locale).filter((item) => !item.hasMegaMenu);
+  return getPrimaryNavigation(locale, content).filter((item) => !item.hasMegaMenu);
 }
 
-export function getBoatNavigation(locale: Locale) {
-  return boatCollections.map((collection) => ({
+export function getBoatNavigation(locale: Locale, content?: NavigationContent) {
+  return getBoatCollectionSource(content).map((collection) => ({
     id: collection.collectionId,
     label: getLocalizedValue(collection.title, locale),
     eyebrow: getLocalizedValue(collection.eyebrow, locale),

@@ -70,16 +70,6 @@ function createContentSaveError(action: "leer" | "eliminar" | "guardar", key: Ad
   return new Error(`Supabase fallo al ${action} ${label}: ${rawMessage}`);
 }
 
-function createEmptySnapshot(): AdminContentSnapshot {
-  const snapshot = createInitialAdminSnapshot();
-
-  contentKeys.forEach((key) => {
-    snapshot.content[key] = [] as never;
-  });
-
-  return snapshot;
-}
-
 function createPublicFallbackSnapshot(): AdminContentSnapshot {
   const snapshot = createInitialAdminSnapshot();
 
@@ -148,13 +138,15 @@ async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
 
     if (!data?.length) {
       return {
-        snapshot: createEmptySnapshot(),
-        source: "supabase",
-        message: selectAll ? "Supabase esta vacio; panel listo para cargar contenido manualmente." : "Supabase esta vacio; no hay contenido publicado."
+        snapshot: unavailableFallback,
+        source: "static",
+        message: selectAll
+          ? "Supabase esta vacio; cargue el contenido inicial real. Pulsa Guardar Supabase para publicarlo en la DB."
+          : "Supabase esta vacio; usando contenido local publicado hasta guardar en Supabase."
       };
     }
 
-    return { snapshot: snapshotFromRows(data as ContentRow[], createEmptySnapshot()), source: "supabase" };
+    return { snapshot: snapshotFromRows(data as ContentRow[], unavailableFallback), source: "supabase" };
   } catch (error) {
     return { snapshot: unavailableFallback, source: "static", message: error instanceof Error ? error.message : "No se pudo leer Supabase." };
   }

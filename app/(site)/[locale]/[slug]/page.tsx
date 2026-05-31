@@ -12,10 +12,9 @@ import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
 import { faqs as fallbackFaqs } from "@/data/faqs";
-import { securityServices, selfDriveVehicles, type ServiceOption } from "@/data/serviceOptions";
 import { buildAlternates, getAllLocalizedStaticPaths, getPageBySlug, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
-import type { ServicePage } from "@/types/content";
+import type { ServiceOption, ServicePage } from "@/types/content";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -194,7 +193,7 @@ export default async function DynamicPage({ params }: Props) {
         <ServiceHero page={page} locale={locale} />
         <ServiceOptionsGrid
           locale={locale}
-          options={securityServices}
+          options={page.options ?? []}
           eyebrow={locale === "es" ? "Tres coberturas principales" : "Three core coverages"}
           title={locale === "es" ? "Protección privada según el plan" : "Private protection matched to the plan"}
           description={
@@ -214,7 +213,7 @@ export default async function DynamicPage({ params }: Props) {
         <ServiceHero page={page} locale={locale} />
         <ServiceOptionsGrid
           locale={locale}
-          options={selfDriveVehicles}
+          options={page.options ?? []}
           eyebrow={locale === "es" ? "Sin precios publicados" : "No published prices"}
           title={locale === "es" ? "Consulta disponibilidad por WhatsApp" : "Check availability by WhatsApp"}
           description={
@@ -251,6 +250,8 @@ function ServiceOptionsGrid({
   description: string;
   soft?: boolean;
 }) {
+  if (!options.length) return null;
+
   return (
     <section className={`section ${soft ? "section--soft" : ""}`}>
       <div className="container">

@@ -1,34 +1,37 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import Link from "next/link";
 import { FiChevronDown } from "react-icons/fi";
 import { getMobilePageNavigation } from "@/data/navigation";
 import type { Locale } from "@/lib/i18n";
 import { uiLabels } from "@/lib/i18n";
+import type { ServicePage } from "@/types/content";
 
 interface DesktopServicesDropdownProps {
   locale: Locale;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  servicePages: ServicePage[];
 }
 
-export function DesktopServicesDropdown({ locale, open, onOpenChange }: DesktopServicesDropdownProps) {
+export function DesktopServicesDropdown({ locale, open, onOpenChange, servicePages }: DesktopServicesDropdownProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const items = getMobilePageNavigation(locale);
+  const items = getMobilePageNavigation(locale, { servicePages });
+  const handleOpenChange = useEffectEvent(onOpenChange);
 
   useEffect(() => {
     if (!open) return;
 
     function onPointerDown(event: PointerEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        onOpenChange(false);
+        handleOpenChange(false);
       }
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        onOpenChange(false);
+        handleOpenChange(false);
       }
     }
 
@@ -39,7 +42,7 @@ export function DesktopServicesDropdown({ locale, open, onOpenChange }: DesktopS
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, onOpenChange]);
+  }, [open]);
 
   const servicesLabel = uiLabels[locale].services || "Servicios";
 

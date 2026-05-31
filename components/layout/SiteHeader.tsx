@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiMail } from "react-icons/fi";
@@ -10,25 +10,32 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { servicePages } from "@/data/services";
+import type { BoatCollection, ServicePage } from "@/types/content";
 
 interface SiteHeaderProps {
   locale: Locale;
+  boatCollections: BoatCollection[];
+  servicePages: ServicePage[];
 }
 
-export function SiteHeader({ locale }: SiteHeaderProps) {
-  const [isScrolled, setIsScrolled] = useState(false);
+function subscribeToScroll(callback: () => void) {
+  window.addEventListener("scroll", callback, { passive: true });
+
+  return () => window.removeEventListener("scroll", callback);
+}
+
+function getScrollSnapshot() {
+  return window.scrollY > 10;
+}
+
+function getServerScrollSnapshot() {
+  return false;
+}
+
+export function SiteHeader({ locale, boatCollections, servicePages }: SiteHeaderProps) {
+  const isScrolled = useSyncExternalStore(subscribeToScroll, getScrollSnapshot, getServerScrollSnapshot);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    function handleScroll() {
-      setIsScrolled(window.scrollY > 10);
-    }
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleMegaMenuOpenChange = (open: boolean) => {
     setIsMegaMenuOpen(open);
@@ -66,15 +73,15 @@ export function SiteHeader({ locale }: SiteHeaderProps) {
           <span className="brand__logo" aria-hidden="true" />
         </Link>
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <DesktopMegaMenu locale={locale} open={isMegaMenuOpen} onOpenChange={handleMegaMenuOpenChange} />
-          <DesktopServicesDropdown locale={locale} open={isServicesDropdownOpen} onOpenChange={handleServicesDropdownOpenChange} />
+          <DesktopMegaMenu locale={locale} open={isMegaMenuOpen} onOpenChange={handleMegaMenuOpenChange} boatCollections={boatCollections} />
+          <DesktopServicesDropdown locale={locale} open={isServicesDropdownOpen} onOpenChange={handleServicesDropdownOpenChange} servicePages={servicePages} />
         </nav>
         <div className="site-header__actions">
           <LanguageSwitcher locale={locale} />
           <Link href={contactHref} className="header-contact">
             {labels.contact}
           </Link>
-          <MobileMenu locale={locale} />
+          <MobileMenu locale={locale} boatCollections={boatCollections} servicePages={servicePages} />
         </div>
       </div>
     </header>

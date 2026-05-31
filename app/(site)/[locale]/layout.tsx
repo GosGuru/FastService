@@ -3,6 +3,7 @@ import { FloatingWhatsApp } from "@/components/layout/FloatingWhatsApp";
 import { Footer } from "@/components/layout/Footer";
 import { SiteLoader } from "@/components/layout/SiteLoader";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { getPublicContent } from "@/lib/content";
 import { isLocale, locales, type Locale } from "@/lib/i18n";
 
 type Props = {
@@ -22,13 +23,14 @@ export default async function LocaleLayout({ children, params }: Props) {
   }
 
   const locale = rawLocale as Locale;
+  const content = await getPublicContent();
 
   return (
     <>
       <SiteLoader />
-      <SiteHeader locale={locale} />
+      <SiteHeader locale={locale} boatCollections={content.boatCollections} servicePages={content.servicePages} />
       {children}
-      <Footer locale={locale} />
+      <Footer locale={locale} servicePages={content.servicePages} />
       <FloatingWhatsApp locale={locale} />
     </>
   );
