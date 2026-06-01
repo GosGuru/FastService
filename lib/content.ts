@@ -16,7 +16,7 @@ export function t(value: LocalizedText, locale: Locale) {
 export async function getPublicContent() {
   const result = await loadPublicContentSnapshot();
 
-  return withStaticRoutePages(result.snapshot.content);
+  return withStaticPublicFallbacks(result.snapshot.content);
 }
 
 function mergeMissingById<T extends { id: string }>(currentItems: T[], fallbackItems: T[]) {
@@ -26,15 +26,25 @@ function mergeMissingById<T extends { id: string }>(currentItems: T[], fallbackI
   return missingItems.length ? [...currentItems, ...missingItems] : currentItems;
 }
 
-function withStaticRoutePages(content: AdminContentSnapshot["content"]) {
+function mergeMissingCollections<T extends { id: string; collectionId: string }>(currentItems: T[], fallbackItems: T[]) {
+  const existingIds = new Set(currentItems.map((item) => item.id));
+  const populatedCollections = new Set(currentItems.map((item) => item.collectionId));
+  const missingItems = fallbackItems.filter((item) => !existingIds.has(item.id) && !populatedCollections.has(item.collectionId));
+
+  return missingItems.length ? [...currentItems, ...missingItems] : currentItems;
+}
+
+function withStaticPublicFallbacks(content: AdminContentSnapshot["content"]) {
   const boatCollectionPages = mergeMissingById(content.boatCollections, boatCollections);
+  const boatItems = mergeMissingCollections(content.boats, boats);
   const serviceRoutePages = mergeMissingById(content.servicePages, servicePages);
 
-  if (boatCollectionPages === content.boatCollections && serviceRoutePages === content.servicePages) return content;
+  if (boatCollectionPages === content.boatCollections && boatItems === content.boats && serviceRoutePages === content.servicePages) return content;
 
   return {
     ...content,
     boatCollections: boatCollectionPages,
+    boats: boatItems,
     servicePages: serviceRoutePages
   };
 }
