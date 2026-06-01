@@ -20,14 +20,15 @@ export function HomeHero({ locale }: HomeSectionsProps) {
   return <HomeHeroExperience locale={locale} />;
 }
 
-const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: string; first: string; second: string; third?: string; cta: string; message: string }> = {
+const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: string; first: string; second: string; third?: string; fourth?: string; cta: string; message: string }> = {
   es: {
     eyebrow: "FastServices Ibiza",
-    title: "¿No sabes qué barco elegir?",
-    italic: "Nosotros te asesoramos.",
-    first: "Accede a una selección exclusiva de yates, lanchas y catamaranes en Ibiza, Formentera y Mallorca.",
-    second: "Comparamos opciones, resolvemos tus dudas y organizamos toda la experiencia para que reserves con total confianza, de forma rápida y sin complicaciones.",
-    third: "Contacta ahora y recibe recomendaciones personalizadas para tu día perfecto en el mar.",
+    title: "Alquiler de yates",
+    italic: "Ibiza",
+    first: "¿No sabes qué barco elegir? Nosotros te asesoramos.",
+    second: "Accede a una selección exclusiva de yates, lanchas y catamaranes en Ibiza, Formentera y Mallorca.",
+    third: "Comparamos opciones, resolvemos tus dudas y organizamos toda la experiencia para que reserves con total confianza, de forma rápida y sin complicaciones.",
+    fourth: "Contacta ahora y recibe recomendaciones personalizadas para tu día perfecto en el mar.",
     cta: "Contacta ahora",
     message: "Hola, quiero recibir recomendaciones personalizadas para mi día perfecto en el mar."
   },
@@ -169,6 +170,7 @@ export function HomeIntroSection({ locale }: HomeSectionsProps) {
           <p>{copy.first}</p>
           <p>{copy.second}</p>
           {copy.third ? <p>{copy.third}</p> : null}
+          {copy.fourth ? <p>{copy.fourth}</p> : null}
           <WhatsAppCta locale={locale} label={copy.cta} message={copy.message} />
         </div>
       </div>
