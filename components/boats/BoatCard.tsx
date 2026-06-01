@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { PiBathtub, PiBed, PiRuler, PiUsers } from "react-icons/pi";
-import { MediaImage } from "@/components/MediaImage";
+import { ImageCarousel } from "@/components/media/ImageCarousel";
 import type { Boat } from "@/types/content";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
 import { buildBoatAvailabilityMessage, buildWhatsAppUrl, getBoatTypeLabel } from "@/lib/whatsapp";
@@ -43,10 +43,16 @@ export function BoatCard({ boat, locale, href }: BoatCardProps) {
 
   return (
     <article className="boat-card">
-      <Link href={cardHref} className="boat-card__image" aria-label={`${labels.details}: ${boat.name}`}>
-        <MediaImage asset={boat.image} locale={locale} sizes="(max-width: 760px) 88vw, (max-width: 1180px) 46vw, 32vw" />
-        <span className="boat-card__image-link">{labels.details}</span>
-      </Link>
+      <ImageCarousel
+        assets={[boat.image, ...boat.gallery]}
+        locale={locale}
+        href={cardHref}
+        ariaLabel={`${labels.details}: ${boat.name}`}
+        className="boat-card__image"
+        sizes="(max-width: 760px) 88vw, (max-width: 1180px) 46vw, 32vw"
+        showFullscreen={false}
+        variant="card"
+      />
 
       <div className="boat-card__body">
         <div className="boat-card__meta">

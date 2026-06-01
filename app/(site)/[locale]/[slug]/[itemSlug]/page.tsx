@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { DetailGallery } from "@/components/media/DetailGallery";
 import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
@@ -72,6 +72,13 @@ export default async function ItemPage({ params }: Props) {
 
   if (!item) notFound();
 
+  const canonicalSectionSlug = section ? getLocalizedSlug(section.slugsByLocale, locale) : slug;
+  const canonicalItemSlug = getLocalizedSlug(item.slugsByLocale, locale);
+
+  if (slug !== canonicalSectionSlug || itemSlug !== canonicalItemSlug) {
+    redirect(`/${locale}/${canonicalSectionSlug}/${canonicalItemSlug}`);
+  }
+
   const title = item.kind === "vehicle" ? item.name : getLocalizedValue(item.name, locale);
   const summary = item.kind === "vehicle" ? getLocalizedValue(item.overview, locale) : getLocalizedValue(item.details, locale);
   const richDescription = item.richDescription?.[locale] ?? item.richDescription?.es ?? { html: summary ? `<p>${escapeHtml(summary)}</p>` : "", text: summary };
@@ -84,7 +91,7 @@ export default async function ItemPage({ params }: Props) {
     return label ? [label] : [];
   });
   const galleryImages = [item.image, ...(item.gallery ?? [])];
-  const sectionHref = section ? `/${locale}/${getLocalizedSlug(section.slugsByLocale, locale)}` : `/${locale}/${slug}`;
+  const sectionHref = `/${locale}/${canonicalSectionSlug}`;
   const eyebrow = item.kind === "vehicle" ? t("transfer", locale) : t("waterToy", locale);
 
   return (

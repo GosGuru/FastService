@@ -5,6 +5,7 @@ import { securityServices, selfDriveVehicles } from "@/data/serviceOptions";
 import { servicePages } from "@/data/services";
 import { vehicles } from "@/data/vehicles";
 import { waterToys } from "@/data/waterToys";
+import { normalizeSlugSegment } from "@/lib/i18n";
 import type { Boat, BoatCollection, FaqItem, LocalizedText, RichTextByLocale, SeoPage, ServicePage, SpecItem, Vehicle, WaterToy } from "@/types/content";
 
 export type AdminContentKey = keyof AdminContentSnapshot["content"];
@@ -118,6 +119,12 @@ function normalizeSpecs(specs: SpecItem[] | undefined): SpecItem[] {
   return Array.isArray(specs) ? specs : [];
 }
 
+function normalizeLocalizedSlugs(slugsByLocale: LocalizedText): LocalizedText {
+  return Object.fromEntries(
+    Object.entries(slugsByLocale).map(([locale, slug]) => [locale, normalizeSlugSegment(String(slug))])
+  ) as LocalizedText;
+}
+
 function normalizeVehicle(vehicle: Vehicle): Vehicle {
   return {
     ...vehicle,
@@ -140,6 +147,13 @@ function normalizeWaterToy(toy: WaterToy): WaterToy {
   };
 }
 
+function normalizeServiceOptions(options: ServicePage["options"]): ServicePage["options"] {
+  return options?.map((option) => ({
+    ...option,
+    gallery: Array.isArray(option.gallery) ? option.gallery : []
+  }));
+}
+
 function normalizeServicePage(page: ServicePage): ServicePage {
   return {
     ...page,
@@ -148,7 +162,7 @@ function normalizeServicePage(page: ServicePage): ServicePage {
     richDescription: page.richDescription,
     amenities: page.amenities ?? [],
     marina: page.marina ?? localized(""),
-    options: Array.isArray(page.options) ? page.options : getDefaultServiceOptions(page.serviceId)
+    options: normalizeServiceOptions(Array.isArray(page.options) ? page.options : getDefaultServiceOptions(page.serviceId))
   };
 }
 
@@ -161,16 +175,18 @@ function getDefaultServiceOptions(serviceId: string) {
 
 export function normalizeAdminContentSnapshot(snapshot: AdminContentSnapshot): AdminContentSnapshot {
   const normalized = clone(snapshot);
-  const collectionSlugsById = new Map(normalized.content.boatCollections.map((collection) => [collection.collectionId, collection.slugsByLocale]));
 
   (["boatCollections", "boats", "servicePages", "vehicles", "waterToys", "seoPages"] as const).forEach((key) => {
     normalized.content[key] = normalized.content[key].map((item) => ({
       ...item,
+      slugsByLocale: normalizeLocalizedSlugs(item.slugsByLocale),
       status: "published",
       visibility: key === "seoPages" ? "hidden" : "listed",
       robotsIndex: true
     })) as never;
   });
+
+  const collectionSlugsById = new Map(normalized.content.boatCollections.map((collection) => [collection.collectionId, collection.slugsByLocale]));
 
   normalized.content.boats = normalized.content.boats.map((boat) => ({
     ...boat,

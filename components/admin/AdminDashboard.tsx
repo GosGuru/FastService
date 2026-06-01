@@ -7,7 +7,7 @@ import type { AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
-import { getLocalizedSlug, getLocalizedValue, locales, type Locale } from "@/lib/i18n";
+import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
 import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, RichTextByLocale, SeoPage, ServiceOption, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
@@ -94,10 +94,11 @@ function validateLocalizedSlug(
   scope: string
 ) {
   requiredSaveLocales.forEach((saveLocale) => {
-    const slug = getDirectLocalizedValue(slugsByLocale, saveLocale);
+    const rawSlug = getDirectLocalizedValue(slugsByLocale, saveLocale);
+    const slug = normalizeSlugSegment(rawSlug);
 
     if (!slug) {
-      errors.push(`${label}: completa el slug ${saveLocale.toUpperCase()}.`);
+      errors.push(`${label}: completa un slug valido ${saveLocale.toUpperCase()} con letras o numeros.`);
       return;
     }
 
@@ -1339,10 +1340,10 @@ function ServiceOptionsEditor({
               <LocalizedTextEditor label="Mensaje WhatsApp" value={option.whatsappMessage} locale={locale} multiline onChange={(value) => updateOption(index, { whatsappMessage: value })} />
               <MediaEditor
                 image={option.image}
-                gallery={[]}
+                gallery={option.gallery ?? []}
                 locale={locale}
                 itemLabel={optionLabel}
-                onChange={(image) => updateOption(index, { image })}
+                onChange={(image, gallery) => updateOption(index, { image, gallery })}
               />
             </section>
           );

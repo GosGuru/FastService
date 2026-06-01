@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BoatGrid } from "@/components/boats/BoatGrid";
 import { BoatCtaBanner } from "@/components/sections/BoatCtaBanner";
 import { ContactFormSection } from "@/components/sections/ContactFormSection";
@@ -73,6 +73,12 @@ export default async function DynamicPage({ params }: Props) {
 
   if (!page) notFound();
 
+  const canonicalSlug = getLocalizedSlug(page.slugsByLocale, locale);
+
+  if (slug !== canonicalSlug) {
+    redirect(`/${locale}/${canonicalSlug}`);
+  }
+
   if (page.kind === "boatCollection") {
     const content = await getPublicContent();
     const collectionBoats = content.boats.filter((boat) => boat.collectionId === page.collectionId);
@@ -110,7 +116,6 @@ export default async function DynamicPage({ params }: Props) {
   }
 
   if (page.kind === "seoPage") {
-    const currentSlug = getLocalizedSlug(page.slugsByLocale, locale);
     const richContent = page.body[locale] ?? page.body.es;
 
     return (
@@ -131,7 +136,7 @@ export default async function DynamicPage({ params }: Props) {
           <div className="container seo-page-layout">
             <div className="narrow-copy seo-page-body" dangerouslySetInnerHTML={{ __html: richContent.html }} />
             {page.gallery.length ? (
-              <ImageCarousel assets={[page.image, ...page.gallery]} locale={locale} href={`/${locale}/${currentSlug}`} ariaLabel={getLocalizedValue(page.title, locale)} className="seo-page-gallery" sizes="(max-width: 900px) 100vw, 42vw" />
+              <ImageCarousel assets={[page.image, ...page.gallery]} locale={locale} href={`/${locale}/${canonicalSlug}`} ariaLabel={getLocalizedValue(page.title, locale)} className="seo-page-gallery" sizes="(max-width: 900px) 100vw, 42vw" />
             ) : null}
           </div>
         </article>
@@ -140,7 +145,7 @@ export default async function DynamicPage({ params }: Props) {
   }
 
   const content = await getPublicContent();
-  const sectionSlug = getLocalizedSlug(page.slugsByLocale, locale);
+  const sectionSlug = canonicalSlug;
 
   if (page.serviceId === "transfers") {
     return (

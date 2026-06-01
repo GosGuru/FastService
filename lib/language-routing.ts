@@ -1,4 +1,4 @@
-import { defaultLocale, getLocalizedSlug, isLocale, locales, type Locale } from "@/lib/i18n";
+import { defaultLocale, getLocalizedSlug, isLocale, locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
 import type { AdminContentSnapshot } from "@/lib/admin/snapshot";
 import type { BlogPost, LocalizedText } from "@/types/content";
 
@@ -32,7 +32,7 @@ function slugForLocale(slugsByLocale: LanguageSlugs, locale: Locale, fallback: s
 }
 
 function slugsMatch(slugsByLocale: LanguageSlugs, locale: Locale, slug: string) {
-  return slugForLocale(slugsByLocale, locale, "") === slug;
+  return slugForLocale(slugsByLocale, locale, "") === normalizeSlugSegment(slug);
 }
 
 export function createLanguageRouteMap(content: AdminContentSnapshot["content"], blogPosts: BlogPost[]): LanguageRouteMap {

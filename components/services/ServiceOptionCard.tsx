@@ -1,5 +1,5 @@
 import { CardActions } from "@/components/cards/CardActions";
-import { MediaImage } from "@/components/MediaImage";
+import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { NoWidowText } from "@/components/typography/NoWidowText";
 import { getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
 import type { ServiceOption } from "@/types/content";
@@ -16,9 +16,16 @@ export function ServiceOptionCard({ option, locale, detailHref, showAvailability
 
   return (
     <article className="water-toy-card service-option-card" id={option.id}>
-      <div className="water-toy-card__image service-option-card__image">
-        <MediaImage asset={option.image} locale={locale} sizes="(max-width: 768px) 100vw, 33vw" />
-      </div>
+      <ImageCarousel
+        assets={[option.image, ...(option.gallery ?? [])]}
+        locale={locale}
+        href={resolvedDetailHref}
+        ariaLabel={getLocalizedValue(option.name, locale)}
+        className="water-toy-card__image service-option-card__image"
+        sizes="(max-width: 768px) 100vw, 33vw"
+        showFullscreen={false}
+        variant="card"
+      />
       <div className="water-toy-card__body service-option-card__body">
         {showAvailabilityPill ? <span className="availability-pill">{uiLabels[locale].noPrices}</span> : null}
         <h2>{getLocalizedValue(option.name, locale)}</h2>

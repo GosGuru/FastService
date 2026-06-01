@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PiBathtub, PiBed, PiRuler, PiUsers } from "react-icons/pi";
 import { BoatGrid } from "@/components/boats/BoatGrid";
 import { DetailGallery } from "@/components/media/DetailGallery";
@@ -71,6 +71,13 @@ export default async function BoatPage({ params }: Props) {
 
   if (!boat) notFound();
 
+  const canonicalCategorySlug = getLocalizedSlug(boat.categorySlugsByLocale, locale);
+  const canonicalBoatSlug = getLocalizedSlug(boat.slugsByLocale, locale);
+
+  if (categorySlug !== canonicalCategorySlug || boatSlug !== canonicalBoatSlug) {
+    redirect(`/${locale}/boat/${canonicalCategorySlug}/${canonicalBoatSlug}`);
+  }
+
   const content = await getPublicContent();
   const related = (await getBoatsByCollection(boat.collectionId)).filter((item) => item.id !== boat.id).slice(0, 3);
   const boatFaqs = content.faqs.filter((faq) => faq.serviceId === "boats");
@@ -82,7 +89,7 @@ export default async function BoatPage({ params }: Props) {
   );
 
   const collectionLabel = collectionLabels[boat.collectionId]?.[locale] ?? collectionLabels[boat.collectionId]?.es ?? "";
-  const collectionHref = `/${locale}/${categorySlug}`;
+  const collectionHref = `/${locale}/${canonicalCategorySlug}`;
   const descriptionRich = boat.description?.[locale] ?? boat.description?.es;
   const marina = boat.marina ? getLocalizedValue(boat.marina, locale) : null;
   const galleryImages = [boat.image, ...boat.gallery].filter(Boolean);

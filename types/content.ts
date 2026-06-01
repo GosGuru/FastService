@@ -108,6 +108,7 @@ export interface ServiceOption {
   description: LocalizedText;
   details: LocalizedText;
   image: MediaAsset;
+  gallery?: MediaAsset[];
   whatsappMessage: LocalizedText;
 }
 

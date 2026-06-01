@@ -198,53 +198,25 @@ Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
   status: 400,
   code: 'refresh_token_not_found'
 }
-Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
-⨯ unhandledRejection:  Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
 Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
     at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
@@ -266,151 +238,85 @@ Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
   status: 400,
   code: 'refresh_token_not_found'
 }
-Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
-⨯ unhandledRejection:  Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
-Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
-⨯ unhandledRejection:  Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
-⨯ Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  digest: '2765456971',
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
-⨯ Error [ChunkLoadError]: Failed to load chunk server/chunks/ssr/components_0detf~_._.js from module 23568
-    at Context.loadChunkAsync [as l] (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js:766:27) {
-  digest: '2765456971',
-  [cause]: Error: Cannot find module 'C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\components_0detf~_._.js'
-  Require stack:
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\[turbopack]_runtime.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\app\(site)\[locale]\[slug]\[itemSlug]\page.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\require.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\next.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\server\lib\start-server.js
-  - C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\node_modules\next\dist\cli\next-start.js
-      at ignore-listed frames {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: [
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\chunks\\ssr\\[turbopack]_runtime.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\.next\\server\\app\\(site)\\[locale]\\[slug]\\[itemSlug]\\page.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\require.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\next.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\server\\lib\\start-server.js',
-      'C:\\Users\\Maxim\\OneDrive\\Escritorio\\Proyectos\\lacocinadepedro\\FastService\\node_modules\\next\\dist\\cli\\next-start.js'
-    ]
-  }
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
+}
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
+}
+Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
+    at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)
+    at async cd (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:42012)
+    at async cc (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41452)
+    at async c (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22444)
+    at async (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:37:22707) {
+  __isAuthError: true,
+  status: 400,
+  code: 'refresh_token_not_found'
 }
 Error [AuthApiError]: Invalid Refresh Token: Refresh Token Not Found
     at cb (C:\Users\Maxim\OneDrive\Escritorio\Proyectos\lacocinadepedro\FastService\.next\server\chunks\ssr\_0izogd2._.js:24:41068)

@@ -16,7 +16,7 @@ export function VehicleCard({ vehicle, locale, sectionSlug }: VehicleCardProps) 
 
   return (
     <article className="vehicle-card">
-      <ImageCarousel assets={[vehicle.image, ...vehicle.gallery]} locale={locale} href={href} ariaLabel={vehicle.name} className="vehicle-card__image" sizes="(max-width: 768px) 100vw, 33vw" />
+      <ImageCarousel assets={[vehicle.image, ...vehicle.gallery]} locale={locale} href={href} ariaLabel={vehicle.name} className="vehicle-card__image" sizes="(max-width: 768px) 100vw, 33vw" showFullscreen={false} variant="card" />
       <div className="vehicle-card__body">
         <h2>{vehicle.name}</h2>
         <p>

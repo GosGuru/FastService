@@ -35,8 +35,27 @@ export function getLocalizedValue(value: LocalizedValue, locale: Locale) {
   return value[locale] ?? value[defaultLocale] ?? value.en ?? "";
 }
 
+function decodeSlugSegment(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export function normalizeSlugSegment(value: string) {
+  return decodeSlugSegment(value)
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export function getLocalizedSlug(value: LocalizedValue, locale: Locale) {
-  return getLocalizedValue(value, locale);
+  return normalizeSlugSegment(getLocalizedValue(value, locale));
 }
 
 export function localizedPath(locale: Locale, path = ""): string {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MediaImage } from "@/components/MediaImage";
 import { buildAlternates, getAllPostPaths, getPostBySlug } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
@@ -33,6 +33,12 @@ export default async function PostPage({ params }: Props) {
   const post = getPostBySlug(locale, slug);
 
   if (!post) notFound();
+
+  const canonicalSlug = getLocalizedSlug(post.slugsByLocale, locale);
+
+  if (slug !== canonicalSlug) {
+    redirect(`/${locale}/blog/${canonicalSlug}`);
+  }
 
   return (
     <main>
