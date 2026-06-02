@@ -74,7 +74,7 @@ function createPublicFallbackSnapshot(): AdminContentSnapshot {
   const snapshot = createInitialAdminSnapshot();
 
   contentKeys.forEach((key) => {
-    if (key === "faqs") return;
+    if (key === "faqs") return; // Keep static faqs as fallback; DB rows override when present
 
     snapshot.content[key] = (snapshot.content[key] as AdminItem[]).filter((item) => getItemStatus(item) === "published") as never;
   });

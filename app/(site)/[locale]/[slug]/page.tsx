@@ -11,7 +11,6 @@ import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
-import { faqs as fallbackFaqs } from "@/data/faqs";
 import { buildAlternates, getAllLocalizedStaticPaths, getPageBySlug, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
 import type { ServiceOption, ServicePage } from "@/types/content";
@@ -82,9 +81,7 @@ export default async function DynamicPage({ params }: Props) {
   if (page.kind === "boatCollection") {
     const content = await getPublicContent();
     const collectionBoats = content.boats.filter((boat) => boat.collectionId === page.collectionId);
-    const snapshotBoatFaqs = (content.faqs ?? []).filter((faq) => faq.serviceId === "boats");
-    const fallbackBoatFaqs = fallbackFaqs.filter((faq) => faq.serviceId === "boats");
-    const boatFaqs = snapshotBoatFaqs.length >= 4 ? snapshotBoatFaqs : fallbackBoatFaqs;
+    const boatFaqs = (content.faqs ?? []).filter((faq) => faq.serviceId === "boats");
     const collectionTitle = keepWordsTogether(getLocalizedValue(page.title, locale));
 
     return (
@@ -148,6 +145,8 @@ export default async function DynamicPage({ params }: Props) {
   const sectionSlug = canonicalSlug;
 
   if (page.serviceId === "transfers") {
+    const transferFaqs = content.faqs.filter((faq) => faq.serviceId === "transfers");
+
     return (
       <main>
         <ServiceHero page={page} locale={locale} />
@@ -165,11 +164,14 @@ export default async function DynamicPage({ params }: Props) {
             </div>
           </div>
         </section>
+        <FaqSection items={transferFaqs} locale={locale} />
       </main>
     );
   }
 
   if (page.serviceId === "water-toys") {
+    const waterToyFaqs = content.faqs.filter((faq) => faq.serviceId === "water-toys");
+
     return (
       <main>
         <ServiceHero page={page} locale={locale} />
@@ -188,6 +190,7 @@ export default async function DynamicPage({ params }: Props) {
             </div>
           </div>
         </section>
+        <FaqSection items={waterToyFaqs} locale={locale} />
       </main>
     );
   }

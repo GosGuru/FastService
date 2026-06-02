@@ -3150,7 +3150,7 @@ button {
 
 .boat-card__btn--detail,
 .catalog-card-actions__btn--detail {
-  background: #050505;
+  background: #499fbb;
   color: #fff;
 }
 
@@ -3158,9 +3158,9 @@ button {
 .boat-card__btn--detail:focus-visible,
 .catalog-card-actions__btn--detail:hover,
 .catalog-card-actions__btn--detail:focus-visible {
-  background: #000;
+  background: #3a8fa9;
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgb(20 20 20 / 18%);
+  box-shadow: 0 14px 28px rgb(73 159 187 / 30%);
 }
 
 .boat-card__btn--wa,
