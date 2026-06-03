@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createInitialAdminSnapshot, normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
+import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -70,23 +70,23 @@ function createContentSaveError(action: "leer" | "eliminar" | "guardar", key: Ad
   return new Error(`Supabase fallo al ${action} ${label}: ${rawMessage}`);
 }
 
-function createPublicFallbackSnapshot(): AdminContentSnapshot {
-  const snapshot = createInitialAdminSnapshot();
-
-  contentKeys.forEach((key) => {
-    if (key === "faqs") return; // Keep static faqs as fallback; DB rows override when present
-
-    snapshot.content[key] = (snapshot.content[key] as AdminItem[]).filter((item) => getItemStatus(item) === "published") as never;
-  });
-
-  return snapshot;
+function createEmptyContentSnapshot(): AdminContentSnapshot {
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    content: {
+      boatCollections: [],
+      boats: [],
+      servicePages: [],
+      vehicles: [],
+      waterToys: [],
+      seoPages: [],
+      faqs: []
+    }
+  };
 }
 
-function getItemStatus(item: AdminItem) {
-  return "status" in item ? item.status : "published";
-}
-
-function snapshotFromRows(rows: ContentRow[], fallback = createInitialAdminSnapshot()): AdminContentSnapshot {
+function snapshotFromRows(rows: ContentRow[], fallback = createEmptyContentSnapshot()): AdminContentSnapshot {
   if (!rows.length) return fallback;
 
   const content = clone(fallback.content);
@@ -116,10 +116,10 @@ function snapshotFromRows(rows: ContentRow[], fallback = createInitialAdminSnaps
 }
 
 async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
-  const unavailableFallback = selectAll ? createInitialAdminSnapshot() : createPublicFallbackSnapshot();
+  const unavailableFallback = createEmptyContentSnapshot();
 
   if (!hasSupabaseConfig()) {
-    return { snapshot: unavailableFallback, source: "static", message: "Supabase no esta configurado; usando contenido local." };
+    return { snapshot: unavailableFallback, source: "static", message: "Supabase no esta configurado; sin fallback local." };
   }
 
   try {
@@ -139,14 +139,14 @@ async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
     if (!data?.length) {
       return {
         snapshot: unavailableFallback,
-        source: "static",
+        source: "supabase",
         message: selectAll
-          ? "Supabase esta vacio; cargue el contenido inicial real. Pulsa Guardar Supabase para publicarlo en la DB."
-          : "Supabase esta vacio; usando contenido local publicado hasta guardar en Supabase."
+          ? "Supabase esta vacio; no se cargan seeds locales automaticamente."
+          : "Supabase esta vacio; sin fallback local publicado."
       };
     }
 
-    return { snapshot: snapshotFromRows(data as ContentRow[], unavailableFallback), source: "supabase" };
+    return { snapshot: snapshotFromRows(data as ContentRow[], createEmptyContentSnapshot()), source: "supabase" };
   } catch (error) {
     return { snapshot: unavailableFallback, source: "static", message: error instanceof Error ? error.message : "No se pudo leer Supabase." };
   }

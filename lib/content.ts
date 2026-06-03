@@ -1,10 +1,5 @@
-import { boatCollections } from "@/data/boatCollections";
 import { posts } from "@/data/posts";
-import { servicePages } from "@/data/services";
-import { vehicles } from "@/data/vehicles";
-import { waterToys } from "@/data/waterToys";
 import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, siteUrl, type Locale } from "@/lib/i18n";
-import type { AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { loadPublicContentSnapshot } from "@/lib/supabase/content";
 import type { BoatCollectionId, LocalizedText } from "@/types/content";
 
@@ -15,27 +10,7 @@ export function t(value: LocalizedText, locale: Locale) {
 export async function getPublicContent() {
   const result = await loadPublicContentSnapshot();
 
-  return withStaticPublicFallbacks(result.snapshot.content);
-}
-
-function mergeMissingById<T extends { id: string }>(currentItems: T[], fallbackItems: T[]) {
-  const existingIds = new Set(currentItems.map((item) => item.id));
-  const missingItems = fallbackItems.filter((item) => !existingIds.has(item.id));
-
-  return missingItems.length ? [...currentItems, ...missingItems] : currentItems;
-}
-
-function withStaticPublicFallbacks(content: AdminContentSnapshot["content"]) {
-  const boatCollectionPages = mergeMissingById(content.boatCollections, boatCollections);
-  const serviceRoutePages = mergeMissingById(content.servicePages, servicePages);
-
-  if (boatCollectionPages === content.boatCollections && serviceRoutePages === content.servicePages) return content;
-
-  return {
-    ...content,
-    boatCollections: boatCollectionPages,
-    servicePages: serviceRoutePages
-  };
+  return result.snapshot.content;
 }
 
 function matchesLocalizedSlug(slugsByLocale: LocalizedText, locale: Locale, slug: string) {
