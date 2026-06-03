@@ -6,7 +6,7 @@ import { servicePages } from "@/data/services";
 import { vehicles } from "@/data/vehicles";
 import { waterToys } from "@/data/waterToys";
 import { normalizeSlugSegment } from "@/lib/i18n";
-import type { Boat, BoatCollection, FaqItem, LocalizedText, RichTextByLocale, SeoPage, ServicePage, SpecItem, Vehicle, WaterToy } from "@/types/content";
+import type { Boat, BoatCollection, FaqItem, LocalizedText, RichTextByLocale, SeoPage, ServicePage, ServicePageId, SpecItem, Vehicle, WaterToy } from "@/types/content";
 
 export type AdminContentKey = keyof AdminContentSnapshot["content"];
 
@@ -87,6 +87,14 @@ const seoPages: SeoPage[] = [
   }
 ];
 
+const canonicalServicePageIds: Partial<Record<ServicePage["id"], ServicePageId>> = {
+  "service-transfers": "transfers",
+  "service-water-toys": "water-toys",
+  "service-security": "security",
+  "service-self-drive": "self-drive",
+  "service-contact": "contact"
+};
+
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -157,6 +165,7 @@ function normalizeServiceOptions(options: ServicePage["options"]): ServicePage["
 function normalizeServicePage(page: ServicePage): ServicePage {
   return {
     ...page,
+    serviceId: canonicalServicePageIds[page.id] ?? page.serviceId,
     gallery: Array.isArray(page.gallery) ? page.gallery : [],
     specs: normalizeSpecs(page.specs),
     richDescription: page.richDescription,

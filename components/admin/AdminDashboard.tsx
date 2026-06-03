@@ -10,7 +10,7 @@ import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentS
 import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
-import type { Boat, BoatCollection, FaqItem, LocalizedText, MediaAsset, RichTextByLocale, SeoPage, ServiceOption, ServicePage, SpecItem, Vehicle, VideoAsset, WaterToy } from "@/types/content";
+import { publicServiceIds, servicePageIds, type Boat, type BoatCollection, type FaqItem, type LocalizedText, type MediaAsset, type RichTextByLocale, type SeoPage, type ServiceId, type ServiceOption, type ServicePage, type ServicePageId, type SpecItem, type Vehicle, type VideoAsset, type WaterToy } from "@/types/content";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
 type GenericContentItem = BoatCollection;
@@ -57,6 +57,16 @@ const categorySlugsByCollection: Record<Boat["collectionId"], LocalizedText> = {
 };
 
 const requiredSaveLocales = ["es", "en"] as const satisfies Locale[];
+
+const servicePageLabels: Record<ServicePageId, string> = {
+  transfers: "Transfer",
+  "water-toys": "Juguetes náuticos",
+  security: "Seguridad",
+  "self-drive": "Vehículos sin conductor",
+  contact: "Contacto"
+};
+
+const optionDrivenServicePages = new Set<ServicePageId>(["security", "self-drive"]);
 
 function getInitialSaveStatus(initialSource: "supabase" | "static", initialMessage?: string): AdminSaveStatus {
   if (initialSource === "supabase") {
@@ -172,17 +182,40 @@ function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
   });
 
   const serviceSlugKeys = new Set<string>();
+  const seenServicePageIds = new Set<ServicePageId>();
   snapshot.content.servicePages.forEach((page, index) => {
     const label = getLocalizedValue(page.title, "es").trim() || page.id || `Servicio ${index + 1}`;
 
+    if (!isServicePageId(page.serviceId)) {
+      errors.push(`${label}: el ID interno del servicio no es valido.`);
+    } else {
+      if (seenServicePageIds.has(page.serviceId)) {
+        errors.push(`${label}: ya existe otra landing con el ID interno ${page.serviceId}.`);
+      }
+
+      seenServicePageIds.add(page.serviceId);
+    }
+
     validateLocalizedSlug(errors, serviceSlugKeys, label, page.slugsByLocale, "servicePages");
     validatePrimaryImage(errors, label, page);
+
+    if (isServicePageId(page.serviceId) && optionDrivenServicePages.has(page.serviceId) && !(page.options?.length)) {
+      errors.push(`${label}: agrega al menos una opcion visible para ${servicePageLabels[page.serviceId].toLowerCase()}.`);
+    }
 
     page.options?.forEach((option, optionIndex) => {
       const optionLabel = getLocalizedValue(option.name, "es").trim() || option.id || `Opcion ${optionIndex + 1}`;
 
       validatePrimaryImage(errors, `${label} / ${optionLabel}`, option);
     });
+  });
+
+  snapshot.content.faqs.forEach((faq, index) => {
+    const label = getLocalizedValue(faq.question, "es").trim() || faq.id || `FAQ ${index + 1}`;
+
+    if (faq.serviceId && !isPublicServiceId(faq.serviceId)) {
+      errors.push(`${label}: el servicio asociado ya no existe en el modelo público.`);
+    }
   });
 
   if (errors.length <= 8) return errors;
@@ -345,7 +378,11 @@ function getServicePageHref(snapshot: AdminContentSnapshot, serviceId: FaqItem["
 }
 
 function isPublicServiceId(value: unknown): value is NonNullable<FaqItem["serviceId"]> {
-  return value === "boats" || value === "transfers" || value === "water-toys" || value === "security" || value === "self-drive";
+  return typeof value === "string" && publicServiceIds.includes(value as ServiceId);
+}
+
+function isServicePageId(value: unknown): value is ServicePageId {
+  return typeof value === "string" && servicePageIds.includes(value as ServicePageId);
 }
 
 function getVisitTarget(activeSection: AdminContentKey, item: AdminItem, snapshot: AdminContentSnapshot, locale: Locale) {
@@ -520,19 +557,20 @@ function createWaterToy(): WaterToy {
   };
 }
 
-function createServicePage(): ServicePage {
+function createServicePage(serviceId: ServicePageId = "transfers"): ServicePage {
   const id = createId("service");
   const date = new Date().toISOString().slice(0, 10);
+  const title = servicePageLabels[serviceId];
 
   return {
     id,
     kind: "service",
-    serviceId: id,
+    serviceId,
     status: "published",
     visibility: "listed",
     robotsIndex: true,
     slugsByLocale: localized(id),
-    title: localized("Nuevo servicio"),
+    title: localized(title),
     eyebrow: localized("Servicio personalizado"),
     description: localized("Resumen del servicio para el hero."),
     image: blankImage,
@@ -545,8 +583,8 @@ function createServicePage(): ServicePage {
     },
     marina: localized(""),
     priceLabel: localized("Consultar disponibilidad"),
-    seoTitle: localized("Nuevo servicio en Ibiza"),
-    seoDescription: localized("Descripción SEO del nuevo servicio en Ibiza."),
+    seoTitle: localized(`${title} en Ibiza`),
+    seoDescription: localized(`Descripción SEO de ${title.toLowerCase()} en Ibiza.`),
     publishedAt: date,
     updatedAt: date,
     schemaType: "Service",
@@ -730,6 +768,31 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }
 
   function addItem() {
+    if (activeSection === "servicePages") {
+      const usedServicePageIds = new Set(snapshot.content.servicePages.map((page) => page.serviceId));
+      const nextServicePageId = servicePageIds.find((serviceId) => !usedServicePageIds.has(serviceId));
+
+      if (!nextServicePageId) {
+        setSaveStatus({
+          tone: "error",
+          title: "No hay más landings base disponibles",
+          message: "Las páginas de servicio usan una lista cerrada de IDs internos. Edita una landing existente en lugar de crear otra."
+        });
+        return;
+      }
+
+      const newPage = normalizeItemForActiveSection(createServicePage(nextServicePageId));
+
+      updateSnapshot(activeSection, (currentItems) => [newPage as AdminItem, ...currentItems]);
+      selectItem(newPage.id);
+      setSaveStatus({
+        tone: "info",
+        title: "Landing creada en memoria",
+        message: "Completa los campos clave y guarda en Supabase para publicarla."
+      });
+      return;
+    }
+
     const newItem = normalizeItemForActiveSection(createItemForSection(activeSection));
 
     updateSnapshot(activeSection, (currentItems) => [newItem as AdminItem, ...currentItems]);
@@ -1235,10 +1298,25 @@ function WaterToyEditor({ toy, locale, onChange }: { toy: WaterToy; locale: Loca
 
 function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; locale: Locale; onChange: (patch: Partial<ServicePage>) => void }) {
   const itemLabel = getLocalizedValue(page.title, locale);
+  const showsOptionsEditor = optionDrivenServicePages.has(page.serviceId);
+  const relatedItemsMessage = page.serviceId === "transfers"
+    ? "Las tarjetas y fichas públicas de este servicio se gestionan en la sección Transfer."
+    : page.serviceId === "water-toys"
+      ? "Las tarjetas y fichas públicas de este servicio se gestionan en la sección Juguetes."
+      : page.serviceId === "contact"
+        ? "Esta página solo usa el contenido general del servicio y no muestra tarjetas adicionales."
+        : null;
 
   return (
     <div className="admin-form">
-      <TextField label="ID interno del servicio" value={page.serviceId} onChange={(value) => onChange({ serviceId: value.trim() || page.id })} />
+      <label className="admin-field">
+        <span>Servicio interno</span>
+        <select value={page.serviceId} onChange={(event) => onChange({ serviceId: event.target.value as ServicePageId })}>
+          {servicePageIds.map((serviceId) => (
+            <option key={serviceId} value={serviceId}>{servicePageLabels[serviceId]}</option>
+          ))}
+        </select>
+      </label>
       <LocalizedTextEditor label="Título H1" value={page.title} locale={locale} onChange={(value) => onChange({ title: value })} />
       <LocalizedTextEditor label="Eyebrow" value={page.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
       <LocalizedTextEditor label="Resumen del hero" value={page.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
@@ -1261,12 +1339,19 @@ function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; loca
         uploadPrefix="service-body"
         onChange={(patch) => onChange(patch as Partial<ServicePage>)}
       />
-      <ServiceOptionsEditor
-        serviceId={page.serviceId}
-        options={page.options ?? []}
-        locale={locale}
-        onChange={(options) => onChange({ options })}
-      />
+      {showsOptionsEditor ? (
+        <ServiceOptionsEditor
+          serviceId={page.serviceId}
+          options={page.options ?? []}
+          locale={locale}
+          onChange={(options) => onChange({ options })}
+        />
+      ) : relatedItemsMessage ? (
+        <div className="admin-gallery-empty">
+          <FiBriefcase aria-hidden="true" />
+          <span>{relatedItemsMessage}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

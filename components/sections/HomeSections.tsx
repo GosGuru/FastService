@@ -267,19 +267,23 @@ export function FeaturedBoatsSection({ boats, locale }: HomeSectionsProps & { bo
 }
 
 export function TransferSection({ locale, servicePages, vehicles }: HomeSectionsProps & { servicePages: ServicePage[]; vehicles: Vehicle[] }) {
-  const transferSectionSlug = getLocalizedSlug(servicePages.find((page) => page.serviceId === "transfers")?.slugsByLocale ?? { es: "transfer", en: "transfers" }, locale);
+  const transferPage = servicePages.find((page) => page.serviceId === "transfers");
+  const transferSectionSlug = getLocalizedSlug(transferPage?.slugsByLocale ?? { es: "transfer", en: "transfers" }, locale);
+  const eyebrow = transferPage ? getLocalizedValue(transferPage.eyebrow, locale) : locale === "es" ? "Servicios transfer privado" : "Private transfer services";
+  const title = transferPage ? getLocalizedValue(transferPage.title, locale) : locale === "es" ? "Soluciones de transporte privado para cubrir cualquier necesidad" : "Private transport solutions for every need";
+  const description = transferPage
+    ? getLocalizedValue(transferPage.description, locale)
+    : locale === "es"
+      ? "Chóferes profesionales, vehículos premium y coordinación para aeropuerto, villas, marinas, eventos y beach clubs."
+      : "Professional chauffeurs, premium vehicles and coordination for airport, villas, marinas, events and beach clubs.";
 
   return (
     <section className="section section--soft">
       <div className="container">
         <div className="section-heading section-heading--center">
-          <p className="eyebrow">2. {locale === "es" ? "Servicios transfer privado" : "Private transfer services"}</p>
-          <h2>{locale === "es" ? "Soluciones de transporte privado para cubrir cualquier necesidad" : "Private transport solutions for every need"}</h2>
-          <p>
-            {locale === "es"
-              ? "Chóferes profesionales, vehículos premium y coordinación para aeropuerto, villas, marinas, eventos y beach clubs."
-              : "Professional chauffeurs, premium vehicles and coordination for airport, villas, marinas, events and beach clubs."}
-          </p>
+          <p className="eyebrow">2. {eyebrow}</p>
+          <h2>{title}</h2>
+          <p>{description}</p>
         </div>
         <HomeCardRail>
           {vehicles.map((vehicle) => (
@@ -292,19 +296,23 @@ export function TransferSection({ locale, servicePages, vehicles }: HomeSections
 }
 
 export function WaterToysSection({ locale, servicePages, waterToys }: HomeSectionsProps & { servicePages: ServicePage[]; waterToys: WaterToy[] }) {
-  const waterToysSectionSlug = getLocalizedSlug(servicePages.find((page) => page.serviceId === "water-toys")?.slugsByLocale ?? { es: "juguetes-nauticos", en: "water-toys" }, locale);
+  const waterToysPage = servicePages.find((page) => page.serviceId === "water-toys");
+  const waterToysSectionSlug = getLocalizedSlug(waterToysPage?.slugsByLocale ?? { es: "juguetes-nauticos", en: "water-toys" }, locale);
+  const eyebrow = waterToysPage ? getLocalizedValue(waterToysPage.eyebrow, locale) : locale === "es" ? "Juguetes náuticos" : "Water toys";
+  const title = waterToysPage ? getLocalizedValue(waterToysPage.title, locale) : locale === "es" ? "Añade diversión a tu reserva" : "Add fun to your booking";
+  const description = waterToysPage
+    ? getLocalizedValue(waterToysPage.description, locale)
+    : locale === "es"
+      ? "Sin precios publicados: te orientamos por WhatsApp para que el equipo cierre disponibilidad y logística por teléfono."
+      : "No published prices: we guide you by WhatsApp so the team can close availability and logistics by phone.";
 
   return (
     <section className="section">
       <div className="container">
         <div className="section-heading">
-          <p className="eyebrow">3. {locale === "es" ? "Juguetes náuticos" : "Water toys"}</p>
-          <h2>{locale === "es" ? "Añade diversión a tu reserva" : "Add fun to your booking"}</h2>
-          <p>
-            {locale === "es"
-              ? "Sin precios publicados: te orientamos por WhatsApp para que el equipo cierre disponibilidad y logística por teléfono."
-              : "No published prices: we guide you by WhatsApp so the team can close availability and logistics by phone."}
-          </p>
+          <p className="eyebrow">3. {eyebrow}</p>
+          <h2>{title}</h2>
+          <p>{description}</p>
         </div>
         <HomeCardRail>
           {waterToys.map((toy) => (

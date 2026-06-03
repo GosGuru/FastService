@@ -8,6 +8,12 @@ export type ContentVisibility = "listed" | "hidden";
 
 export type ServiceId = "boats" | "transfers" | "water-toys" | "security" | "self-drive";
 
+export type ServicePageId = Exclude<ServiceId, "boats"> | "contact";
+
+export const publicServiceIds = ["boats", "transfers", "water-toys", "security", "self-drive"] as const satisfies ServiceId[];
+
+export const servicePageIds = ["transfers", "water-toys", "security", "self-drive", "contact"] as const satisfies ServicePageId[];
+
 export type BoatCollectionId = "yachts-xl" | "yachts" | "fast-boats";
 
 export interface MediaAsset {
@@ -114,7 +120,7 @@ export interface ServiceOption {
 
 export interface ServicePage extends BaseContent, ManagedDetailFields {
   kind: "service";
-  serviceId: string;
+  serviceId: ServicePageId;
   title: LocalizedText;
   eyebrow: LocalizedText;
   description: LocalizedText;

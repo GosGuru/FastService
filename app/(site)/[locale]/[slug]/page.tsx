@@ -13,7 +13,7 @@ import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
 import { buildAlternates, getAllLocalizedStaticPaths, getPageBySlug, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
-import type { ServiceOption, ServicePage } from "@/types/content";
+import type { FaqItem, ServiceId, ServiceOption, ServicePage } from "@/types/content";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -51,6 +51,10 @@ function t(key: string, locale: Locale) {
   return serviceDetailCopy[key]?.[locale] ?? serviceDetailCopy[key]?.es ?? key;
 }
 
+function getFaqsForService(items: FaqItem[], serviceId: ServiceId) {
+  return items.filter((faq) => !faq.serviceId || faq.serviceId === serviceId);
+}
+
 function getAmenityLabel(item: string | Record<string, string>, locale: Locale) {
   return typeof item === "string" ? item : getLocalizedValue(item, locale);
 }
@@ -81,7 +85,7 @@ export default async function DynamicPage({ params }: Props) {
   if (page.kind === "boatCollection") {
     const content = await getPublicContent();
     const collectionBoats = content.boats.filter((boat) => boat.collectionId === page.collectionId);
-    const boatFaqs = (content.faqs ?? []).filter((faq) => faq.serviceId === "boats");
+    const boatFaqs = getFaqsForService(content.faqs ?? [], "boats");
     const collectionTitle = keepWordsTogether(getLocalizedValue(page.title, locale));
 
     return (
@@ -145,7 +149,7 @@ export default async function DynamicPage({ params }: Props) {
   const sectionSlug = canonicalSlug;
 
   if (page.serviceId === "transfers") {
-    const transferFaqs = content.faqs.filter((faq) => faq.serviceId === "transfers");
+    const transferFaqs = getFaqsForService(content.faqs, "transfers");
 
     return (
       <main>
@@ -170,7 +174,7 @@ export default async function DynamicPage({ params }: Props) {
   }
 
   if (page.serviceId === "water-toys") {
-    const waterToyFaqs = content.faqs.filter((faq) => faq.serviceId === "water-toys");
+    const waterToyFaqs = getFaqsForService(content.faqs, "water-toys");
 
     return (
       <main>
@@ -196,9 +200,12 @@ export default async function DynamicPage({ params }: Props) {
   }
 
   if (page.serviceId === "security") {
+    const securityFaqs = getFaqsForService(content.faqs, "security");
+
     return (
       <main>
         <ServiceHero page={page} locale={locale} />
+        <ServiceDetails page={page} locale={locale} />
         <ServiceOptionsGrid
           locale={locale}
           options={page.options ?? []}
@@ -211,14 +218,18 @@ export default async function DynamicPage({ params }: Props) {
           }
           soft
         />
+        <FaqSection items={securityFaqs} locale={locale} />
       </main>
     );
   }
 
   if (page.serviceId === "self-drive") {
+    const selfDriveFaqs = getFaqsForService(content.faqs, "self-drive");
+
     return (
       <main>
         <ServiceHero page={page} locale={locale} />
+        <ServiceDetails page={page} locale={locale} />
         <ServiceOptionsGrid
           locale={locale}
           options={page.options ?? []}
@@ -230,6 +241,7 @@ export default async function DynamicPage({ params }: Props) {
               : "Models are confirmed according to date, delivery point, terms and real availability."
           }
         />
+        <FaqSection items={selfDriveFaqs} locale={locale} />
       </main>
     );
   }

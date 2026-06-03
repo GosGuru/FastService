@@ -11,6 +11,7 @@ import { ContactFormSection } from "@/components/sections/ContactFormSection";
 import { getAllBoatPaths, getBoatBySlug, getBoatsByCollection, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
 import { buildBoatAvailabilityMessage } from "@/lib/whatsapp";
+import type { FaqItem } from "@/types/content";
 
 type Props = { params: Promise<{ locale: string; categorySlug: string; boatSlug: string }> };
 
@@ -64,6 +65,10 @@ function getAmenityLabel(item: string | Record<string, string>, locale: Locale) 
   return typeof item === "string" ? item : getLocalizedValue(item, locale);
 }
 
+function getBoatFaqs(items: FaqItem[]) {
+  return items.filter((faq) => !faq.serviceId || faq.serviceId === "boats");
+}
+
 export default async function BoatPage({ params }: Props) {
   const { locale: rawLocale, categorySlug, boatSlug } = await params;
   const locale = assertLocale(rawLocale) as Locale;
@@ -80,7 +85,7 @@ export default async function BoatPage({ params }: Props) {
 
   const content = await getPublicContent();
   const related = (await getBoatsByCollection(boat.collectionId)).filter((item) => item.id !== boat.id).slice(0, 3);
-  const boatFaqs = content.faqs.filter((faq) => faq.serviceId === "boats");
+  const boatFaqs = getBoatFaqs(content.faqs);
   const availabilityMessage = buildBoatAvailabilityMessage(
     locale,
     boat.collectionId,
