@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
@@ -115,7 +116,7 @@ function snapshotFromRows(rows: ContentRow[], fallback = createEmptyContentSnaps
   });
 }
 
-async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
+async function loadRows(selectAll: boolean, getClient: () => SupabaseClient | Promise<SupabaseClient>): Promise<ContentSnapshotResult> {
   const unavailableFallback = createEmptyContentSnapshot();
 
   if (!hasSupabaseConfig()) {
@@ -123,7 +124,7 @@ async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
   }
 
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await getClient();
     let query = supabase.from("content_items").select("content_type,content_id,payload,sort_order").order("content_type").order("sort_order");
 
     if (!selectAll) {
@@ -153,10 +154,10 @@ async function loadRows(selectAll: boolean): Promise<ContentSnapshotResult> {
 }
 
 export async function loadAdminContentSnapshot() {
-  return loadRows(true);
+  return loadRows(true, createSupabaseServerClient);
 }
 
-export const loadPublicContentSnapshot = cache(async () => loadRows(false));
+export const loadPublicContentSnapshot = cache(async () => loadRows(false, createSupabasePublicClient));
 
 export async function saveAdminSnapshotToSupabase(supabase: SupabaseClient, snapshot: AdminContentSnapshot) {
   const normalizedSnapshot = normalizeAdminContentSnapshot(snapshot);

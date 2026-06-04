@@ -80,7 +80,7 @@ function getInitialSaveStatus(initialSource: "supabase" | "static", initialMessa
   return {
     tone: "info",
     title: "Contenido local listo",
-    message: initialMessage ?? "Seed local cargado. Guarda en Supabase para migrarlo."
+    message: initialMessage ?? "Contenido local listo. Pulsa \"Publicar en el sitio\" para sincronizar con la web."
   };
 }
 
@@ -154,7 +154,7 @@ function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
     const label = boat.name.trim() || boat.id || `Barco ${index + 1}`;
 
     if (!boat.name.trim() || boat.name.trim().toLowerCase() === "nuevo barco") {
-      errors.push(`${label}: cambia el nombre visible antes de guardar.`);
+      errors.push(`${label}: cambia el nombre visible antes de publicar.`);
     }
 
     if (!categorySlugsByCollection[boat.collectionId]) {
@@ -220,7 +220,7 @@ function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
 
   if (errors.length <= 8) return errors;
 
-  return [...errors.slice(0, 8), `Hay ${errors.length - 8} avisos mas. Corrige los primeros y vuelve a guardar.`];
+  return [...errors.slice(0, 8), `Hay ${errors.length - 8} avisos mas. Corrige los primeros y pulsa publicar.`];
 }
 
 function getSuggestedAlt(baseAlt: LocalizedText, itemLabel: string, locale: Locale): LocalizedText {
@@ -788,7 +788,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       setSaveStatus({
         tone: "info",
         title: "Landing creada en memoria",
-        message: "Completa los campos clave y guarda en Supabase para publicarla."
+        message: "Completa los campos clave y pulsa \"Publicar en el sitio\"."
       });
       return;
     }
@@ -800,7 +800,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     setSaveStatus({
       tone: "info",
       title: "Contenido creado en memoria",
-      message: "Completa los campos clave y guarda en Supabase para publicarlo."
+      message: "Completa los campos clave y pulsa \"Publicar en el sitio\"."
     });
   }
 
@@ -813,14 +813,14 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     setSaveStatus({
       tone: "info",
       title: "Contenido duplicado en memoria",
-      message: "Revisa slug, imagen y textos antes de guardar en Supabase."
+      message: "Revisa slug, imagen y textos antes de publicar."
     });
   }
 
   function deleteItem() {
     if (!selectedItem) return;
 
-    if (!window.confirm(`Eliminar "${getItemTitle(selectedItem, locale)}"? Guarda en Supabase despues para aplicar el borrado.`)) {
+    if (!window.confirm(`Eliminar "${getItemTitle(selectedItem, locale)}"? Pulsa "Publicar en el sitio" después para aplicar el borrado en la web.`)) {
       return;
     }
 
@@ -832,7 +832,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     setSaveStatus({
       tone: "info",
       title: "Contenido eliminado en memoria",
-      message: "Guarda en Supabase para aplicar el borrado en la web publica."
+      message: "Pulsa \"Publicar en el sitio\" para aplicar el borrado en la web pública."
     });
   }
 
@@ -854,8 +854,8 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     setIsSaving(true);
     setSaveStatus({
       tone: "info",
-      title: "Guardando en Supabase",
-      message: "Publicando contenido, imagenes y rutas para que el frontend use los datos actualizados."
+      title: "Publicando en el sitio",
+      message: "Publicando todos los cambios, galerías y textos para que la web pública los use."
     });
 
     try {
@@ -863,7 +863,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
       setSaveStatus({
         tone: result.ok ? "success" : "error",
-        title: result.ok ? "Contenido publicado" : "No se pudo guardar",
+        title: result.ok ? "Publicado en el sitio" : "No se pudo publicar",
         message: result.message,
         details: result.details
       });
@@ -911,10 +911,10 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
       <main className="admin-main">
         <header className="admin-topbar">
-          <div>
+          <div className="admin-header-title">
             <p className="admin-kicker">Panel preparado para Supabase</p>
-            <h1>Administrador de contenido</h1>
-            <small className="admin-session-label">{adminEmail}</small>
+            <h1>Administrador</h1>
+            <span className="admin-title-subtitle">de contenido</span>
           </div>
           <div
             ref={saveStatusRef}
@@ -927,7 +927,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
               <SaveStatusIcon aria-hidden="true" className={isSaving ? "admin-spin" : undefined} />
             </span>
             <div>
-              <strong>{isSaving ? "Guardando en Supabase" : saveStatus.title}</strong>
+              <strong>{isSaving ? "Publicando..." : saveStatus.title}</strong>
               <p>{saveStatus.message}</p>
               {saveStatus.details?.length ? (
                 <ul>
@@ -940,9 +940,6 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           </div>
           <div className="admin-actions">
             {hasUnsavedChanges ? <span className="admin-unsaved-pill">Cambios sin guardar</span> : null}
-            <button type="button" className="admin-button admin-button--primary" onClick={() => void saveToSupabase()} disabled={isSaving} aria-busy={isSaving}>
-              {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Guardando" : "Guardar Supabase"}
-            </button>
             <form
               action={signOutAction}
               onSubmit={(event) => {
@@ -971,8 +968,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                 <SectionIcon aria-hidden="true" />
               </span>
               <div>
-                <p className="admin-kicker">{section.label}</p>
-                <h2>{section.description}</h2>
+                <h2>{section.label}</h2>
               </div>
               <button type="button" className="admin-icon-button" onClick={addItem} aria-label="Crear contenido">
                 <FiPlus aria-hidden="true" />
@@ -1024,10 +1020,33 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                     ) : null}
                     <button type="button" className="admin-button admin-button--ghost" onClick={duplicateItem}><FiCopy aria-hidden="true" /> Duplicar</button>
                     <button type="button" className="admin-button admin-button--danger" onClick={deleteItem}><FiTrash2 aria-hidden="true" /> Eliminar</button>
+                    <button
+                      type="button"
+                      className={`admin-button ${hasUnsavedChanges ? "admin-button--primary" : "admin-button--ghost"}`}
+                      onClick={() => void saveToSupabase()}
+                      disabled={isSaving}
+                      aria-busy={isSaving}
+                      title="Publica todos los cambios (incluyendo esta sección) en la web"
+                    >
+                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Publicando" : hasUnsavedChanges ? "Publicar cambios" : "Publicar"}
+                    </button>
                   </div>
                 </div>
 
                 <ItemEditor activeSection={activeSection} item={selectedItem} locale={locale} onChange={updateSelectedItem} />
+                {hasUnsavedChanges && (
+                  <div className="admin-floating-publish">
+                    <button
+                      type="button"
+                      className="admin-button admin-button--primary"
+                      onClick={() => void saveToSupabase()}
+                      disabled={isSaving}
+                      aria-busy={isSaving}
+                    >
+                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Publicando" : "Publicar cambios"}
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <div className="admin-empty-state">
@@ -1596,7 +1615,7 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
         mimeType: file.type || undefined
       });
       setStatusTone("success");
-      setStatus("Video subido. Pulsa Guardar Supabase para publicarlo en la web.");
+      setStatus("Video subido. Pulsa \"Publicar en el sitio\" para que aparezca en la web.");
     } catch (error) {
       setStatusTone("error");
       setStatus(error instanceof Error ? error.message : "No se pudo subir el video.");
@@ -1620,7 +1639,7 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
 
     onChange(undefined);
     setStatusTone("info");
-    setStatus("Video quitado. Guarda en Supabase para aplicar el cambio.");
+    setStatus("Video quitado. Pulsa \"Publicar en el sitio\" para aplicar el cambio.");
   }
 
   return (
@@ -1737,24 +1756,6 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
     });
   }
 
-  function addImageUrl() {
-    if (isUploading) return;
-
-    const src = window.prompt("Pega la URL de la imagen");
-    if (!src?.trim()) return;
-
-    commitGallery([
-      ...assets,
-      {
-        src: src.trim(),
-        alt: getSuggestedAlt(image.alt, itemLabel ?? "", locale),
-        source: "local"
-      }
-    ]);
-    setUploadTone("info");
-    setUploadStatus("URL agregada al contenido. Pulsa Guardar Supabase para publicarla en la web.");
-  }
-
   function setMainImage(index: number) {
     if (isUploading) return;
 
@@ -1763,7 +1764,15 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
 
     onChange(asset, nextGallery);
     setUploadTone("info");
-    setUploadStatus("Imagen principal actualizada en memoria. Guarda en Supabase para publicarla.");
+    setUploadStatus("Imagen principal actualizada. Pulsa \"Publicar en el sitio\" para aplicarla en la web.");
+  }
+
+  function reorderGallery(from: number, to: number) {
+    if (from === to || isUploading) return;
+    const newAssets = [...assets];
+    const [moved] = newAssets.splice(from, 1);
+    newAssets.splice(to, 0, moved);
+    commitGallery(newAssets);
   }
 
   async function deleteAsset(index: number) {
@@ -1782,7 +1791,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
 
     commitGallery(assets.filter((_, assetIndex) => assetIndex !== index));
     setUploadTone("info");
-    setUploadStatus("Imagen quitada del contenido. Guarda en Supabase para aplicar el cambio.");
+    setUploadStatus("Imagen quitada. Pulsa \"Publicar en el sitio\" para aplicar el cambio en la web.");
   }
 
   async function uploadFiles(fileList: FileList | null) {
@@ -1851,7 +1860,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
       }
 
       setUploadTone("success");
-      setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"} a Storage. Pulsa Guardar Supabase para publicarlas en la web.`);
+      setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"} a Storage. Pulsa "Publicar en el sitio" para que aparezcan en la web pública.`);
     } catch (error) {
       setUploadTone("error");
       setUploadStatus(error instanceof Error ? error.message : "No se pudieron subir las imagenes.");
@@ -1905,12 +1914,10 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
       >
         {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiUploadCloud aria-hidden="true" />}
         <span>{isUploading ? "Subiendo fotos a Storage" : isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
-        <small>JPG, PNG, WebP o GIF. La subida guarda el archivo; el boton Guardar Supabase publica el contenido.</small>
+        <small>JPG, PNG, WebP o GIF. Las imágenes se suben inmediatamente a Storage; pulsa "Publicar en el sitio" para que aparezcan en la web.</small>
         <input type="file" accept="image/*" multiple disabled={isUploading} onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ""; }} />
       </label>
-      <div className="admin-actions admin-actions--compact">
-        <button type="button" className="admin-button admin-button--ghost" onClick={addImageUrl} disabled={isUploading}><FiPlus aria-hidden="true" /> Agregar URL</button>
-      </div>
+      {/* Removed "Agregar URL" as per UX feedback - only direct uploads supported */}
       {uploadStatus ? (
         <div className={`admin-upload-status admin-upload-status--${uploadTone}`} role={uploadTone === "error" ? "alert" : "status"} aria-live="polite">
           <strong>{uploadStatus}</strong>
@@ -1934,20 +1941,47 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
           </div>
         ) : null}
         {assets.map((asset, index) => (
-          <article className={`admin-gallery-item ${index === 0 ? "is-main" : ""}`} key={asset.storagePath ?? asset.src}>
+          <article 
+            className={`admin-gallery-item ${index === 0 ? "is-main" : ""}`} 
+            key={asset.storagePath ?? asset.src}
+            draggable={!isUploading}
+            onDragStart={(e) => {
+              e.dataTransfer.setData('text/plain', index.toString());
+              e.dataTransfer.effectAllowed = 'move';
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+              if (!isNaN(from) && from !== index) {
+                reorderGallery(from, index);
+              }
+            }}
+          >
             <div className="admin-gallery-item__preview">
               {index === 0 ? <span className="admin-gallery-item__badge">Principal</span> : null}
-              {asset.src ? <MediaImage asset={asset} locale={locale} sizes="180px" /> : <FiImage aria-hidden="true" />}
+              {asset.src ? <MediaImage asset={asset} locale={locale} sizes="80px" /> : <FiImage aria-hidden="true" />}
             </div>
             <div className="admin-gallery-item__fields">
-              <TextField label={index === 0 ? "URL imagen principal" : "URL imagen"} value={asset.src} onChange={(value) => updateAsset(index, { src: value })} />
               <TextField label={`Alt (${locale.toUpperCase()})`} value={getLocalizedValue(asset.alt, locale)} onChange={(value) => updateAssetAlt(index, value)} />
             </div>
             <div className="admin-gallery-item__actions">
-              <button type="button" className="admin-icon-button" onClick={() => setMainImage(index)} disabled={index === 0 || isUploading} aria-label="Marcar como imagen principal">
+              <button 
+                type="button" 
+                className="admin-icon-button" 
+                style={{cursor: 'grab'}} 
+                onMouseDown={(e) => e.stopPropagation()}
+                title="Arrastrar para reordenar (afecta orden y principal)"
+              >
+                ⋮⋮
+              </button>
+              <button type="button" className="admin-icon-button" onClick={() => setMainImage(index)} disabled={index === 0 || isUploading} aria-label="Marcar como imagen principal" title="Hacer principal (mover al inicio)">
                 <FiStar aria-hidden="true" />
               </button>
-              <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => deleteAsset(index)} disabled={isUploading} aria-label="Eliminar imagen">
+              <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => deleteAsset(index)} disabled={isUploading} aria-label="Eliminar imagen" title="Eliminar">
                 <FiTrash2 aria-hidden="true" />
               </button>
             </div>
