@@ -2,7 +2,7 @@
 
 import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
-import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
+import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiMove, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
 import type { AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -679,6 +679,8 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const SaveStatusIcon = isSaving ? FiLoader : saveStatus.tone === "success" ? FiCheckCircle : saveStatus.tone === "error" ? FiAlertCircle : FiSave;
   const currentFingerprint = useMemo(() => snapshotFingerprint(snapshot), [snapshot]);
   const hasUnsavedChanges = currentFingerprint !== lastSavedFingerprint;
+  const headerSaveLabel = isSaving ? "Guardando" : hasUnsavedChanges ? "Guardar" : "Guardado";
+  const editorSaveLabel = isSaving ? "Guardando" : hasUnsavedChanges ? "Guardar cambios" : "Todo guardado";
 
   useEffect(() => {
     if (saveStatus.tone === "error") {
@@ -939,7 +941,18 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
             </div>
           </div>
           <div className="admin-actions">
-            {hasUnsavedChanges ? <span className="admin-unsaved-pill">Cambios sin guardar</span> : null}
+            <button
+              type="button"
+              className={`admin-button admin-button--save-cta ${hasUnsavedChanges || isSaving ? "admin-button--primary" : "admin-button--ghost"}`}
+              onClick={() => void saveToSupabase()}
+              disabled={isSaving || !hasUnsavedChanges}
+              aria-busy={isSaving}
+              title="Guarda y publica todos los cambios del panel en la web"
+            >
+              {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : hasUnsavedChanges ? <FiSave aria-hidden="true" /> : <FiCheckCircle aria-hidden="true" />}
+              {headerSaveLabel}
+            </button>
+            {hasUnsavedChanges ? <span className="admin-unsaved-pill">Cambios pendientes</span> : null}
             <form
               action={signOutAction}
               onSubmit={(event) => {
@@ -1026,9 +1039,9 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                       onClick={() => void saveToSupabase()}
                       disabled={isSaving}
                       aria-busy={isSaving}
-                      title="Publica todos los cambios (incluyendo esta sección) en la web"
+                      title="Guarda y publica todos los cambios de esta sesión de edición"
                     >
-                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Publicando" : hasUnsavedChanges ? "Publicar cambios" : "Publicar"}
+                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : hasUnsavedChanges ? <FiSave aria-hidden="true" /> : <FiCheckCircle aria-hidden="true" />} {editorSaveLabel}
                     </button>
                   </div>
                 </div>
@@ -1043,7 +1056,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                       disabled={isSaving}
                       aria-busy={isSaving}
                     >
-                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Publicando" : "Publicar cambios"}
+                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Guardando" : "Guardar cambios"}
                     </button>
                   </div>
                 )}
@@ -1914,7 +1927,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
       >
         {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiUploadCloud aria-hidden="true" />}
         <span>{isUploading ? "Subiendo fotos a Storage" : isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
-        <small>JPG, PNG, WebP o GIF. Las imágenes se suben inmediatamente a Storage; pulsa "Publicar en el sitio" para que aparezcan en la web.</small>
+        <small>JPG, PNG, WebP o GIF. Las imágenes se suben inmediatamente a Storage; pulsa Guardar cambios para que aparezcan en la web.</small>
         <input type="file" accept="image/*" multiple disabled={isUploading} onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ""; }} />
       </label>
       {/* Removed "Agregar URL" as per UX feedback - only direct uploads supported */}
@@ -1933,6 +1946,10 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
           ) : null}
         </div>
       ) : null}
+      <div className="admin-gallery-summary" aria-label="Guía rápida de la galería">
+        <span><FiStar aria-hidden="true" /> La primera imagen se usa como portada.</span>
+        <span><FiMove aria-hidden="true" /> Arrastra una card para cambiar el orden.</span>
+      </div>
       <div className="admin-gallery-list">
         {!assets.length ? (
           <div className="admin-gallery-empty">
@@ -1961,28 +1978,42 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
               }
             }}
           >
+            <div className="admin-gallery-item__meta">
+              <span className="admin-gallery-item__position">Foto {index + 1}</span>
+              <span className="admin-gallery-item__handle"><FiMove aria-hidden="true" /> Arrastra</span>
+            </div>
             <div className="admin-gallery-item__preview">
               {index === 0 ? <span className="admin-gallery-item__badge">Principal</span> : null}
               {asset.src ? <MediaImage asset={asset} locale={locale} sizes="80px" /> : <FiImage aria-hidden="true" />}
             </div>
             <div className="admin-gallery-item__fields">
               <TextField label={`Alt (${locale.toUpperCase()})`} value={getLocalizedValue(asset.alt, locale)} onChange={(value) => updateAssetAlt(index, value)} />
+              <small className="admin-gallery-item__hint">
+                {index === 0 ? "Imagen de portada activa." : "Disponible en la galeria publica."}
+              </small>
             </div>
             <div className="admin-gallery-item__actions">
-              <button 
-                type="button" 
-                className="admin-icon-button" 
-                style={{cursor: 'grab'}} 
-                onMouseDown={(e) => e.stopPropagation()}
-                title="Arrastrar para reordenar (afecta orden y principal)"
+              <button
+                type="button"
+                className={`admin-gallery-item__action ${index === 0 ? "is-active" : ""}`}
+                onClick={() => setMainImage(index)}
+                disabled={index === 0 || isUploading}
+                aria-label="Marcar como imagen principal"
+                title="Hacer principal (mover al inicio)"
               >
-                ⋮⋮
-              </button>
-              <button type="button" className="admin-icon-button" onClick={() => setMainImage(index)} disabled={index === 0 || isUploading} aria-label="Marcar como imagen principal" title="Hacer principal (mover al inicio)">
                 <FiStar aria-hidden="true" />
+                <span>{index === 0 ? "Portada" : "Hacer portada"}</span>
               </button>
-              <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => deleteAsset(index)} disabled={isUploading} aria-label="Eliminar imagen" title="Eliminar">
+              <button
+                type="button"
+                className="admin-gallery-item__action admin-gallery-item__action--danger"
+                onClick={() => deleteAsset(index)}
+                disabled={isUploading}
+                aria-label="Eliminar imagen"
+                title="Eliminar"
+              >
                 <FiTrash2 aria-hidden="true" />
+                <span>Eliminar</span>
               </button>
             </div>
           </article>
