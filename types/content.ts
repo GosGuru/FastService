@@ -76,6 +76,7 @@ export interface BoatCollection extends BaseContent {
   hiddenPage: boolean;
   selectionNote: LocalizedText;
   whatsappMessage: LocalizedText;
+  priceTag?: LocalizedText;
 }
 
 export interface Boat extends BaseContent {

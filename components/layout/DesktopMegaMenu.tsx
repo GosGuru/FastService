@@ -65,6 +65,9 @@ export function DesktopMegaMenu({ locale, open, onOpenChange, boatCollections }:
           {items.map((item) => (
             <Link className="mega-card" href={item.href} key={item.id} onClick={() => onOpenChange(false)}>
               <span className="mega-card__tag">{item.label}</span>
+              {item.priceTag && (
+                <span className="mega-card__badge">{item.priceTag}</span>
+              )}
               <span className="mega-card__image">
                 <MediaImage asset={item.image} locale={locale} sizes="25vw" />
               </span>

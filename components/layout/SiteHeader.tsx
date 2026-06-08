@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { FiMail } from "react-icons/fi";
 import { DesktopMegaMenu } from "@/components/layout/DesktopMegaMenu";
 import { DesktopServicesDropdown } from "@/components/layout/DesktopServicesDropdown";
@@ -60,13 +60,17 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
         <div className="site-header__top-inner">
           <div className="site-header__contact-group">
             <Link href={buildWhatsAppUrl(undefined, locale)} className="site-header__contact-link" target="_blank" rel="noreferrer">
-              <span className="site-header__contact-icon"><FaWhatsapp aria-hidden="true" /></span>
+              <span className="site-header__contact-icon site-header__contact-icon--whatsapp"><FaWhatsapp aria-hidden="true" /></span>
               <span>+34 655 835 803</span>
             </Link>
+            <Link href="https://www.instagram.com/fastservicesibiza/?hl=en" className="site-header__contact-link" target="_blank" rel="noreferrer">
+              <span className="site-header__contact-icon site-header__contact-icon--instagram"><FaInstagram aria-hidden="true" /></span>
+              <span>@fastservicesibiza</span>
+            </Link>
           </div>
-          <a href="mailto:Fastservicesibiza@gmail.com" className="site-header__contact-link">
-            <span className="site-header__contact-icon"><FiMail aria-hidden="true" /></span>
-            <span>Fastservicesibiza@gmail.com</span>
+          <a href="mailto:fastservicesibiza@gmail.com" className="site-header__contact-link">
+            <span className="site-header__contact-icon site-header__contact-icon--gmail"><FiMail aria-hidden="true" /></span>
+            <span>fastservicesibiza@gmail.com</span>
           </a>
         </div>
       </div>

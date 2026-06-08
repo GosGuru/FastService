@@ -54,27 +54,27 @@ const soundLabels: Record<Locale, { enable: string; disable: string; mutedState:
 const heroCopy: Record<Locale, { pill: string; text: string; cta: string; message: string }> = {
   es: {
     pill: "FastServices Ibiza: tu contacto náutico de confianza",
-    text: "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación con Rodrigo.",
+    text: "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación",
     cta: "Ponte en contacto",
-    message: "Hola Rodrigo, quiero organizar una experiencia privada en Ibiza."
+    message: "Hola, quiero organizar una experiencia privada en Ibiza."
   },
   en: {
     pill: "FastServices Ibiza: your trusted nautical contact",
-    text: "Boats, private transfers and water toys coordinated from one conversation with Rodrigo.",
+    text: "Boats, private transfers and water toys coordinated from a single conversation",
     cta: "Get in touch",
-    message: "Hello Rodrigo, I would like to plan a private experience in Ibiza."
+    message: "Hello, I would like to plan a private experience in Ibiza."
   },
   de: {
     pill: "FastServices Ibiza: dein vertrauter Nautik-Kontakt",
-    text: "Boote, private Transfers und Wasserspielzeug koordiniert in einem Gespräch mit Rodrigo.",
+    text: "Boote, private Transfers und Wasserspielzeug koordiniert in einer einzigen Konversation",
     cta: "Kontakt aufnehmen",
-    message: "Hallo Rodrigo, ich möchte ein privates Erlebnis auf Ibiza planen."
+    message: "Hallo, ich möchte ein privates Erlebnis auf Ibiza planen."
   },
   nl: {
     pill: "FastServices Ibiza: je vertrouwde nautische contact",
-    text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één gesprek met Rodrigo.",
+    text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één enkel gesprek",
     cta: "Neem contact op",
-    message: "Hallo Rodrigo, ik wil graag een privé-ervaring op Ibiza plannen."
+    message: "Hallo, ik wil graag un privé-ervaring op Ibiza plannen."
   }
 };
 
@@ -84,6 +84,13 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
   const autoplayAttemptedRef = useRef(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add("no-scroll-home");
+    return () => {
+      document.body.classList.remove("no-scroll-home");
+    };
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -243,6 +250,9 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
         <div className="hero-section__actions">
           <WhatsAppCta locale={locale} variant="light" label={copy.cta} message={copy.message} />
         </div>
+        <p className="hero-section__location-tagline">
+          Menorca - Formentera - Ibiza - Mallorca
+        </p>
       </div>
       <button
         className={`hero-sound-toggle hero-sound-toggle--corner ${soundEnabled ? "is-on" : ""} ${soundBlocked ? "is-blocked" : ""}`}

@@ -61,6 +61,34 @@ export function getMobilePageNavigation(locale: Locale, content?: NavigationCont
   return getPrimaryNavigation(locale, content).filter((item) => !item.hasMegaMenu);
 }
 
+function formatPriceTag(value: string, locale: Locale): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const isNumeric = /^[0-9.,\s€$]+$/.test(trimmed);
+
+  if (isNumeric) {
+    const prefixes: Record<Locale, string> = {
+      es: "Desde",
+      en: "From",
+      de: "Ab",
+      nl: "Vanaf"
+    };
+    const prefix = prefixes[locale] ?? "Desde";
+
+    const hasDollar = trimmed.includes("$");
+    const cleanNumber = trimmed.replace(/[€$]/g, "").trim();
+
+    if (hasDollar) {
+      return `${prefix} $${cleanNumber}`;
+    } else {
+      return `${prefix} ${cleanNumber}€`;
+    }
+  }
+
+  return trimmed;
+}
+
 export function getBoatNavigation(locale: Locale, content?: NavigationContent) {
   return getBoatCollectionSource(content).map((collection) => ({
     id: collection.collectionId,
@@ -68,6 +96,7 @@ export function getBoatNavigation(locale: Locale, content?: NavigationContent) {
     eyebrow: getLocalizedValue(collection.eyebrow, locale),
     description: getLocalizedValue(collection.description, locale),
     image: collection.image,
-    href: `/${locale}/${getLocalizedSlug(collection.slugsByLocale, locale)}`
+    href: `/${locale}/${getLocalizedSlug(collection.slugsByLocale, locale)}`,
+    priceTag: collection.priceTag ? formatPriceTag(getLocalizedValue(collection.priceTag, locale), locale) : undefined
   }));
 }

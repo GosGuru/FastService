@@ -39,7 +39,7 @@ export function Footer({ locale, servicePages }: FooterProps) {
         <div>
           <h2>{labels.contact}</h2>
           <Link href={buildWhatsAppUrl(undefined, locale)} target="_blank" rel="noreferrer"><FaWhatsapp /> +34 655 835 803</Link>
-          <a href="mailto:Fastservicesibiza@gmail.com">Fastservicesibiza@gmail.com</a>
+          <a href="mailto:fastservicesibiza@gmail.com">fastservicesibiza@gmail.com</a>
           <Link href="/admin" className="site-footer__admin-link">Admin</Link>
         </div>
       </div>

@@ -146,6 +146,9 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
               {boatItems.map((item) => (
                 <Link href={item.href} key={item.id} className="mobile-boat-card" onClick={closeMenu}>
                   <span className="mobile-boat-card__tag">{item.label}</span>
+                  {item.priceTag && (
+                    <span className="mobile-boat-card__badge">{item.priceTag}</span>
+                  )}
                   <span className="mobile-boat-card__image">
                     <MediaImage asset={item.image} locale={locale} sizes="(max-width: 430px) 100vw, 360px" />
                   </span>

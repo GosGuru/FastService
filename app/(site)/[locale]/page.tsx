@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: locale === "es" ? "Ibiza Lifestyle Management" : "Ibiza Lifestyle Management",
     description:
       locale === "es"
-        ? "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación con Rodrigo."
-        : "Boats, private transfers and water toys coordinated from one conversation with Rodrigo.",
+        ? "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación"
+        : "Boats, private transfers and water toys coordinated from a single conversation",
     alternates: {
       canonical: `${siteUrl}/${locale}`,
       languages: buildHomeAlternates()
@@ -33,6 +33,7 @@ export default async function HomePage({ params }: Props) {
   return (
     <main>
       <HomeHero locale={locale} />
+      {/*
       <HomeIntroSection locale={locale} />
       <BoatCollectionSection collections={content.boatCollections} locale={locale} />
       <FeaturedBoatsSection boats={content.boats} locale={locale} />
@@ -41,6 +42,7 @@ export default async function HomePage({ params }: Props) {
       <SecuritySection servicePages={content.servicePages} locale={locale} />
       <SelfDriveVehiclesSection servicePages={content.servicePages} locale={locale} />
       <ContactFormSection locale={locale} />
+      */}
     </main>
   );
 }

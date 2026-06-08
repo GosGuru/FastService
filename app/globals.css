@@ -868,6 +868,24 @@ button {
   color: var(--header-detail-color);
 }
 
+.site-header__contact-icon.site-header__contact-icon--whatsapp {
+  border-color: rgba(37, 211, 102, 0.25) !important;
+  background: #ffffff !important;
+  color: #075e54 !important;
+}
+
+.site-header__contact-icon.site-header__contact-icon--instagram {
+  border-color: rgba(225, 48, 108, 0.25) !important;
+  background: #ffffff !important;
+  color: #c13584 !important;
+}
+
+.site-header__contact-icon.site-header__contact-icon--gmail {
+  border-color: rgba(234, 67, 53, 0.25) !important;
+  background: #ffffff !important;
+  color: #d93025 !important;
+}
+
 .site-header__inner {
   width: 94%;
   min-height: var(--header-main-height);
@@ -1331,14 +1349,34 @@ button {
   margin: 12px;
   padding: 0 12px;
   border-radius: 999px;
-  background: rgb(217 244 249 / 88%);
-  color: var(--color-brand);
+  background: #ffffff;
+  color: #1f2528;
   font-size: 12px;
   font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .mega-card__tag {
   font-size: var(--header-type-xs);
+}
+
+.mega-card__badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1f2528;
+  font-size: var(--header-type-xs);
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .mega-card__title {
@@ -1621,10 +1659,28 @@ button {
   margin: 10px;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgb(217 244 249 / 92%);
-  color: var(--color-brand);
+  background: #ffffff;
+  color: #1f2528;
   font-size: var(--header-type-xs);
   font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.mobile-boat-card__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: inline-flex;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1f2528;
+  font-size: var(--header-type-xs);
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .mobile-boat-card__title {
@@ -1684,6 +1740,36 @@ button {
   min-height: 100dvh;
   height: 100dvh;
   max-height: 100dvh;
+  align-items: center;
+}
+
+body.no-scroll-home {
+  overflow: hidden !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+}
+
+body.no-scroll-home footer {
+  display: none !important;
+}
+
+.hero-section__location-tagline {
+  margin-top: clamp(14px, 3.2dvh, 26px);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+  .hero-section__location-tagline {
+    font-size: 16px;
+    letter-spacing: 0.04em;
+  }
 }
 
 .page-hero--compact {
@@ -1734,7 +1820,7 @@ button {
   max-width: 1120px;
 }
 
-.hero-section__content > p:not(.eyebrow):not(.hero-trust-pill),
+.hero-section__content > p:not(.eyebrow):not(.hero-trust-pill):not(.hero-section__location-tagline),
 .page-hero p:not(.eyebrow),
 .final-cta p {
   max-width: 720px;
@@ -6260,6 +6346,13 @@ button {
     padding: 0 10px;
   }
 
+  .mega-card__badge {
+    top: 10px;
+    right: 10px;
+    min-height: 26px;
+    padding: 0 10px;
+  }
+
   .mega-card__title {
     left: 12px;
     right: 12px;
@@ -6976,7 +7069,7 @@ button {
     font-size: clamp(54px, 11.8dvh, 82px);
   }
 
-  .hero-section__content > p:not(.eyebrow):not(.hero-trust-pill) {
+  .hero-section__content > p:not(.eyebrow):not(.hero-trust-pill):not(.hero-section__location-tagline) {
     font-size: clamp(18px, 3.2dvh, 21px);
     margin: 12px 0 20px;
   }

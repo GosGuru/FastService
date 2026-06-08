@@ -36,6 +36,10 @@ export const boatCollections: BoatCollection[] = [
     whatsappMessage: {
       es: "Hola, quiero consultar disponibilidad de Yates XL en Ibiza.",
       en: "Hello, I would like to check availability for XL yachts in Ibiza."
+    },
+    priceTag: {
+      es: "$2500",
+      en: "$2500"
     }
   },
   {
@@ -73,6 +77,10 @@ export const boatCollections: BoatCollection[] = [
     whatsappMessage: {
       es: "Hola, quiero consultar disponibilidad de yates en Ibiza.",
       en: "Hello, I would like to check yacht availability in Ibiza."
+    },
+    priceTag: {
+      es: "1.800",
+      en: "1.800"
     }
   },
   {
@@ -110,6 +118,10 @@ export const boatCollections: BoatCollection[] = [
     whatsappMessage: {
       es: "Hola, quiero consultar disponibilidad de embarcaciones rápidas en Ibiza.",
       en: "Hello, I would like to check fast boat availability in Ibiza."
+    },
+    priceTag: {
+      es: "800",
+      en: "800"
     }
   }
 ];

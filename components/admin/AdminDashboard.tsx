@@ -487,7 +487,8 @@ function createBoatCollection(): BoatCollection {
     publishedAt: date,
     updatedAt: date,
     schemaType: "CollectionPage",
-    whatsappMessage: localized("Hola, quiero consultar esta colección de barcos en Ibiza.")
+    whatsappMessage: localized("Hola, quiero consultar esta colección de barcos en Ibiza."),
+    priceTag: localized("")
   };
 }
 
@@ -1149,6 +1150,7 @@ function BoatCollectionEditor({ collection, locale, onChange }: { collection: Bo
       <MediaEditor image={collection.image} gallery={[]} locale={locale} itemLabel={getLocalizedValue(collection.title, locale)} onChange={(image) => onChange({ image })} />
       <LocalizedTextEditor label="Título" value={collection.title} locale={locale} onChange={(value) => onChange({ title: value })} />
       <LocalizedTextEditor label="Eyebrow" value={collection.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
+      <LocalizedTextEditor label="Etiqueta de Precio/Badge" value={collection.priceTag ?? localized("")} locale={locale} onChange={(value) => onChange({ priceTag: value })} />
       <LocalizedTextEditor label="Descripción" value={collection.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
       <LocalizedTextEditor label="Slug por idioma" value={collection.slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
       <LocalizedTextEditor label="Nota de selección" value={collection.selectionNote} locale={locale} multiline onChange={(value) => onChange({ selectionNote: value })} />
