@@ -4,7 +4,6 @@ import { BoatGrid } from "@/components/boats/BoatGrid";
 import { BoatCtaBanner } from "@/components/sections/BoatCtaBanner";
 import { ContactFormSection } from "@/components/sections/ContactFormSection";
 import { FaqSection } from "@/components/sections/FaqSection";
-import { DetailGallery } from "@/components/media/DetailGallery";
 import { ImageCarousel } from "@/components/media/ImageCarousel";
 import { MediaImage } from "@/components/MediaImage";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
@@ -391,7 +390,6 @@ function ServiceDetails({ page, locale }: { page: ServicePage; locale: Locale })
 
     return label ? [label] : [];
   });
-  const galleryImages = [page.image, ...(page.gallery ?? [])];
   const title = getLocalizedValue(page.title, locale);
   const hasMainDetails = Boolean(richDescription?.html || specs.length > 0 || priceText);
 
@@ -452,9 +450,6 @@ function ServiceDetails({ page, locale }: { page: ServicePage; locale: Locale })
         </section>
       ) : null}
 
-      {galleryImages.length > 1 ? (
-        <DetailGallery assets={galleryImages} locale={locale} title={t("gallery", locale)} />
-      ) : null}
     </>
   );
 }
