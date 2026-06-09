@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
+import { createInitialAdminSnapshot, normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -108,6 +108,19 @@ function snapshotFromRows(rows: ContentRow[], fallback = createEmptyContentSnaps
       const key = row.content_type as AdminContentKey;
       (content[key] as AdminItem[]).push(row.payload);
     });
+
+  // Si Supabase tiene datos de servicePages pero faltan servicios canónicos
+  // (p.ej. water-taxi añadido al seed local después del último guardado),
+  // completamos los huecos con el snapshot inicial para que no aparezca "no disponible".
+  if (keysWithRows.has("servicePages")) {
+    const seedSnapshot = createInitialAdminSnapshot();
+    const existingIds = new Set((content.servicePages as AdminItem[]).map((p) => p.id));
+    const missingPages = seedSnapshot.content.servicePages.filter((p) => !existingIds.has(p.id));
+
+    if (missingPages.length) {
+      (content.servicePages as AdminItem[]).push(...(missingPages as AdminItem[]));
+    }
+  }
 
   return normalizeAdminContentSnapshot({
     version: 1,

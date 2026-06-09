@@ -153,5 +153,36 @@ export const servicePages: ServicePage[] = [
       es: "Hola, quiero recibir asesoramiento para una experiencia en Ibiza.",
       en: "Hello, I would like advice for an Ibiza experience."
     }
+  },
+  {
+    id: "service-water-taxi",
+    kind: "service",
+    serviceId: "water-taxi",
+    status: "published",
+    slugsByLocale: { es: "taxi-boat", en: "taxi-boat", de: "taxi-boot", nl: "taxi-boot" },
+    title: { es: "Taxi Boat", en: "Taxi Boat", de: "Taxi Boot", nl: "Taxi Boot" },
+    eyebrow: { es: "Transfer acuático", en: "Water transfer" },
+    description: {
+      es: "Servicio de transfer marítimo rápido y seguro disponible las 24 horas en Ibiza.",
+      en: "Fast and safe maritime transfer service available 24 hours in Ibiza."
+    },
+    image: {
+      src: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=1200&q=80",
+      alt: { es: "Taxi Boat en el puerto de Ibiza", en: "Taxi Boat in Ibiza port" },
+      source: "unsplash"
+    },
+    seoTitle: { es: "Taxi Boat y transfer marítimo en Ibiza", en: "Taxi Boat and marine transfer in Ibiza" },
+    seoDescription: {
+      es: "Servicio de Taxi Boat y transfer acuático en Ibiza bajo consulta por WhatsApp.",
+      en: "Taxi Boat and marine transfer service in Ibiza by WhatsApp request."
+    },
+    publishedAt: "2026-06-08",
+    updatedAt: "2026-06-09",
+    schemaType: "Service",
+    options: [],
+    whatsappMessage: {
+      es: "Hola, quiero consultar disponibilidad del servicio de Taxi Boat en Ibiza.",
+      en: "Hello, I would like to check availability for the Taxi Boat service in Ibiza."
+    }
   }
 ];

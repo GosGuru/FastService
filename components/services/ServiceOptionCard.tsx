@@ -9,9 +9,16 @@ interface ServiceOptionCardProps {
   locale: Locale;
   detailHref?: string;
   showAvailabilityPill?: boolean;
+  showDetailLink?: boolean;
 }
 
-export function ServiceOptionCard({ option, locale, detailHref, showAvailabilityPill = true }: ServiceOptionCardProps) {
+export function ServiceOptionCard({
+  option,
+  locale,
+  detailHref,
+  showAvailabilityPill = true,
+  showDetailLink = true
+}: ServiceOptionCardProps) {
   const resolvedDetailHref = detailHref ?? `#${option.id}`;
 
   return (
@@ -32,7 +39,12 @@ export function ServiceOptionCard({ option, locale, detailHref, showAvailability
         <p>
           <NoWidowText text={getLocalizedValue(option.description, locale)} />
         </p>
-        <CardActions locale={locale} whatsappMessage={getLocalizedValue(option.whatsappMessage, locale)} detailHref={resolvedDetailHref} />
+        <CardActions
+          locale={locale}
+          whatsappMessage={getLocalizedValue(option.whatsappMessage, locale)}
+          detailHref={resolvedDetailHref}
+          showDetail={showDetailLink}
+        />
       </div>
     </article>
   );

@@ -11,6 +11,8 @@ import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { ServiceOptionCard } from "@/components/services/ServiceOptionCard";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { WaterToyCard } from "@/components/water-toys/WaterToyCard";
+import { NoWidowText } from "@/components/typography/NoWidowText";
+import { TaxiBoatHero } from "@/components/services/TaxiBoatHero";
 import { buildAlternates, getAllLocalizedStaticPaths, getPageBySlug, getPublicContent } from "@/lib/content";
 import { assertLocale, getLocalizedSlug, getLocalizedValue, siteUrl, type Locale } from "@/lib/i18n";
 import type { FaqItem, ServiceId, ServiceOption, ServicePage } from "@/types/content";
@@ -88,6 +90,28 @@ export default async function DynamicPage({ params }: Props) {
     const boatFaqs = getFaqsForService(content.faqs ?? [], "boats");
     const collectionTitle = keepWordsTogether(getLocalizedValue(page.title, locale));
 
+    const heroTitleText = page.heroTitle
+      ? getLocalizedValue(page.heroTitle, locale).trim()
+      : getBoatCollectionHeroTitle(locale, collectionTitle);
+    const showHeroTitle = heroTitleText !== "";
+
+    const descriptionText = page.description
+      ? getLocalizedValue(page.description, locale).trim()
+      : "";
+    const showDescription = descriptionText !== "";
+
+    const descriptionStyle = {
+      fontWeight: page.descriptionBold ? "bold" : undefined,
+      fontStyle: page.descriptionItalic ? "italic" : undefined
+    };
+
+    const whatsappCtaLabel = page.whatsappLabel
+      ? getLocalizedValue(page.whatsappLabel, locale).trim()
+      : undefined;
+
+    const showWhatsappButton = !page.hideWhatsappButton &&
+      (page.whatsappLabel === undefined || whatsappCtaLabel !== "");
+
     return (
       <main>
         <section className="page-hero page-hero--compact page-hero--boat-collection">
@@ -96,10 +120,17 @@ export default async function DynamicPage({ params }: Props) {
           </div>
           <div className="page-hero__overlay" />
           <div className="container page-hero__content">
-            <p className="eyebrow">{getLocalizedValue(page.eyebrow, locale)}</p>
-            <h1>{getBoatCollectionHeroTitle(locale, collectionTitle)}</h1>
-            <p>{getLocalizedValue(page.description, locale)}</p>
-            <WhatsAppCta locale={locale} message={getLocalizedValue(page.whatsappMessage, locale)} variant="light" />
+            {/* Omit eyebrow line as requested by user */}
+            {showHeroTitle && <h1>{heroTitleText}</h1>}
+            {showDescription && <p className="hero-description" style={descriptionStyle}>{descriptionText}</p>}
+            {showWhatsappButton && (
+              <WhatsAppCta
+                locale={locale}
+                message={getLocalizedValue(page.whatsappMessage, locale)}
+                label={whatsappCtaLabel}
+                variant="light"
+              />
+            )}
           </div>
         </section>
         <section className="section boat-grid-section">
@@ -110,7 +141,6 @@ export default async function DynamicPage({ params }: Props) {
             <BoatGrid boats={collectionBoats} locale={locale} />
           </div>
         </section>
-        <BoatCtaBanner collection={page} locale={locale} />
         <FaqSection items={boatFaqs} locale={locale} />
       </main>
     );
@@ -159,7 +189,34 @@ export default async function DynamicPage({ params }: Props) {
           <div className="container">
             <div className="section-heading section-heading--center">
               <p className="eyebrow">{locale === "es" ? "Descubre nuestra flota" : "Discover our fleet"}</p>
-              <h2>{locale === "es" ? "Vehículos con chófer para cada momento" : "Chauffeur vehicles for every moment"}</h2>
+              <h2>
+                <NoWidowText
+                  text={
+                    locale === "es"
+                      ? "Vehículos con chófer para cada momento que necesites en las Islas Baleares"
+                      : "Chauffeur vehicles for every moment you need in the Balearic Islands"
+                  }
+                />
+              </h2>
+              {locale === "es" ? (
+                <>
+                  <p>
+                    <NoWidowText text="Todo el personal debidamente uniformado, aseado y con sus respectivas licencias de conducir en regla." />
+                  </p>
+                  <p>
+                    <NoWidowText text="Todos los vehículos tendrán toda la documentación en vigor." />
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    <NoWidowText text="All staff properly uniformed, neat, and with their respective driving licenses in order." />
+                  </p>
+                  <p>
+                    <NoWidowText text="All vehicles will have all documentation in force." />
+                  </p>
+                </>
+              )}
             </div>
             <div className="content-grid content-grid--three catalog-grid">
               {content.vehicles.map((vehicle) => (
@@ -178,15 +235,10 @@ export default async function DynamicPage({ params }: Props) {
 
     return (
       <main>
-        <ServiceHero page={page} locale={locale} />
+        <ServiceHero page={page} locale={locale} showEyebrow={false} />
         <ServiceDetails page={page} locale={locale} />
         <section className="section">
           <div className="container">
-            <div className="section-heading">
-              <p className="eyebrow">{locale === "es" ? "Sin precios publicados" : "No published prices"}</p>
-              <h2>{locale === "es" ? "Consulta disponibilidad por WhatsApp" : "Check availability by WhatsApp"}</h2>
-              <p>{locale === "es" ? "Cada juguete depende de logística, fecha, barco y condiciones. Te lo confirmamos directamente por WhatsApp." : "Each toy depends on logistics, date, boat and conditions. We confirm it directly by WhatsApp."}</p>
-            </div>
             <div className="content-grid content-grid--three catalog-grid">
               {content.waterToys.map((toy) => (
                 <WaterToyCard toy={toy} locale={locale} sectionSlug={sectionSlug} key={toy.id} />
@@ -204,22 +256,35 @@ export default async function DynamicPage({ params }: Props) {
 
     return (
       <main>
-        <ServiceHero page={page} locale={locale} />
-        <ServiceDetails page={page} locale={locale} />
+        <ServiceHero page={page} locale={locale} showEyebrow={false} />
         <ServiceOptionsGrid
           locale={locale}
           options={page.options ?? []}
-          eyebrow={locale === "es" ? "Tres coberturas principales" : "Three core coverages"}
-          title={locale === "es" ? "Protección privada según el plan" : "Private protection matched to the plan"}
+          eyebrow=""
+          title={locale === "es" ? "Personal Cualificado con tarjetas TIP" : "Qualified Personnel with TIP cards"}
           description={
             locale === "es"
-              ? "Trabajamos cada servicio según agenda, ubicación y nivel de discreción requerido."
-              : "Each service is coordinated around the schedule, location and required level of discretion."
+              ? "Todo el personal debidamente uniformado, aseado y con sus respectivos equipos de seguridad.\nTodos los TIP (tarjetas de identificación profesional) estarán en vigor y revisadas."
+              : "All staff are properly uniformed, clean, and equipped with their respective security gear.\nAll TIPs (professional identification cards) will be valid and verified."
           }
           soft
+          showAvailabilityPill={false}
+          showDetailLink={false}
         />
         <FaqSection items={securityFaqs} locale={locale} />
       </main>
+    );
+  }
+
+  if (page.serviceId === "water-taxi") {
+    return (
+      <TaxiBoatHero
+        title={getLocalizedValue(page.title, locale)}
+        description={getLocalizedValue(page.description, locale)}
+        whatsappMessage={getLocalizedValue(page.whatsappMessage, locale)}
+        image={page.image}
+        locale={locale}
+      />
     );
   }
 
@@ -233,13 +298,8 @@ export default async function DynamicPage({ params }: Props) {
         <ServiceOptionsGrid
           locale={locale}
           options={page.options ?? []}
-          eyebrow={locale === "es" ? "Sin precios publicados" : "No published prices"}
-          title={locale === "es" ? "Consulta disponibilidad por WhatsApp" : "Check availability by WhatsApp"}
-          description={
-            locale === "es"
-              ? "Los modelos se confirman según fecha, punto de entrega, condiciones y disponibilidad real."
-              : "Models are confirmed according to date, delivery point, terms and real availability."
-          }
+          showAvailabilityPill={false}
+          showDetailLink={false}
         />
         <FaqSection items={selfDriveFaqs} locale={locale} />
       </main>
@@ -258,31 +318,45 @@ export default async function DynamicPage({ params }: Props) {
 function ServiceOptionsGrid({
   locale,
   options,
-  eyebrow,
-  title,
-  description,
-  soft = false
+  eyebrow = "",
+  title = "",
+  description = "",
+  soft = false,
+  showAvailabilityPill = true,
+  showDetailLink = true
 }: {
   locale: Locale;
   options: ServiceOption[];
-  eyebrow: string;
-  title: string;
-  description: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
   soft?: boolean;
+  showAvailabilityPill?: boolean;
+  showDetailLink?: boolean;
 }) {
   if (!options.length) return null;
 
   return (
     <section className={`section ${soft ? "section--soft" : ""}`}>
       <div className="container">
-        <div className="section-heading">
-          <p className="eyebrow">{eyebrow}</p>
-          <h2>{title}</h2>
-          <p>{description}</p>
-        </div>
+        {(eyebrow || title || description) && (
+          <div className="section-heading">
+            {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+            {title && <h2>{title}</h2>}
+            {description && description.split("\n").map((line, idx) => (
+              <p key={idx}>{line}</p>
+            ))}
+          </div>
+        )}
         <div className="content-grid content-grid--three catalog-grid">
           {options.map((option) => (
-            <ServiceOptionCard option={option} locale={locale} key={option.id} />
+            <ServiceOptionCard
+              option={option}
+              locale={locale}
+              key={option.id}
+              showAvailabilityPill={showAvailabilityPill}
+              showDetailLink={showDetailLink}
+            />
           ))}
         </div>
       </div>
@@ -290,7 +364,7 @@ function ServiceOptionsGrid({
   );
 }
 
-function ServiceHero({ page, locale }: { page: ServicePage; locale: Locale }) {
+function ServiceHero({ page, locale, showEyebrow = true }: { page: ServicePage; locale: Locale; showEyebrow?: boolean }) {
   return (
     <section className="page-hero">
       <div className="page-hero__media">
@@ -298,7 +372,7 @@ function ServiceHero({ page, locale }: { page: ServicePage; locale: Locale }) {
       </div>
       <div className="page-hero__overlay" />
       <div className="container page-hero__content">
-        <p className="eyebrow">{getLocalizedValue(page.eyebrow, locale)}</p>
+        {showEyebrow && <p className="eyebrow">{getLocalizedValue(page.eyebrow, locale)}</p>}
         <h1>{getLocalizedValue(page.title, locale)}</h1>
         <p>{getLocalizedValue(page.description, locale)}</p>
         <WhatsAppCta locale={locale} message={getLocalizedValue(page.whatsappMessage, locale)} variant="light" />

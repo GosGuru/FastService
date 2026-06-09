@@ -43,15 +43,17 @@ export function getMobilePageNavigation(locale: Locale, content?: NavigationCont
   const waterToys = getServicePage(content, "water-toys");
   const security = getServicePage(content, "security");
   const selfDrive = getServicePage(content, "self-drive");
+  const waterTaxi = getServicePage(content, "water-taxi");
   const transfersHref = `/${locale}/${transfers ? getLocalizedSlug(transfers.slugsByLocale, locale) : "transfer"}`;
   const waterToysHref = `/${locale}/${waterToys ? getLocalizedSlug(waterToys.slugsByLocale, locale) : "water-toys"}`;
   const securityHref = `/${locale}/${security ? getLocalizedSlug(security.slugsByLocale, locale) : "security"}`;
   const selfDriveHref = `/${locale}/${selfDrive ? getLocalizedSlug(selfDrive.slugsByLocale, locale) : "self-drive-car-rental"}`;
+  const waterTaxiHref = `/${locale}/${waterTaxi ? getLocalizedSlug(waterTaxi.slugsByLocale, locale) : "taxi-boat"}`;
 
   if (locale === "es") {
     return [
       { label: "TRANSFER/SHUTTLE PRIVADO", href: transfersHref },
-      { label: "WATER TAXI / TRANSFER ACUÁTICO", href: transfersHref },
+      { label: "TAXI BOAT", href: waterTaxiHref },
       { label: "JUGUETES NÁUTICOS", href: waterToysHref },
       { label: "SEGURIDAD PRIVADA Y ESCOLTAS", href: securityHref },
       { label: "ALQUILER DE VEHÍCULOS SIN CONDUCTOR", href: selfDriveHref }

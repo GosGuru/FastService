@@ -39,6 +39,13 @@ export function BoatCtaBanner({ collection, locale }: BoatCtaBannerProps) {
   const copy = bannerCopy[locale];
   const collectionTitle = getLocalizedValue(collection.title, locale).toLocaleLowerCase(locale);
 
+  const whatsappCtaLabel = collection.whatsappLabel
+    ? getLocalizedValue(collection.whatsappLabel, locale).trim()
+    : undefined;
+
+  const showWhatsappButton = !collection.hideWhatsappButton &&
+    (collection.whatsappLabel === undefined || whatsappCtaLabel !== "");
+
   return (
     <section className="boat-cta-banner" aria-labelledby={`boat-cta-${collection.id}`}>
       <div className="boat-cta-banner__media">
@@ -50,7 +57,9 @@ export function BoatCtaBanner({ collection, locale }: BoatCtaBannerProps) {
           {copy.titleStart} {collectionTitle} {copy.titleEnd}
         </h2>
         <p>{copy.text}</p>
-        <WhatsAppCta locale={locale} label={copy.cta} message={getLocalizedValue(collection.whatsappMessage, locale)} variant="light" />
+        {showWhatsappButton && (
+          <WhatsAppCta locale={locale} label={whatsappCtaLabel || copy.cta} message={getLocalizedValue(collection.whatsappMessage, locale)} variant="light" />
+        )}
       </div>
     </section>
   );

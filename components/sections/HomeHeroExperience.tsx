@@ -249,21 +249,21 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
         <p>{copy.text}</p>
         <div className="hero-section__actions">
           <WhatsAppCta locale={locale} variant="light" label={copy.cta} message={copy.message} />
+          <button
+            className={`hero-sound-toggle ${soundEnabled ? "is-on" : ""} ${soundBlocked ? "is-blocked" : ""}`}
+            type="button"
+            aria-label={soundLabel}
+            aria-pressed={soundEnabled}
+            title={soundStateLabel}
+            onClick={handleSoundToggle}
+          >
+            {soundEnabled ? <FiVolume2 aria-hidden="true" /> : <FiVolumeX aria-hidden="true" />}
+          </button>
         </div>
         <p className="hero-section__location-tagline">
           Menorca - Formentera - Ibiza - Mallorca
         </p>
       </div>
-      <button
-        className={`hero-sound-toggle hero-sound-toggle--corner ${soundEnabled ? "is-on" : ""} ${soundBlocked ? "is-blocked" : ""}`}
-        type="button"
-        aria-label={soundLabel}
-        aria-pressed={soundEnabled}
-        title={soundStateLabel}
-        onClick={handleSoundToggle}
-      >
-        {soundEnabled ? <FiVolume2 aria-hidden="true" /> : <FiVolumeX aria-hidden="true" />}
-      </button>
     </section>
   );
 }

@@ -3,7 +3,7 @@
 import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
 import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiMove, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
-import type { AdminMutationResult } from "@/app/admin/actions";
+import { translateItemAction, type AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
@@ -63,6 +63,7 @@ const servicePageLabels: Record<ServicePageId, string> = {
   "water-toys": "Juguetes náuticos",
   security: "Seguridad",
   "self-drive": "Vehículos sin conductor",
+  "water-taxi": "Taxi Boat",
   contact: "Contacto"
 };
 
@@ -197,7 +198,11 @@ function validateSnapshotBeforeSave(snapshot: AdminContentSnapshot) {
     }
 
     validateLocalizedSlug(errors, serviceSlugKeys, label, page.slugsByLocale, "servicePages");
-    validatePrimaryImage(errors, label, page);
+    // Taxi Boat usa portada a pantalla completa; imagen de portada no es requerida
+    const isTaxiBoat = page.serviceId === "water-taxi";
+    if (!isTaxiBoat) {
+      validatePrimaryImage(errors, label, page);
+    }
 
     if (isServicePageId(page.serviceId) && optionDrivenServicePages.has(page.serviceId) && !(page.options?.length)) {
       errors.push(`${label}: agrega al menos una opcion visible para ${servicePageLabels[page.serviceId].toLowerCase()}.`);
@@ -488,7 +493,12 @@ function createBoatCollection(): BoatCollection {
     updatedAt: date,
     schemaType: "CollectionPage",
     whatsappMessage: localized("Hola, quiero consultar esta colección de barcos en Ibiza."),
-    priceTag: localized("")
+    priceTag: localized(""),
+    heroTitle: localized(""),
+    descriptionBold: false,
+    descriptionItalic: false,
+    whatsappLabel: localized(""),
+    hideWhatsappButton: false
   };
 }
 
@@ -570,7 +580,7 @@ function createServicePage(serviceId: ServicePageId = "transfers"): ServicePage 
     status: "published",
     visibility: "listed",
     robotsIndex: true,
-    slugsByLocale: localized(id),
+    slugsByLocale: localized(serviceId),
     title: localized(title),
     eyebrow: localized("Servicio personalizado"),
     description: localized("Resumen del servicio para el hero."),
@@ -670,6 +680,182 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const [saveStatus, setSaveStatus] = useState<AdminSaveStatus>(() => getInitialSaveStatus(initialSource, initialMessage));
   const [isSaving, setIsSaving] = useState(false);
   const saveStatusRef = useRef<HTMLDivElement>(null);
+
+  // Estados para controlar el progreso de traducción por idioma
+  const [translationStatus, setTranslationStatus] = useState<Record<Locale, "pending" | "translating" | "completed" | "error"> | null>(null);
+  const [translationErrors, setTranslationErrors] = useState<Record<Locale, string>>({} as Record<Locale, string>);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationSourceLocale, setTranslationSourceLocale] = useState<Locale | null>(null);
+
+  // Limpiar el estado de traducción cuando el usuario cambie de sección o de item
+  useEffect(() => {
+    setTranslationStatus(null);
+    setTranslationErrors({} as Record<Locale, string>);
+    setTranslationSourceLocale(null);
+  }, [activeSection, selectedId]);
+
+  // Helper para buscar locales con traducciones faltantes en el item
+  function findMissingLocales(item: AdminItem, sourceLocale: Locale): Locale[] {
+    const targetLocales = locales.filter(loc => loc !== sourceLocale);
+    const missing = new Set<Locale>();
+
+    function check(obj: any) {
+      if (obj === null || obj === undefined) return;
+      if (Array.isArray(obj)) {
+        obj.forEach(check);
+        return;
+      }
+      if (typeof obj === "object") {
+        // LocalizedText
+        const isLocalizedTextObj = typeof obj.es === "string" || typeof obj.en === "string";
+        if (isLocalizedTextObj) {
+          const sourceVal = obj[sourceLocale];
+          if (typeof sourceVal === "string" && sourceVal.trim() !== "") {
+            targetLocales.forEach(loc => {
+              const targetVal = obj[loc];
+              if (typeof targetVal !== "string" || targetVal.trim() === "") {
+                missing.add(loc);
+              }
+            });
+          }
+          return;
+        }
+
+        // RichTextByLocale
+        const isRichTextObj =
+          (obj.es && typeof obj.es.html === "string") ||
+          (obj.en && typeof obj.en.html === "string") ||
+          (obj.de && typeof obj.de.html === "string") ||
+          (obj.nl && typeof obj.nl.html === "string");
+        if (isRichTextObj) {
+          const sourceVal = obj[sourceLocale];
+          if (sourceVal && typeof sourceVal.html === "string" && sourceVal.html.trim() !== "") {
+            targetLocales.forEach(loc => {
+              const targetVal = obj[loc];
+              if (!targetVal || typeof targetVal.html !== "string" || targetVal.html.trim() === "") {
+                missing.add(loc);
+              }
+            });
+          }
+          return;
+        }
+
+        Object.keys(obj).forEach(key => {
+          if (["id", "status", "visibility", "publishedAt", "updatedAt", "source", "collectionId", "serviceId", "kind"].includes(key)) return;
+          check(obj[key]);
+        });
+      }
+    }
+
+    check(item);
+    return Array.from(missing);
+  }
+
+  // Combinar recursivamente los datos de un idioma destino traducidos con el item actual
+  function mergeLocaleData(current: any, translated: any, targetLocale: Locale): any {
+    if (translated === null || translated === undefined) {
+      return current;
+    }
+    if (current === null || current === undefined) {
+      current = Array.isArray(translated) ? [] : typeof translated === "object" ? {} : translated;
+    }
+    if (Array.isArray(current) && Array.isArray(translated)) {
+      // Ajustar longitud del array si difiere (ej. nuevas especificaciones o fotos añadidas)
+      const maxLength = Math.max(current.length, translated.length);
+      const result = [];
+      for (let i = 0; i < maxLength; i++) {
+        result.push(mergeLocaleData(current[i], translated[i], targetLocale));
+      }
+      return result;
+    }
+    if (typeof current === "object" && typeof translated === "object") {
+      const isLocalizedTextObj = typeof current.es === "string" || typeof current.en === "string" || typeof translated.es === "string" || typeof translated.en === "string";
+      const isRichTextObj =
+        (current.es && typeof current.es.html === "string") ||
+        (current.en && typeof current.en.html === "string") ||
+        (translated.es && typeof translated.es.html === "string") ||
+        (translated.en && typeof translated.en.html === "string");
+
+      if (isLocalizedTextObj) {
+        return {
+          ...current,
+          [targetLocale]: translated[targetLocale] !== undefined ? translated[targetLocale] : current[targetLocale]
+        };
+      }
+      if (isRichTextObj) {
+        return {
+          ...current,
+          [targetLocale]: translated[targetLocale] !== undefined ? translated[targetLocale] : current[targetLocale]
+        };
+      }
+      const merged: any = {};
+      const allKeys = new Set([...Object.keys(current), ...Object.keys(translated)]);
+      for (const key of allKeys) {
+        merged[key] = mergeLocaleData(current[key], translated[key], targetLocale);
+      }
+      return merged;
+    }
+    return current;
+  }
+
+  // Ejecuta la traducción en paralelo por idioma
+  async function runTranslation(
+    itemToTranslate: AdminItem,
+    sourceLocale: Locale,
+    targetLocales: Locale[],
+    onFinish?: (finalItem: AdminItem) => void
+  ) {
+    if (!itemToTranslate || targetLocales.length === 0) {
+      if (onFinish) onFinish(itemToTranslate);
+      return;
+    }
+
+    setIsTranslating(true);
+    setTranslationSourceLocale(sourceLocale);
+    setTranslationErrors({} as Record<Locale, string>);
+
+    const initialStatus = {} as Record<Locale, "pending" | "translating" | "completed" | "error">;
+    locales.forEach(loc => {
+      if (loc !== sourceLocale) {
+        initialStatus[loc] = targetLocales.includes(loc) ? "pending" : "completed";
+      }
+    });
+    setTranslationStatus(initialStatus);
+
+    let currentItemAccumulator = JSON.parse(JSON.stringify(itemToTranslate)) as AdminItem;
+
+    const translationPromises = targetLocales.map(async (targetLocale) => {
+      setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "translating" }));
+      try {
+        const result = await translateItemAction(itemToTranslate, sourceLocale, targetLocale);
+        if (result.ok && result.item) {
+          setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "completed" }));
+          currentItemAccumulator = mergeLocaleData(currentItemAccumulator, result.item, targetLocale);
+        } else {
+          setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "error" }));
+          setTranslationErrors(prev => ({ ...prev, [targetLocale]: result.message || "Error de traducción." }));
+        }
+      } catch (err) {
+        setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "error" }));
+        setTranslationErrors(prev => ({ ...prev, [targetLocale]: err instanceof Error ? err.message : "Fallo de conexión." }));
+      }
+    });
+
+    await Promise.all(translationPromises);
+
+    updateSnapshot(activeSection, (currentItems) => currentItems.map((item) => (item.id === itemToTranslate.id ? touch(currentItemAccumulator) : item)));
+    setIsTranslating(false);
+
+    if (onFinish) {
+      onFinish(currentItemAccumulator);
+    }
+  }
+
+  function translateCurrentItemManually() {
+    if (!selectedItem) return;
+    const targetLocales = locales.filter(loc => loc !== locale);
+    void runTranslation(selectedItem, locale, targetLocales);
+  }
 
   const section = sectionConfig.find((item) => item.key === activeSection) ?? sectionConfig[0];
   const SectionIcon = section.icon;
@@ -840,7 +1026,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }
 
   async function saveToSupabase() {
-    if (isSaving) return;
+    if (isSaving || isTranslating) return;
 
     const validationErrors = validateSnapshotBeforeSave(snapshot);
 
@@ -854,6 +1040,41 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       return;
     }
 
+    // Comprobar si faltan traducciones en el item actual
+    if (selectedItem) {
+      const missingLocales = findMissingLocales(selectedItem, locale);
+      if (missingLocales.length > 0) {
+        setSaveStatus({
+          tone: "info",
+          title: "Traduciendo y publicando",
+          message: "Traduciendo automáticamente campos vacíos con DeepSeek antes de guardar..."
+        });
+
+        // Ejecutar traducción automática y guardar después
+        await runTranslation(selectedItem, locale, missingLocales, async (finalItem) => {
+          // Construir snapshot actualizado al instante para evitar lag de estado
+          const updatedContent = {
+            ...snapshot.content,
+            [activeSection]: (snapshot.content[activeSection] as AdminItem[]).map((item) => 
+              item.id === selectedItem.id ? touch(finalItem) : item
+            ) as any
+          };
+          const updatedSnapshot = {
+            ...snapshot,
+            content: updatedContent
+          };
+
+          await proceedWithSave(updatedSnapshot);
+        });
+        return;
+      }
+    }
+
+    // Si no faltan traducciones, guardar directamente
+    await proceedWithSave(snapshot);
+  }
+
+  async function proceedWithSave(snapshotToSave: AdminContentSnapshot) {
     setIsSaving(true);
     setSaveStatus({
       tone: "info",
@@ -862,7 +1083,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     });
 
     try {
-      const result = await saveSnapshotAction(snapshot);
+      const result = await saveSnapshotAction(snapshotToSave);
 
       setSaveStatus({
         tone: result.ok ? "success" : "error",
@@ -1021,10 +1242,23 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
             {selectedItem ? (
               <>
                 <div className="admin-editor-toolbar">
-                  <div className="admin-locale-tabs" aria-label="Idioma de edición">
-                    {locales.map((item) => (
-                      <button type="button" key={item} className={item === locale ? "is-active" : ""} onClick={() => setLocale(item)}>{item.toUpperCase()}</button>
-                    ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div className="admin-locale-tabs" aria-label="Idioma de edición" style={{ marginRight: 0 }}>
+                      {locales.map((item) => (
+                        <button type="button" key={item} className={item === locale ? "is-active" : ""} onClick={() => setLocale(item)}>{item.toUpperCase()}</button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-button admin-button--ghost"
+                      style={{ padding: "0 10px", height: "32px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem" }}
+                      onClick={translateCurrentItemManually}
+                      disabled={isTranslating || isSaving}
+                      title="Traducir campos vacíos a todos los demás idiomas usando DeepSeek"
+                    >
+                      <FiGlobe aria-hidden="true" className={isTranslating ? "admin-spin" : ""} />
+                      {isTranslating ? "Traduciendo..." : "Traducir"}
+                    </button>
                   </div>
                   <div className="admin-actions admin-actions--compact">
                     {visitTarget ? (
@@ -1046,6 +1280,83 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                     </button>
                   </div>
                 </div>
+
+                {translationStatus && translationSourceLocale && (
+                  <div className="admin-translation-panel" style={{
+                    margin: "12px 24px",
+                    padding: "16px",
+                    borderRadius: "8px",
+                    backgroundColor: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    fontSize: "0.9rem",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                      <span style={{ fontWeight: 600, color: "#334155", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <FiGlobe /> Estado de traducción automática
+                      </span>
+                      {isTranslating ? (
+                        <span style={{ color: "#0284c7", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                          <FiLoader className="admin-spin" /> Procesando con DeepSeek...
+                        </span>
+                      ) : (
+                        <button 
+                          type="button" 
+                          onClick={() => setTranslationStatus(null)} 
+                          style={{ border: "none", background: "none", color: "#64748b", cursor: "pointer", fontSize: "0.8rem" }}
+                        >
+                          Cerrar
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "12px" }}>
+                      {locales.filter(loc => loc !== translationSourceLocale).map((loc) => {
+                        const status = translationStatus[loc];
+                        const errorMsg = translationErrors[loc];
+                        
+                        let color = "#64748b";
+                        let icon = <FiLoader className="admin-spin" />;
+                        let statusText = "Pendiente";
+                        
+                        if (status === "translating") {
+                          color = "#0284c7";
+                          icon = <FiLoader className="admin-spin" />;
+                          statusText = "Traduciendo";
+                        } else if (status === "completed") {
+                          color = "#16a34a";
+                          icon = <FiCheckCircle />;
+                          statusText = "Completado";
+                        } else if (status === "error") {
+                          color = "#dc2626";
+                          icon = <FiAlertCircle />;
+                          statusText = "Error";
+                        }
+
+                        return (
+                          <div key={loc} style={{
+                            padding: "10px",
+                            borderRadius: "6px",
+                            backgroundColor: "#ffffff",
+                            border: `1px solid ${status === "translating" ? "#bae6fd" : "#e2e8f0"}`,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px"
+                          }}>
+                            <span style={{ fontWeight: 700, color: "#1e293b" }}>{loc.toUpperCase()}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", color, fontSize: "0.8rem", fontWeight: 550 }}>
+                              {icon} {statusText}
+                            </div>
+                            {errorMsg && (
+                              <span style={{ fontSize: "0.7rem", color: "#ef4444", marginTop: "2px", wordBreak: "break-word" }} title={errorMsg}>
+                                {errorMsg.substring(0, 40)}{errorMsg.length > 40 ? "..." : ""}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <ItemEditor activeSection={activeSection} item={selectedItem} locale={locale} onChange={updateSelectedItem} />
                 {hasUnsavedChanges && (
@@ -1146,12 +1457,29 @@ function BoatCollectionEditor({ collection, locale, onChange }: { collection: Bo
           <input type="checkbox" checked={collection.hiddenPage} onChange={(event) => onChange({ hiddenPage: event.target.checked })} />
           <span>Página oculta en menú</span>
         </label>
+        <label className="admin-check-field">
+          <input type="checkbox" checked={!!collection.hideWhatsappButton} onChange={(event) => onChange({ hideWhatsappButton: event.target.checked })} />
+          <span>Ocultar botón de WhatsApp</span>
+        </label>
       </div>
       <MediaEditor image={collection.image} gallery={[]} locale={locale} itemLabel={getLocalizedValue(collection.title, locale)} onChange={(image) => onChange({ image })} />
       <LocalizedTextEditor label="Título" value={collection.title} locale={locale} onChange={(value) => onChange({ title: value })} />
-      <LocalizedTextEditor label="Eyebrow" value={collection.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
+      <LocalizedTextEditor label="Título Hero (Personalizado)" value={collection.heroTitle ?? localized("")} locale={locale} onChange={(value) => onChange({ heroTitle: value })} />
       <LocalizedTextEditor label="Etiqueta de Precio/Badge" value={collection.priceTag ?? localized("")} locale={locale} onChange={(value) => onChange({ priceTag: value })} />
       <LocalizedTextEditor label="Descripción" value={collection.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
+      <div className="admin-form-grid admin-form-grid--two">
+        <label className="admin-check-field">
+          <input type="checkbox" checked={!!collection.descriptionBold} onChange={(event) => onChange({ descriptionBold: event.target.checked })} />
+          <span>Descripción en negrita (Bold)</span>
+        </label>
+        <label className="admin-check-field">
+          <input type="checkbox" checked={!!collection.descriptionItalic} onChange={(event) => onChange({ descriptionItalic: event.target.checked })} />
+          <span>Descripción en cursiva (Italic)</span>
+        </label>
+      </div>
+      {!collection.hideWhatsappButton && (
+        <LocalizedTextEditor label="Texto botón WhatsApp (Personalizado)" value={collection.whatsappLabel ?? localized("")} locale={locale} onChange={(value) => onChange({ whatsappLabel: value })} />
+      )}
       <LocalizedTextEditor label="Slug por idioma" value={collection.slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
       <LocalizedTextEditor label="Nota de selección" value={collection.selectionNote} locale={locale} multiline onChange={(value) => onChange({ selectionNote: value })} />
       <LocalizedTextEditor label="Título SEO" value={collection.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value })} />
@@ -1339,7 +1667,9 @@ function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; loca
       ? "Las tarjetas y fichas públicas de este servicio se gestionan en la sección Juguetes."
       : page.serviceId === "contact"
         ? "Esta página solo usa el contenido general del servicio y no muestra tarjetas adicionales."
-        : null;
+        : page.serviceId === "water-taxi"
+          ? "Taxi Boat muestra una portada a pantalla completa. Solo edita el título, la descripción y el mensaje de WhatsApp."
+          : null;
 
   return (
     <div className="admin-form">
@@ -1352,7 +1682,6 @@ function ServicePageEditor({ page, locale, onChange }: { page: ServicePage; loca
         </select>
       </label>
       <LocalizedTextEditor label="Título H1" value={page.title} locale={locale} onChange={(value) => onChange({ title: value })} />
-      <LocalizedTextEditor label="Eyebrow" value={page.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
       <LocalizedTextEditor label="Resumen del hero" value={page.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
       <ManagedDetailsEditor
         itemId={page.id}
@@ -1484,7 +1813,6 @@ function SeoPageEditor({ page, locale, onChange }: { page: SeoPage; locale: Loca
   return (
     <div className="admin-form">
       <LocalizedTextEditor label="Título H1" value={page.title} locale={locale} onChange={(value) => onChange({ title: value })} />
-      <LocalizedTextEditor label="Eyebrow" value={page.eyebrow} locale={locale} onChange={(value) => onChange({ eyebrow: value })} />
       <LocalizedTextEditor label="Resumen" value={page.excerpt} locale={locale} multiline onChange={(value) => onChange({ excerpt: value })} />
       <LocalizedTextEditor label="Slug por idioma" value={page.slugsByLocale} locale={locale} onChange={(value) => onChange({ slugsByLocale: value })} />
       <LocalizedTextEditor label="Título SEO" value={page.seoTitle} locale={locale} onChange={(value) => onChange({ seoTitle: value })} />

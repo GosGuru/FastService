@@ -92,6 +92,7 @@ const canonicalServicePageIds: Partial<Record<ServicePage["id"], ServicePageId>>
   "service-water-toys": "water-toys",
   "service-security": "security",
   "service-self-drive": "self-drive",
+  "service-water-taxi": "water-taxi",
   "service-contact": "contact"
 };
 
@@ -163,15 +164,28 @@ function normalizeServiceOptions(options: ServicePage["options"]): ServicePage["
 }
 
 function normalizeServicePage(page: ServicePage): ServicePage {
+  const resolvedServiceId = canonicalServicePageIds[page.id] ?? page.serviceId;
+
+  // Si es Taxi Boat y no tiene imagen propia, usa la imagen del seed
+  const taxiBoatFallbackImage: ServicePage["image"] = {
+    src: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=1200&q=80",
+    alt: { es: "Taxi Boat en el puerto de Ibiza", en: "Taxi Boat in Ibiza port", de: "Taxi Boot im Hafen von Ibiza", nl: "Taxi Boot in de haven van Ibiza" },
+    source: "unsplash"
+  };
+  const image = resolvedServiceId === "water-taxi" && !page.image?.src?.trim()
+    ? taxiBoatFallbackImage
+    : page.image;
+
   return {
     ...page,
-    serviceId: canonicalServicePageIds[page.id] ?? page.serviceId,
+    image,
+    serviceId: resolvedServiceId,
     gallery: Array.isArray(page.gallery) ? page.gallery : [],
     specs: normalizeSpecs(page.specs),
     richDescription: page.richDescription,
     amenities: page.amenities ?? [],
     marina: page.marina ?? localized(""),
-    options: normalizeServiceOptions(Array.isArray(page.options) ? page.options : getDefaultServiceOptions(page.serviceId))
+    options: normalizeServiceOptions(Array.isArray(page.options) ? page.options : getDefaultServiceOptions(resolvedServiceId))
   };
 }
 

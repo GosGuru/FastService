@@ -6,13 +6,13 @@ export type PublicationStatus = "published";
 
 export type ContentVisibility = "listed" | "hidden";
 
-export type ServiceId = "boats" | "transfers" | "water-toys" | "security" | "self-drive";
+export type ServiceId = "boats" | "transfers" | "water-toys" | "security" | "self-drive" | "water-taxi";
 
 export type ServicePageId = Exclude<ServiceId, "boats"> | "contact";
 
-export const publicServiceIds = ["boats", "transfers", "water-toys", "security", "self-drive"] as const satisfies ServiceId[];
+export const publicServiceIds = ["boats", "transfers", "water-toys", "security", "self-drive", "water-taxi"] as const satisfies ServiceId[];
 
-export const servicePageIds = ["transfers", "water-toys", "security", "self-drive", "contact"] as const satisfies ServicePageId[];
+export const servicePageIds = ["transfers", "water-toys", "security", "self-drive", "water-taxi", "contact"] as const satisfies ServicePageId[];
 
 export type BoatCollectionId = "yachts-xl" | "yachts" | "fast-boats";
 
@@ -77,6 +77,11 @@ export interface BoatCollection extends BaseContent {
   selectionNote: LocalizedText;
   whatsappMessage: LocalizedText;
   priceTag?: LocalizedText;
+  heroTitle?: LocalizedText;
+  descriptionBold?: boolean;
+  descriptionItalic?: boolean;
+  whatsappLabel?: LocalizedText;
+  hideWhatsappButton?: boolean;
 }
 
 export interface Boat extends BaseContent {

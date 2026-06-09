@@ -6,6 +6,8 @@ import { getAdminSession } from "@/lib/supabase/admin-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveAdminSnapshotToSupabase } from "@/lib/supabase/content";
 import type { AdminContentSnapshot } from "@/lib/admin/snapshot";
+import { translateItem, type AdminItem } from "@/lib/admin/deepseek";
+import type { Locale } from "@/lib/i18n";
 
 export interface AdminMutationResult {
   ok: boolean;
@@ -85,4 +87,35 @@ export async function signOutAction() {
   }
 
   redirect("/admin/login");
+}
+
+export async function translateItemAction(
+  item: AdminItem,
+  sourceLocale: Locale,
+  targetLocale: Locale
+): Promise<{ ok: boolean; message: string; item?: AdminItem }> {
+  const adminSession = await getAdminSession();
+
+  if (!adminSession) {
+    return {
+      ok: false,
+      message: "Tu sesion no tiene permisos de administrador para realizar traducciones."
+    };
+  }
+
+  try {
+    const translatedItem = await translateItem(item, sourceLocale, targetLocale);
+    return {
+      ok: true,
+      message: `Traducción al ${targetLocale.toUpperCase()} completada con éxito.`,
+      item: translatedItem
+    };
+  } catch (error) {
+    console.error(`Error en translateItemAction para ${targetLocale}:`, error);
+    const rawMessage = error instanceof Error ? error.message : "Error desconocido.";
+    return {
+      ok: false,
+      message: `Fallo al traducir al ${targetLocale.toUpperCase()}: ${rawMessage}`
+    };
+  }
 }

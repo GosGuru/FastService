@@ -18,12 +18,11 @@ export function WaterToyCard({ toy, locale, sectionSlug }: WaterToyCardProps) {
     <article className="water-toy-card">
       <ImageCarousel assets={[toy.image, ...toy.gallery]} locale={locale} href={href} ariaLabel={getLocalizedValue(toy.name, locale)} className="water-toy-card__image" sizes="(max-width: 768px) 100vw, 33vw" showFullscreen={false} variant="card" />
       <div className="water-toy-card__body">
-        <span className="availability-pill">{uiLabels[locale].noPrices}</span>
         <h2>{getLocalizedValue(toy.name, locale)}</h2>
         <p>
           <NoWidowText text={getLocalizedValue(toy.description, locale)} />
         </p>
-        <CardActions locale={locale} whatsappMessage={getLocalizedValue(toy.whatsappMessage, locale)} detailHref={href} />
+        <CardActions locale={locale} whatsappMessage={getLocalizedValue(toy.whatsappMessage, locale)} detailHref={href} showDetail={false} />
       </div>
     </article>
   );
