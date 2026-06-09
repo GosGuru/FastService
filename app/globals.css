@@ -1747,6 +1747,7 @@ body.no-scroll-home {
   overflow: hidden !important;
   height: 100dvh !important;
   max-height: 100dvh !important;
+  background-color: #05161d !important;
 }
 
 body.no-scroll-home footer {
@@ -1759,6 +1760,7 @@ body.taxi-boat-fullscreen {
   overflow: hidden !important;
   height: 100dvh !important;
   max-height: 100dvh !important;
+  background-color: #05161d !important;
 }
 
 body.taxi-boat-fullscreen footer,
@@ -1885,6 +1887,24 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   }
 }
 
+@media (max-width: 680px) and (orientation: portrait) {
+  .taxi-boat-hero__media {
+    width: 100dvh;
+    height: 100dvw;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+  }
+
+  .taxi-boat-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: 62% center !important;
+  }
+}
+
 .hero-section__location-tagline {
   margin-top: clamp(14px, 3.2dvh, 26px);
   color: rgba(255, 255, 255, 0.75);
@@ -1899,9 +1919,11 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 
 @media (max-width: 680px) {
   .hero-section__location-tagline {
-    font-size: 14px;
+    font-size: clamp(13px, 3.6vw, 15px);
     letter-spacing: 0.04em;
     white-space: normal;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 16px;
   }
 }
 
@@ -5049,13 +5071,32 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 }
 
 .admin-list-panel {
-  flex: 0 0 200px;
+  flex: 0 0 340px;
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
-  padding: 10px;
+  padding: 16px 12px;
   border-top: 4px solid var(--admin-section-accent);
+}
+
+.admin-panel-heading .admin-icon-button {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--admin-section-accent);
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.admin-panel-heading .admin-icon-button:hover {
+  background: var(--admin-section-soft);
+  border-color: var(--admin-section-accent);
+  color: var(--admin-section-accent);
+  transform: scale(1.05);
 }
 
 .admin-editor-panel {
@@ -5114,15 +5155,31 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 46px;
-  padding: 0 14px;
-  border: 1px solid var(--color-line);
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
   border-radius: 999px;
-  background: #f7f8f8;
-  color: var(--color-muted);
+  background: #f8fafc;
+  color: #64748b;
+  transition: all 0.2s ease;
 }
 
-.admin-search input,
+.admin-search:focus-within {
+  border-color: var(--admin-section-accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-section-accent) 15%, transparent);
+}
+
+.admin-search input {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  outline: 0;
+  color: var(--color-text);
+  font-size: 13.5px;
+}
+
 .admin-field input,
 .admin-field textarea,
 .admin-field select,
@@ -5135,20 +5192,32 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   color: var(--color-text);
 }
 
-.admin-search input {
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  outline: 0;
-}
-
 .admin-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 640px;
+  max-height: calc(100vh - 280px);
+  min-height: 450px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 6px;
+}
+
+.admin-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.admin-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .admin-list-item {
@@ -5156,11 +5225,13 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch;
   gap: 4px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid transparent;
   border-radius: 8px;
-  background: #f7f8f8;
+  background: #ffffff;
   min-height: 56px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  transition: all 0.2s ease-in-out;
 }
 
 .admin-list-item__select {
@@ -5168,44 +5239,74 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   gap: 2px;
   min-width: 0;
   min-height: 56px;
-  padding: 8px 10px;
+  padding: 10px 14px;
   border: 0;
   border-radius: 8px 0 0 8px;
   background: transparent;
   color: var(--color-text);
+  cursor: pointer;
 }
 
 .admin-list-item__select > span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.admin-list-item__select > small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+  transition: color 0.15s ease;
 }
 
 .admin-list-item__visit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-width: 60px;
-  min-height: 56px;
-  padding: 0 8px;
-  border-left: 1px solid rgb(80 133 158 / 10%);
+  gap: 6px;
+  min-width: 68px;
+  padding: 0 12px;
+  border-left: 1px solid #e2e8f0;
   border-radius: 0 8px 8px 0;
   color: var(--admin-section-accent);
-  font-size: 11px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
 .admin-list-item__visit:hover,
 .admin-list-item__visit:focus-visible {
-  background: color-mix(in srgb, var(--admin-section-accent) 10%, white);
+  background: color-mix(in srgb, var(--admin-section-accent) 8%, transparent);
+  color: var(--admin-section-accent);
 }
 
-.admin-list-item:hover,
+.admin-list-item:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--admin-section-accent) 30%, #e2e8f0);
+  border-left-color: var(--admin-section-accent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-section-accent) 8%, transparent);
+}
+
 .admin-list-item.is-active {
-  border-color: color-mix(in srgb, var(--admin-section-accent) 42%, white);
-  background: color-mix(in srgb, var(--admin-section-soft) 72%, white);
+  border-color: var(--admin-section-accent);
+  border-left-color: var(--admin-section-accent);
+  background: color-mix(in srgb, var(--admin-section-soft) 40%, white);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-section-accent) 12%, transparent);
+}
+
+.admin-list-item.is-active .admin-list-item__select > span {
+  color: var(--admin-section-accent);
+}
+
+.admin-list-item.is-active .admin-list-item__select > small {
+  color: color-mix(in srgb, var(--admin-section-accent) 75%, #1e293b);
 }
 
 .admin-list__badges {
@@ -6244,17 +6345,21 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   }
 
   .admin-workspace {
-    flex-direction: column;
+    flex-direction: row;
   }
 
-  .admin-list-panel,
+  .admin-list-panel {
+    flex: 0 0 280px;
+    width: auto;
+  }
+
   .admin-editor-panel {
-    width: 100%;
-    flex: none;
+    flex: 1 1 auto;
+    width: auto;
   }
 
   .admin-list {
-    max-height: 360px;
+    max-height: calc(100vh - 280px);
   }
 }
 
@@ -6997,16 +7102,46 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 
   .hero-section {
     min-height: 100dvh;
+    height: 100dvh;
   }
 
-  .hero-section__content,
+  .hero-section__content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 0 60px;
+  }
+
   .page-hero__content {
     padding: 120px 0 54px;
   }
 
-  .hero-section h1,
+  .hero-section h1 {
+    font-size: clamp(34px, 9.5vw, 44px);
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
   .final-cta h2 {
     font-size: 52px;
+  }
+
+  .hero-section__content > p:not(.eyebrow):not(.hero-trust-pill):not(.hero-section__location-tagline) {
+    font-size: clamp(15px, 4.2vw, 17px);
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 16px 0 24px;
+    max-width: 340px;
+    text-wrap: balance;
+  }
+
+  .hero-sound-toggle {
+    position: absolute;
+    left: max(16px, calc(env(safe-area-inset-left) + 8px));
+    bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+    z-index: 10;
   }
 
   .boat-detail-hero {
