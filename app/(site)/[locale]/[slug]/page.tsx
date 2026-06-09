@@ -374,7 +374,7 @@ function ServiceHero({ page, locale, showEyebrow = true }: { page: ServicePage; 
       <div className="container page-hero__content">
         {showEyebrow && <p className="eyebrow">{getLocalizedValue(page.eyebrow, locale)}</p>}
         <h1>{getLocalizedValue(page.title, locale)}</h1>
-        <p>{getLocalizedValue(page.description, locale)}</p>
+        <p className="page-hero__subtitle">{getLocalizedValue(page.description, locale)}</p>
         <WhatsAppCta locale={locale} message={getLocalizedValue(page.whatsappMessage, locale)} variant="light" />
       </div>
     </section>

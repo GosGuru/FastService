@@ -1938,7 +1938,6 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 }
 
 .hero-section h1,
-.page-hero h1,
 .final-cta h2 {
   max-width: 900px;
   margin: 0;
@@ -1949,18 +1948,44 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   text-wrap: balance;
 }
 
+.page-hero h1 {
+  max-width: 900px;
+  margin: 0;
+  font-family: var(--font-marcellus), serif;
+  font-size: clamp(2.25rem, 5.36vw + 1.18rem, 6rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
 .page-hero--boat-collection h1 {
   max-width: 1120px;
 }
 
 .hero-section__content > p:not(.eyebrow):not(.hero-trust-pill):not(.hero-section__location-tagline),
-.page-hero p:not(.eyebrow),
+.page-hero p:not(.eyebrow):not(.page-hero__subtitle),
 .final-cta p {
   max-width: 720px;
   margin: clamp(12px, 2.8dvh, 18px) 0 clamp(18px, 4.6dvh, 28px);
   color: rgb(255 255 255 / 86%);
   font-size: 22px;
   text-wrap: balance;
+}
+
+.page-hero__subtitle {
+  max-width: 100% !important;
+  width: auto !important;
+  margin: clamp(8px, 2.2dvh, 14px) auto clamp(14px, 3.8dvh, 24px) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: clamp(11px, 3.4vw, 18px) !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  text-wrap: nowrap !important;
+  text-align: center !important;
+  letter-spacing: 0.04em !important;
+  display: block !important;
+  overflow: visible !important;
 }
 
 .hero-description {
@@ -6980,7 +7005,6 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   }
 
   .hero-section h1,
-  .page-hero h1,
   .final-cta h2 {
     font-size: 52px;
   }
@@ -7396,9 +7420,7 @@ body.mobile-menu-open .site-header__inner > .site-header__actions > .header-cont
     right: 12px;
   }
 
-  .page-hero h1 {
-    font-size: 36px !important;
-  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
