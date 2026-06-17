@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/supabase/admin-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveAdminSnapshotToSupabase } from "@/lib/supabase/content";
+import { saveSiteSettings } from "@/lib/siteSettings";
 import type { AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { translateItem, type AdminItem } from "@/lib/admin/deepseek";
 import type { Locale } from "@/lib/i18n";
+import type { SiteSettings } from "@/types/settings";
 
 export interface AdminMutationResult {
   ok: boolean;
@@ -74,6 +76,38 @@ export async function saveAdminSnapshotAction(snapshot: AdminContentSnapshot): P
       ok: false,
       message,
       details: error instanceof Error && error.message !== message ? [error.message] : undefined
+    };
+  }
+}
+
+export async function saveSiteSettingsAction(settings: SiteSettings): Promise<AdminMutationResult> {
+  const adminSession = await getAdminSession();
+
+  if (!adminSession) {
+    return {
+      ok: false,
+      message: "Tu sesion no tiene permisos de administrador.",
+      details: ["Vuelve a iniciar sesion desde /admin/login con un usuario incluido en admin_users."]
+    };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    await saveSiteSettings(supabase, settings);
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin");
+
+    return {
+      ok: true,
+      message: "Configuración guardada en Supabase. El frontend usara estos datos publicados.",
+      details: ["Se revalidaron las rutas publicas y el panel admin."]
+    };
+  } catch (error) {
+    const rawMessage = error instanceof Error ? error.message : "No se pudo guardar la configuración.";
+    return {
+      ok: false,
+      message: rawMessage
     };
   }
 }

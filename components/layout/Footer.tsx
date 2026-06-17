@@ -8,9 +8,22 @@ import type { ServicePage } from "@/types/content";
 interface FooterProps {
   locale: Locale;
   servicePages: ServicePage[];
+  phone?: string;
 }
 
-export function Footer({ locale, servicePages }: FooterProps) {
+function formatPhoneDisplay(phone?: string): string {
+  if (!phone) return "+34 655 835 803";
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.startsWith("34") && cleaned.length === 11) {
+    return `+34 ${cleaned.slice(3, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`;
+  }
+  if (cleaned.startsWith("7") && cleaned.length === 11) {
+    return `+7 ${cleaned.slice(1, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7, 9)} ${cleaned.slice(9)}`;
+  }
+  return `+${cleaned}`;
+}
+
+export function Footer({ locale, servicePages, phone }: FooterProps) {
   const labels = uiLabels[locale];
   const transfers = servicePages.find((page) => page.serviceId === "transfers");
   const waterToys = servicePages.find((page) => page.serviceId === "water-toys");
@@ -38,7 +51,7 @@ export function Footer({ locale, servicePages }: FooterProps) {
         </div>
         <div>
           <h2>{labels.contact}</h2>
-          <Link href={buildWhatsAppUrl(undefined, locale)} target="_blank" rel="noreferrer"><FaWhatsapp /> +34 655 835 803</Link>
+          <Link href={buildWhatsAppUrl(undefined, locale, phone)} target="_blank" rel="noreferrer"><FaWhatsapp /> {formatPhoneDisplay(phone)}</Link>
           <a href="mailto:fastservicesibiza@gmail.com">fastservicesibiza@gmail.com</a>
           <Link href="/admin" className="site-footer__admin-link">Admin</Link>
         </div>

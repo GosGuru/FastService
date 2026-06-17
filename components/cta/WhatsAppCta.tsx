@@ -9,12 +9,13 @@ interface WhatsAppCtaProps {
   label?: string;
   variant?: "solid" | "outline" | "light";
   className?: string;
+  phone?: string;
 }
 
-export function WhatsAppCta({ locale, message, label, variant = "solid", className = "" }: WhatsAppCtaProps) {
+export function WhatsAppCta({ locale, message, label, variant = "solid", className = "", phone }: WhatsAppCtaProps) {
   return (
     <Link
-      href={buildWhatsAppUrl(message, locale)}
+      href={buildWhatsAppUrl(message, locale, phone)}
       className={`whatsapp-cta whatsapp-cta--${variant} ${className}`}
       target="_blank"
       rel="noreferrer"

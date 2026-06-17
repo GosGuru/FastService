@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiCalendar, FiMail, FiPhone, FiSend, FiShield, FiUsers } from "react-icons/fi";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 import { NoWidowText } from "@/components/typography/NoWidowText";
 import type { Locale } from "@/lib/i18n";
 
@@ -123,16 +124,39 @@ const contactCopy: Record<Locale, ContactCopy> = {
     submit: "Aanvraag sturen",
     sent: "We hebben WhatsApp geopend met je aanvraag klaar om te verzenden.",
     required: "Verplicht veld"
+  },
+  ru: {
+    eyebrow: "Личный контакт",
+    title: "Готовы организовать",
+    titleAccent: "ваш следующий опыт на Ибице",
+    description: "Оставьте основные данные, и мы ответим в WhatsApp с реальной доступностью, вариантами и четким следующим шагом.",
+    contactTitle: "Свяжитесь с нами",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    name: "Имя",
+    emailField: "Email",
+    phone: "Телефон",
+    countryCode: "Код",
+    from: "С",
+    to: "До",
+    passengers: "Гостей",
+    service: "Услуга",
+    message: "Сообщение",
+    privacy: "Я согласен, что FastServices может связаться со мной для обработки этого запроса.",
+    submit: "Отправить запрос",
+    sent: "Мы открыли WhatsApp с вашим готовым запросом.",
+    required: "Обязательное поле"
   }
 };
 
-const countryCodes = ["+34", "+44", "+49", "+31", "+33", "+39", "+1", "+598"];
+const countryCodes = ["+34", "+44", "+49", "+31", "+33", "+39", "+1", "+598", "+7"];
 
 const serviceOptions: Record<Locale, string[]> = {
   es: ["Alquiler de yate", "Megayate", "Lancha rapida", "Transfer privado", "Juguetes nauticos", "Seguridad privada", "Vehiculo sin conductor"],
   en: ["Yacht rental", "Mega yacht", "Fast boat", "Private transfer", "Water toys", "Private security", "Self-drive vehicle"],
   de: ["Yacht mieten", "Megayacht", "Schnellboot", "Privattransfer", "Wasserspielzeug", "Private Sicherheit", "Fahrzeug ohne Fahrer"],
-  nl: ["Jacht huren", "Megajacht", "Speedboot", "Prive transfer", "Waterspeelgoed", "Prive beveiliging", "Auto zonder chauffeur"]
+  nl: ["Jacht huren", "Megajacht", "Speedboot", "Prive transfer", "Waterspeelgoed", "Prive beveiliging", "Auto zonder chauffeur"],
+  ru: ["Аренда яхты", "Мегаяхта", "Катер", "Частный трансфер", "Водные игрушки", "Частная охрана", "Автомобиль без водителя"]
 };
 
 function getFormValue(formData: FormData, fieldName: string) {
@@ -169,6 +193,7 @@ function buildContactMessage(formData: FormData, locale: Locale, labels: Contact
 
 export function ContactFormSection({ locale }: ContactFormSectionProps) {
   const labels = contactCopy[locale];
+  const phone = useWhatsAppPhone(locale);
   const [accepted, setAccepted] = useState(false);
   const [sent, setSent] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
@@ -178,7 +203,7 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
 
     const formData = new FormData(event.currentTarget);
     const whatsappMessage = buildContactMessage(formData, locale, labels);
-    window.open(buildWhatsAppUrl(whatsappMessage, locale), "_blank", "noopener,noreferrer");
+    window.open(buildWhatsAppUrl(whatsappMessage, locale, phone), "_blank", "noopener,noreferrer");
     setSent(true);
   }
 

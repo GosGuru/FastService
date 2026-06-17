@@ -23,7 +23,8 @@ const boatCardPrefixes: Record<Locale, string> = {
   es: "Alquiler de",
   en: "Rent",
   de: "Miete",
-  nl: "Huur"
+  nl: "Huur",
+  ru: "Аренда"
 };
 
 export function MobileMenu({ locale, boatCollections, servicePages, languageRoutes }: MobileMenuProps) {
@@ -43,7 +44,8 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
     es: "Contacta ahora",
     en: "Contact now",
     de: "Jetzt kontaktieren",
-    nl: "Contact opnemen"
+    nl: "Contact opnemen",
+    ru: "Связаться сейчас"
   }[locale];
 
   useEffect(() => {

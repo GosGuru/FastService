@@ -123,7 +123,7 @@ export function applyTranslation(item: any, sourceText: TranslatableText, target
 
   if (sourceText.path.endsWith(".html")) {
     // Es un RichTextContent (e.g. richDescription.es.html -> richDescription.en.html)
-    const regex = /\.(es|en|de|nl)\.html$/;
+    const regex = new RegExp(`\\.(${locales.join("|")})\\.html$`);
     targetPath = sourceText.path.replace(regex, `.${targetLocale}.html`);
   } else {
     // Es un LocalizedText, agregamos el locale al final del path original

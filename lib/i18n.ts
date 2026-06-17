@@ -1,4 +1,4 @@
-export const locales = ["es", "en", "de", "nl"] as const;
+export const locales = ["es", "en", "de", "nl", "ru"] as const;
 
 export type Locale = (typeof locales)[number];
 
@@ -8,14 +8,16 @@ export const languageNames: Record<Locale, string> = {
   es: "ES",
   en: "EN",
   de: "DE",
-  nl: "NL"
+  nl: "NL",
+  ru: "RU"
 };
 
 export const languageOptions = [
   { locale: "en", code: "EN", name: "English" },
   { locale: "de", code: "DE", name: "Deutsch" },
   { locale: "es", code: "ES", name: "Español" },
-  { locale: "nl", code: "NL", name: "Nederlands" }
+  { locale: "nl", code: "NL", name: "Nederlands" },
+  { locale: "ru", code: "RU", name: "Русский" }
 ] satisfies Array<{ locale: Locale; code: string; name: string }>;
 
 export type LocalizedValue = Partial<Record<Locale, string>> & { es?: string; en?: string };
@@ -163,5 +165,30 @@ export const uiLabels = {
     bathrooms: "Badkamers",
     from: "Vanaf",
     noPrices: "Beschikbaarheid en voorstel op maat via WhatsApp"
+  },
+  ru: {
+    services: "Услуги",
+    boats: "Аренда яхт",
+    mobileBoatsTab: "Аренда яхт",
+    mobilePagesTab: "Услуги",
+    transfers: "Частный трансфер",
+    waterToys: "Водные игрушки",
+    security: "Безопасность",
+    selfDriveVehicles: "Автомобили без водителя",
+    news: "Новости",
+    contact: "Контакты",
+    availability: "Узнать о доступности",
+    viewFleet: "Смотреть подборку",
+    exploreFleet: "Исследуйте наш флот",
+    whatsapp: "WhatsApp",
+    menu: "Открыть меню",
+    close: "Закрыть меню",
+    language: "Сменить язык",
+    passengers: "Гостей",
+    cabins: "Каюты",
+    length: "Длина",
+    bathrooms: "Ванные комнаты",
+    from: "От",
+    noPrices: "Доступность и индивидуальное предложение по WhatsApp"
   }
 } satisfies Record<Locale, Record<string, string>>;

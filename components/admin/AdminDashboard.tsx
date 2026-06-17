@@ -2,7 +2,7 @@
 
 import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
-import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiMove, FiPlus, FiSave, FiSearch, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
+import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiMove, FiPlus, FiSave, FiSearch, FiSettings, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
 import { translateItemAction, type AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -11,6 +11,7 @@ import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, typ
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { supabaseGalleryBucket } from "@/lib/supabase/config";
 import { publicServiceIds, servicePageIds, type Boat, type BoatCollection, type FaqItem, type LocalizedText, type MediaAsset, type RichTextByLocale, type SeoPage, type ServiceId, type ServiceOption, type ServicePage, type ServicePageId, type SpecItem, type Vehicle, type VideoAsset, type WaterToy } from "@/types/content";
+import type { SiteSettings } from "@/types/settings";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
 type GenericContentItem = BoatCollection;
@@ -39,8 +40,9 @@ const sectionConfig = [
   { key: "waterToys", label: "Juguetes", description: "Juguetes náuticos y disponibilidad", icon: FiDroplet, tone: "water" },
   { key: "servicePages", label: "Servicios", description: "Landings principales y mensajes de venta", icon: FiBriefcase, tone: "services" },
   { key: "seoPages", label: "SEO ocultas", description: "Páginas SEO fuera del menú", icon: FiGlobe, tone: "seo" },
-  { key: "faqs", label: "FAQs", description: "Preguntas frecuentes por servicio", icon: FiHelpCircle, tone: "faqs" }
-] satisfies Array<{ key: AdminContentKey; label: string; description: string; icon: IconType; tone: string }>;
+  { key: "faqs", label: "FAQs", description: "Preguntas frecuentes por servicio", icon: FiHelpCircle, tone: "faqs" },
+  { key: "settings", label: "Configuración", description: "Números de WhatsApp por idioma", icon: FiSettings, tone: "settings" }
+] satisfies Array<{ key: AdminContentKey | "settings"; label: string; description: string; icon: IconType; tone: string }>;
 
 const defaultImage: MediaAsset = {
   src: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?auto=format&fit=crop&w=1200&q=80",
@@ -48,12 +50,12 @@ const defaultImage: MediaAsset = {
   source: "unsplash"
 };
 
-const blankImage: MediaAsset = { src: "", alt: { es: "", en: "", de: "", nl: "" }, source: "local" };
+const blankImage: MediaAsset = { src: "", alt: { es: "", en: "", de: "", nl: "", ru: "" }, source: "local" };
 
 const categorySlugsByCollection: Record<Boat["collectionId"], LocalizedText> = {
-  "yachts-xl": { es: "yates-xl", en: "xl-yachts", de: "xl-yachten", nl: "xl-jachten" },
-  yachts: { es: "yates", en: "yachts", de: "yachten", nl: "jachten" },
-  "fast-boats": { es: "embarcaciones-rapidas", en: "fast-boats", de: "schnellboote", nl: "snelle-boten" }
+  "yachts-xl": { es: "yates-xl", en: "xl-yachts", de: "xl-yachten", nl: "xl-jachten", ru: "xl-yachts" },
+  yachts: { es: "yates", en: "yachts", de: "yachten", nl: "jachten", ru: "yachts" },
+  "fast-boats": { es: "embarcaciones-rapidas", en: "fast-boats", de: "schnellboote", nl: "snelle-boten", ru: "fast-boats" }
 };
 
 const requiredSaveLocales = ["es", "en"] as const satisfies Locale[];
@@ -390,7 +392,7 @@ function isServicePageId(value: unknown): value is ServicePageId {
   return typeof value === "string" && servicePageIds.includes(value as ServicePageId);
 }
 
-function getVisitTarget(activeSection: AdminContentKey, item: AdminItem, snapshot: AdminContentSnapshot, locale: Locale) {
+function getVisitTarget(activeSection: AdminContentKey | "settings", item: AdminItem, snapshot: AdminContentSnapshot, locale: Locale) {
   if (activeSection === "boats" && "kind" in item && item.kind === "boat") {
     const collection = snapshot.content.boatCollections.find((collectionItem) => collectionItem.collectionId === item.collectionId);
     const categorySlugs = collection?.slugsByLocale ?? item.categorySlugsByLocale;
@@ -667,16 +669,22 @@ interface AdminDashboardProps {
   adminEmail: string;
   saveSnapshotAction: (snapshot: AdminContentSnapshot) => Promise<AdminMutationResult>;
   signOutAction: () => Promise<void>;
+  initialSettings: SiteSettings;
+  saveSettingsAction: (settings: SiteSettings) => Promise<AdminMutationResult>;
 }
 
-export function AdminDashboard({ initialSnapshot, initialSource, initialMessage, adminEmail, saveSnapshotAction, signOutAction }: AdminDashboardProps) {
+export function AdminDashboard({ initialSnapshot, initialSource, initialMessage, adminEmail, saveSnapshotAction, signOutAction, initialSettings, saveSettingsAction }: AdminDashboardProps) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState(() => snapshotFingerprint(initialSnapshot));
-  const [activeSection, setActiveSection] = useState<AdminContentKey>("boats");
+  const [lastSavedSettingsFingerprint, setLastSavedSettingsFingerprint] = useState(() => JSON.stringify(initialSettings));
+  const [settings, setSettings] = useState(initialSettings);
+  const [activeSection, setActiveSection] = useState<AdminContentKey | "settings">("boats");
   const [selectedId, setSelectedId] = useState(initialSnapshot.content.boats[0]?.id ?? "");
   const [mobileView, setMobileView] = useState<"list" | "editor">("list");
   const [locale, setLocale] = useState<Locale>("es");
   const [query, setQuery] = useState("");
+  const [filterCollection, setFilterCollection] = useState<string>("all");
+  const [filterVisibility, setFilterVisibility] = useState<string>("all");
   const [saveStatus, setSaveStatus] = useState<AdminSaveStatus>(() => getInitialSaveStatus(initialSource, initialMessage));
   const [isSaving, setIsSaving] = useState(false);
   const saveStatusRef = useRef<HTMLDivElement>(null);
@@ -843,7 +851,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
     await Promise.all(translationPromises);
 
-    updateSnapshot(activeSection, (currentItems) => currentItems.map((item) => (item.id === itemToTranslate.id ? touch(currentItemAccumulator) : item)));
+    updateSnapshot(activeSection as AdminContentKey, (currentItems) => currentItems.map((item) => (item.id === itemToTranslate.id ? touch(currentItemAccumulator) : item)));
     setIsTranslating(false);
 
     if (onFinish) {
@@ -859,13 +867,38 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
   const section = sectionConfig.find((item) => item.key === activeSection) ?? sectionConfig[0];
   const SectionIcon = section.icon;
-  const items = snapshot.content[activeSection] as AdminItem[];
-  const filteredItems = items.filter((item) => `${getItemTitle(item, locale)} ${item.id}`.toLowerCase().includes(query.toLowerCase()));
-  const selectedItem = items.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items[0];
+  const items = activeSection === "settings" ? [] : (snapshot.content[activeSection] as AdminItem[]);
+  const filteredItems = activeSection === "settings" ? [] : items.filter((item) => {
+    const title = getItemTitle(item, locale).toLowerCase();
+    const id = item.id.toLowerCase();
+    const slug = "slugsByLocale" in item ? getLocalizedValue(item.slugsByLocale, locale).toLowerCase() : "";
+    const matchesQuery = `${title} ${id} ${slug}`.includes(query.toLowerCase());
+
+    if (!matchesQuery) return false;
+
+    if (activeSection === "boats" && filterCollection !== "all") {
+      if (!("collectionId" in item) || item.collectionId !== filterCollection) {
+        return false;
+      }
+    }
+
+    if (activeSection !== "faqs" && filterVisibility !== "all") {
+      if ("visibility" in item) {
+        if (filterVisibility === "listed" && item.visibility !== "listed") return false;
+        if (filterVisibility === "hidden" && item.visibility !== "hidden") return false;
+      }
+    }
+
+    return true;
+  });
+  const selectedItem = filteredItems.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items.find((item) => item.id === selectedId) ?? items[0];
   const visitTarget = selectedItem ? getVisitTarget(activeSection, selectedItem, snapshot, locale) : null;
   const SaveStatusIcon = isSaving ? FiLoader : saveStatus.tone === "success" ? FiCheckCircle : saveStatus.tone === "error" ? FiAlertCircle : FiSave;
   const currentFingerprint = useMemo(() => snapshotFingerprint(snapshot), [snapshot]);
-  const hasUnsavedChanges = currentFingerprint !== lastSavedFingerprint;
+  const currentSettingsFingerprint = useMemo(() => JSON.stringify(settings), [settings]);
+  const hasUnsavedSnapshotChanges = currentFingerprint !== lastSavedFingerprint;
+  const hasUnsavedSettingsChanges = currentSettingsFingerprint !== lastSavedSettingsFingerprint;
+  const hasUnsavedChanges = hasUnsavedSnapshotChanges || hasUnsavedSettingsChanges;
   const headerSaveLabel = isSaving ? "Guardando" : hasUnsavedChanges ? "Guardar" : "Guardado";
   const editorSaveLabel = isSaving ? "Guardando" : hasUnsavedChanges ? "Guardar cambios" : "Todo guardado";
 
@@ -914,12 +947,23 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     return window.confirm("Tienes cambios sin guardar. Si sales ahora, se perderan. ¿Quieres continuar sin guardar?");
   }
 
-  function selectSection(key: AdminContentKey) {
+  function selectSection(key: AdminContentKey | "settings") {
+    if (key === "settings") {
+      setActiveSection(key);
+      setSelectedId("");
+      setMobileView("list");
+      setQuery("");
+      setFilterCollection("all");
+      setFilterVisibility("all");
+      return;
+    }
     const nextItems = snapshot.content[key] as AdminItem[];
     setActiveSection(key);
     setSelectedId(nextItems[0]?.id ?? "");
     setMobileView("list");
     setQuery("");
+    setFilterCollection("all");
+    setFilterVisibility("all");
   }
 
   function selectItem(id: string) {
@@ -941,7 +985,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   function updateSelectedItem(patch: Partial<AdminItem>) {
     if (!selectedItem) return;
 
-    updateSnapshot(activeSection, (currentItems) => currentItems.map((item) => (item.id === selectedItem.id ? touch({ ...item, ...patch } as AdminItem) : item)));
+    updateSnapshot(activeSection as AdminContentKey, (currentItems) => currentItems.map((item) => (item.id === selectedItem.id ? touch({ ...item, ...patch } as AdminItem) : item)));
   }
 
   function normalizeItemForActiveSection(item: AdminItem) {
@@ -949,15 +993,15 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       ...snapshot,
       content: {
         ...snapshot.content,
-        [activeSection]: [item] as never
+        [activeSection as AdminContentKey]: [item] as never
       }
     });
 
-    return (normalized.content[activeSection] as AdminItem[])[0];
+    return (normalized.content[activeSection as AdminContentKey] as AdminItem[])[0];
   }
 
   function addItem() {
-    if (activeSection === "servicePages") {
+    if (activeSection === "settings") return;
       const usedServicePageIds = new Set(snapshot.content.servicePages.map((page) => page.serviceId));
       const nextServicePageId = servicePageIds.find((serviceId) => !usedServicePageIds.has(serviceId));
 
@@ -972,7 +1016,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
       const newPage = normalizeItemForActiveSection(createServicePage(nextServicePageId));
 
-      updateSnapshot(activeSection, (currentItems) => [newPage as AdminItem, ...currentItems]);
+      updateSnapshot(activeSection as AdminContentKey, (currentItems) => [newPage as AdminItem, ...currentItems]);
       selectItem(newPage.id);
       setSaveStatus({
         tone: "info",
@@ -982,9 +1026,9 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       return;
     }
 
-    const newItem = normalizeItemForActiveSection(createItemForSection(activeSection));
+    const newItem = normalizeItemForActiveSection(createItemForSection(activeSection as AdminContentKey));
 
-    updateSnapshot(activeSection, (currentItems) => [newItem as AdminItem, ...currentItems]);
+    updateSnapshot(activeSection as AdminContentKey, (currentItems) => [newItem as AdminItem, ...currentItems]);
     selectItem(newItem.id);
     setSaveStatus({
       tone: "info",
@@ -997,7 +1041,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     if (!selectedItem) return;
 
     const copy = touch(normalizeItemForActiveSection({ ...selectedItem, id: createId(activeSection) } as AdminItem));
-    updateSnapshot(activeSection, (currentItems) => [copy, ...currentItems]);
+    updateSnapshot(activeSection as AdminContentKey, (currentItems) => [copy, ...currentItems]);
     selectItem(copy.id);
     setSaveStatus({
       tone: "info",
@@ -1015,7 +1059,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
     const nextItems = items.filter((item) => item.id !== selectedItem.id);
 
-    updateSnapshot(activeSection, () => nextItems);
+    updateSnapshot(activeSection as AdminContentKey, () => nextItems);
     setSelectedId(nextItems[0]?.id ?? "");
     setMobileView("list");
     setSaveStatus({
@@ -1027,6 +1071,11 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
   async function saveToSupabase() {
     if (isSaving || isTranslating) return;
+
+    if (activeSection === "settings") {
+      await handleSaveSettings();
+      return;
+    }
 
     const validationErrors = validateSnapshotBeforeSave(snapshot);
 
@@ -1095,6 +1144,43 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       if (result.ok && result.snapshot) {
         setSnapshot(result.snapshot);
         setLastSavedFingerprint(snapshotFingerprint(result.snapshot));
+      }
+    } catch (error) {
+      setSaveStatus({
+        tone: "error",
+        title: "No se pudo guardar",
+        message: getUnknownErrorMessage(error)
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleSaveSettings() {
+    if (isSaving) return;
+    setIsSaving(true);
+    setSaveStatus({
+      tone: "info",
+      title: "Guardando configuración",
+      message: "Publicando números de WhatsApp en el sitio..."
+    });
+    try {
+      const result = await saveSettingsAction(settings);
+      if (result.ok) {
+        setLastSavedSettingsFingerprint(JSON.stringify(settings));
+        setSaveStatus({
+          tone: "success",
+          title: "Configuración guardada",
+          message: result.message,
+          details: result.details
+        });
+      } else {
+        setSaveStatus({
+          tone: "error",
+          title: "No se pudo guardar",
+          message: result.message,
+          details: result.details
+        });
       }
     } catch (error) {
       setSaveStatus({
@@ -1213,15 +1299,112 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
               <FiSearch aria-hidden="true" />
               <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por título o ID" />
             </label>
+            
+            {/* Panel de Filtros rápidos */}
+            {activeSection !== "faqs" && (
+              <div className="admin-list-filters" style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "2px 2px 8px 2px", borderBottom: "1px solid #f1f5f9", marginBottom: "4px" }}>
+                {activeSection === "boats" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <span style={{ fontSize: "10px", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Colección</span>
+                    <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "2px" }}>
+                      {[
+                        { key: "all", label: "Todas" },
+                        { key: "yachts-xl", label: "Yates XL" },
+                        { key: "yachts", label: "Yates" },
+                        { key: "fast-boats", label: "Rápidas" }
+                      ].map((col) => (
+                        <button
+                          type="button"
+                          key={col.key}
+                          onClick={() => setFilterCollection(col.key)}
+                          style={{
+                            padding: "5px 11px",
+                            borderRadius: "999px",
+                            fontSize: "11px",
+                            fontWeight: 800,
+                            border: "1px solid",
+                            borderColor: filterCollection === col.key ? "var(--admin-section-accent)" : "#e2e8f0",
+                            background: filterCollection === col.key ? "var(--admin-section-accent)" : "#ffffff",
+                            color: filterCollection === col.key ? "#ffffff" : "#64748b",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            boxShadow: filterCollection === col.key ? "0 2px 5px rgb(80 133 158 / 15%)" : "none",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          {col.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Visibilidad</span>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {[
+                      { key: "all", label: "Todos" },
+                      { key: "listed", label: "Visibles" },
+                      { key: "hidden", label: "Ocultos" }
+                    ].map((vis) => (
+                      <button
+                        type="button"
+                        key={vis.key}
+                        onClick={() => setFilterVisibility(vis.key)}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "999px",
+                          fontSize: "10px",
+                          fontWeight: 800,
+                          border: "1px solid",
+                          borderColor: filterVisibility === vis.key ? "#475569" : "#e2e8f0",
+                          background: filterVisibility === vis.key ? "#475569" : "#ffffff",
+                          color: filterVisibility === vis.key ? "#ffffff" : "#64748b",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                          boxShadow: filterVisibility === vis.key ? "0 2px 4px rgba(71, 85, 105, 0.12)" : "none",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {vis.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="admin-list">
-              {filteredItems.map((item) => {
+              {activeSection === "settings" ? (
+                <div className="admin-empty-state">
+                  <FiSettings aria-hidden="true" />
+                  <h2>Configuración del sitio</h2>
+                  <p>Edita los números de WhatsApp por idioma en el panel derecho.</p>
+                </div>
+              ) : (
+                filteredItems.map((item) => {
                 const itemVisitTarget = getVisitTarget(activeSection, item, snapshot, locale);
 
                 return (
                   <article key={item.id} className={`admin-list-item ${item.id === selectedItem?.id ? "is-active" : ""}`}>
-                    <button type="button" className="admin-list-item__select" onClick={() => selectItem(item.id)}>
+                    <button type="button" className="admin-list-item__select" onClick={() => selectItem(item.id)} style={{ textAlign: "left" }}>
                       <span>{getItemTitle(item, locale)}</span>
                       <small>{getItemDescription(item, locale)}</small>
+                      
+                      {activeSection !== "faqs" && (
+                        <div className="admin-list__badges" style={{ marginTop: "6px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          {"collectionId" in item && (
+                            <span className="admin-visibility-badge" style={{ backgroundColor: "#f1f5f9", color: "#475569", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", fontSize: "10px" }}>
+                              {item.collectionId === "yachts-xl" ? "Yates XL" : item.collectionId === "yachts" ? "Yates" : "Rápidas"}
+                            </span>
+                          )}
+                          {"visibility" in item && (
+                            <span className={`admin-status-badge admin-status-badge--${item.visibility === "hidden" ? "hidden" : "published"}`} style={{ padding: "2px 8px", borderRadius: "999px", fontSize: "10px" }}>
+                              {item.visibility === "hidden" ? "Oculto" : "Visible"}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </button>
                     {itemVisitTarget ? (
                       <a className="admin-list-item__visit" href={itemVisitTarget.href} target="_blank" rel="noreferrer" title="Ver página pública" onClick={(event) => { if (!confirmDiscardUnsavedChanges()) event.preventDefault(); }}>
@@ -1231,11 +1414,16 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                     ) : null}
                   </article>
                 );
-              })}
+              })
+              )}
             </div>
           </div>
 
           <div className="admin-editor-panel">
+            {activeSection === "settings" ? (
+              <SettingsEditor settings={settings} onChange={setSettings} onSave={handleSaveSettings} saveStatus={saveStatus} isSaving={isSaving} />
+            ) : (
+              <>
             <button type="button" className="admin-back-button" onClick={() => setMobileView("list")} aria-label="Volver a la lista">
               <FiChevronLeft aria-hidden="true" /> Lista
             </button>
@@ -1380,6 +1568,8 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                 <p>Crea un elemento para empezar.</p>
               </div>
             )}
+            </>
+            )}
           </div>
         </section>
       </main>
@@ -1408,7 +1598,73 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   );
 }
 
-function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: AdminContentKey; item: AdminItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
+function SettingsEditor({
+  settings,
+  onChange,
+  onSave,
+  saveStatus,
+  isSaving
+}: {
+  settings: SiteSettings;
+  onChange: (settings: SiteSettings) => void;
+  onSave: () => void;
+  saveStatus: AdminSaveStatus;
+  isSaving: boolean;
+}) {
+  return (
+    <div className="admin-form" style={{ maxWidth: "640px" }}>
+      <div className="admin-editor-toolbar" style={{ justifyContent: "flex-start" }}>
+        <h2 style={{ margin: 0, fontSize: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
+          <FiSettings aria-hidden="true" /> Configuración
+        </h2>
+      </div>
+      <p className="admin-kicker">Números de WhatsApp por idioma</p>
+      <label className="admin-field">
+        <span>Default (sin idioma específico)</span>
+        <input
+          value={settings.whatsappNumbers?.default ?? ""}
+          onChange={(e) => onChange({ ...settings, whatsappNumbers: { ...settings.whatsappNumbers, default: e.target.value } })}
+          placeholder="+34 600 000 000"
+        />
+      </label>
+      {locales.map((loc) => (
+        <label className="admin-field" key={loc}>
+          <span>{loc.toUpperCase()}</span>
+          <input
+            value={settings.whatsappNumbers?.[loc] ?? ""}
+            onChange={(e) => onChange({ ...settings, whatsappNumbers: { ...settings.whatsappNumbers, [loc]: e.target.value } })}
+            placeholder="+34 600 000 000"
+          />
+        </label>
+      ))}
+      <div className="admin-actions" style={{ marginTop: "16px" }}>
+        <button
+          type="button"
+          className="admin-button admin-button--primary"
+          onClick={() => void onSave()}
+          disabled={isSaving}
+          aria-busy={isSaving}
+        >
+          {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />}
+          {isSaving ? "Guardando..." : "Guardar configuración"}
+        </button>
+      </div>
+      {saveStatus.tone !== "info" && (
+        <div className={`admin-save-status admin-save-status--${saveStatus.tone}`} style={{ marginTop: "16px" }} role={saveStatus.tone === "error" ? "alert" : "status"} aria-live="polite">
+          <span className="admin-save-status__icon">
+            {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : saveStatus.tone === "success" ? <FiCheckCircle /> : saveStatus.tone === "error" ? <FiAlertCircle /> : <FiSave />}
+          </span>
+          <div>
+            <strong>{saveStatus.title}</strong>
+            <p>{saveStatus.message}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: AdminContentKey | "settings"; item: AdminItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
   if (activeSection === "boats" && "kind" in item && item.kind === "boat") {
     return <BoatEditor boat={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }

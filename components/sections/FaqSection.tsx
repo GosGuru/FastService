@@ -20,6 +20,10 @@ const faqCopy: Record<Locale, { title: string; intro: string }> = {
   nl: {
     title: "FAQ - FastServices Ibiza",
     intro: "Snelle antwoorden over bootverhuur, boekingen, routes, betalingen en wat je kunt verwachten op zee."
+  },
+  ru: {
+    title: "FAQ - FastServices Ibiza",
+    intro: "Быстрые ответы об аренде яхт, бронировании, маршрутах, оплате и том, чего ожидать в море."
   }
 };
 

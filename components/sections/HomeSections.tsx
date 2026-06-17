@@ -58,6 +58,15 @@ const homeIntroCopy: Record<Locale, { eyebrow: string; title: string; italic: st
     second: "Boek je voor het eerst, dan begeleid ik je van idee tot bevestiging: de juiste boot, route, timing, extra's en duidelijke WhatsApp-coördinatie.",
     cta: "Neem contact op",
     message: "Hallo, ik wil graag hulp bij het kiezen van een bootervaring op Ibiza."
+  },
+  ru: {
+    eyebrow: "FastServices Ibiza",
+    title: "Аренда яхт",
+    italic: "Ibiza",
+    first: "Наслаждайтесь частным днем на море с тщательно подобранной коллекцией яхт, мегаяхт и катеров для Ибицы и Форментеры.",
+    second: "Если вы бронируете впервые, я проведу вас от идеи до подтверждения: правильная яхта, маршрут, время, дополнения и четкая координация через WhatsApp.",
+    cta: "Связаться",
+    message: "Здравствуйте, я хотел бы получить помощь в выборе морского приключения на Ибице."
   }
 };
 
@@ -66,19 +75,22 @@ const collectionCopy: Record<BoatCollectionId, Record<Locale, { title: string; b
     es: { title: "Alquiler de megayates en Ibiza", body: "Lujo, privacidad y tripulación para jornadas especiales, eventos o una experiencia premium sin improvisar." },
     en: { title: "Mega yacht rental in Ibiza", body: "Luxury, privacy and crew for special days, events or a premium experience without guesswork." },
     de: { title: "Megayachten auf Ibiza mieten", body: "Luxus, Privatsphäre und Crew für besondere Tage, Events oder ein Premium-Erlebnis ohne Improvisation." },
-    nl: { title: "Megajachten huren op Ibiza", body: "Luxe, privacy en bemanning voor bijzondere dagen, events of een premium ervaring zonder improvisatie." }
+    nl: { title: "Megajachten huren op Ibiza", body: "Luxe, privacy en bemanning voor bijzondere dagen, events of een premium ervaring zonder improvisatie." },
+    ru: { title: "Аренда мегаяхт на Ибице", body: "Роскошь, приватность и команда для особых дней, мероприятий или премиального опыта без импровизации." }
   },
   yachts: {
     es: { title: "Alquiler de yates en Ibiza", body: "Elige entre yates cómodos y elegantes para disfrutar calas, Formentera y un día completo a tu ritmo." },
     en: { title: "Yacht rental in Ibiza", body: "Choose comfortable, elegant yachts for coves, Formentera and a full day shaped around your pace." },
     de: { title: "Yachten auf Ibiza mieten", body: "Wähle komfortable, elegante Yachten für Buchten, Formentera und einen ganzen Tag nach deinem Rhythmus." },
-    nl: { title: "Jachten huren op Ibiza", body: "Kies comfortabele, elegante jachten voor baaien, Formentera en een volledige dag op jouw tempo." }
+    nl: { title: "Jachten huren op Ibiza", body: "Kies comfortabele, elegante jachten voor baaien, Formentera en een volledige dag op jouw tempo." },
+    ru: { title: "Аренда яхт на Ибице", body: "Выбирайте комфортабельные, элегантные яхты для бухт, Форментеры и полного дня в вашем ритме." }
   },
   "fast-boats": {
     es: { title: "Alquiler de lanchas rápidas en Ibiza", body: "Una opción ágil para calas, rutas cortas y planes con más movimiento entre Ibiza y Formentera." },
     en: { title: "Fast boat rental in Ibiza", body: "An agile option for coves, shorter routes and more dynamic plans between Ibiza and Formentera." },
     de: { title: "Schnellboote auf Ibiza mieten", body: "Eine agile Option für Buchten, kürzere Routen und dynamische Pläne zwischen Ibiza und Formentera." },
-    nl: { title: "Snelle boten huren op Ibiza", body: "Een wendbare optie voor baaien, kortere routes en dynamische plannen tussen Ibiza en Formentera." }
+    nl: { title: "Snelle boten huren op Ibiza", body: "Een wendbare optie voor baaien, kortere routes en dynamische plannen tussen Ibiza en Formentera." },
+    ru: { title: "Аренда катеров на Ибице", body: "Маневренный вариант для бухт, коротких маршрутов и динамичных планов между Ибицей и Форментерой." }
   }
 };
 

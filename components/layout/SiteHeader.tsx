@@ -11,6 +11,7 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
 import type { LanguageRouteMap } from "@/lib/language-routing";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 import type { BoatCollection, ServicePage } from "@/types/content";
 
 interface SiteHeaderProps {
@@ -38,6 +39,7 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
   const isScrolled = useSyncExternalStore(subscribeToScroll, getScrollSnapshot, getServerScrollSnapshot);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
+  const phone = useWhatsAppPhone(locale);
 
   const handleMegaMenuOpenChange = (open: boolean) => {
     setIsMegaMenuOpen(open);
@@ -59,9 +61,9 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
       <div className="site-header__top">
         <div className="site-header__top-inner">
           <div className="site-header__contact-group">
-            <Link href={buildWhatsAppUrl(undefined, locale)} className="site-header__contact-link" target="_blank" rel="noreferrer">
+            <Link href={buildWhatsAppUrl(undefined, locale, phone)} className="site-header__contact-link" target="_blank" rel="noreferrer">
               <span className="site-header__contact-icon site-header__contact-icon--whatsapp"><FaWhatsapp aria-hidden="true" /></span>
-              <span>+34 655 835 803</span>
+              <span>{phone ? `+${phone.replace(/\D/g, "")}` : "+34 655 835 803"}</span>
             </Link>
             <Link href="https://www.instagram.com/fastservicesibiza/?hl=en" className="site-header__contact-link" target="_blank" rel="noreferrer">
               <span className="site-header__contact-icon site-header__contact-icon--instagram"><FaInstagram aria-hidden="true" /></span>

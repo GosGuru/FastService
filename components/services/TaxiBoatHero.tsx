@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
 import { MediaImage } from "@/components/MediaImage";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 import type { Locale } from "@/lib/i18n";
 import type { MediaAsset } from "@/types/content";
 
@@ -20,7 +21,8 @@ const ctaLabel: Record<Locale, string> = {
   es: "Solicitar Taxi Boat",
   en: "Request Taxi Boat",
   de: "Taxi Boot anfragen",
-  nl: "Taxi Boot aanvragen"
+  nl: "Taxi Boot aanvragen",
+  ru: "Заказать водное такси"
 };
 
 export function TaxiBoatHero({ title, description, whatsappMessage, image, locale }: TaxiBoatHeroProps) {
@@ -31,7 +33,8 @@ export function TaxiBoatHero({ title, description, whatsappMessage, image, local
     };
   }, []);
 
-  const whatsappHref = buildWhatsAppUrl(whatsappMessage, locale);
+  const phone = useWhatsAppPhone(locale);
+  const whatsappHref = buildWhatsAppUrl(whatsappMessage, locale, phone);
 
   return (
     <div className="taxi-boat-hero">

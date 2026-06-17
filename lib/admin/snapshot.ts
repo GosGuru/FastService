@@ -101,7 +101,7 @@ function clone<T>(value: T): T {
 }
 
 function localized(value: string): LocalizedText {
-  return { es: value, en: value, de: value, nl: value };
+  return { es: value, en: value, de: value, nl: value, ru: value };
 }
 
 function escapeHtml(value: string) {
@@ -115,7 +115,7 @@ function escapeHtml(value: string) {
 
 function richTextFromLocalized(value: LocalizedText): RichTextByLocale {
   const fallback = value.es || value.en || "";
-  const entries = (["es", "en", "de", "nl"] as const).map((locale) => {
+  const entries = (["es", "en", "de", "nl", "ru"] as const).map((locale) => {
     const text = value[locale] || fallback;
 
     return [locale, { html: text ? `<p>${escapeHtml(text)}</p>` : "", text }];

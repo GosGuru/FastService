@@ -7,6 +7,9 @@ import { posts } from "@/data/posts";
 import { getPublicContent } from "@/lib/content";
 import { isLocale, locales, type Locale } from "@/lib/i18n";
 import { createLanguageRouteMap } from "@/lib/language-routing";
+import { loadSiteSettings } from "@/lib/siteSettings";
+import { WhatsAppSettingsProvider } from "@/components/providers/WhatsAppSettingsProvider";
+import { getWhatsAppNumber } from "@/types/settings";
 
 type Props = {
   children: React.ReactNode;
@@ -27,14 +30,16 @@ export default async function LocaleLayout({ children, params }: Props) {
   const locale = rawLocale as Locale;
   const content = await getPublicContent();
   const languageRoutes = createLanguageRouteMap(content, posts);
+  const settings = await loadSiteSettings();
+  const phone = getWhatsAppNumber(settings, locale);
 
   return (
-    <>
+    <WhatsAppSettingsProvider settings={settings}>
       <SiteLoader />
       <SiteHeader locale={locale} boatCollections={content.boatCollections} servicePages={content.servicePages} languageRoutes={languageRoutes} />
       {children}
-      <Footer locale={locale} servicePages={content.servicePages} />
-      <FloatingWhatsApp locale={locale} />
-    </>
+      <Footer locale={locale} servicePages={content.servicePages} phone={phone} />
+      <FloatingWhatsApp locale={locale} phone={phone} />
+    </WhatsAppSettingsProvider>
   );
 }

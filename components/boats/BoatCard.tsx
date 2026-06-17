@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
@@ -6,6 +8,7 @@ import { ImageCarousel } from "@/components/media/ImageCarousel";
 import type { Boat } from "@/types/content";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
 import { buildBoatAvailabilityMessage, buildWhatsAppUrl, getBoatTypeLabel } from "@/lib/whatsapp";
+import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 
 const icons = {
   cabins: PiBed,
@@ -18,21 +21,24 @@ const cardLabels: Record<Locale, { details: string; view: string; availability: 
   es: { details: "Más información", view: "Ver modelo", availability: "Disponibilidad", metres: "Metros" },
   en: { details: "More information", view: "View model", availability: "Availability", metres: "Metres" },
   de: { details: "Mehr Informationen", view: "Modell ansehen", availability: "Verfügbarkeit", metres: "Meter" },
-  nl: { details: "Meer informatie", view: "Model bekijken", availability: "Beschikbaarheid", metres: "Meter" }
+  nl: { details: "Meer informatie", view: "Model bekijken", availability: "Beschikbaarheid", metres: "Meter" },
+  ru: { details: "Подробнее", view: "Посмотреть модель", availability: "Доступность", metres: "Метров" }
 };
 
 interface BoatCardProps {
   boat: Boat;
   locale: Locale;
   href?: string;
+  phone?: string;
 }
 
-export function BoatCard({ boat, locale, href }: BoatCardProps) {
+export function BoatCard({ boat, locale, href, phone }: BoatCardProps) {
   const labels = cardLabels[locale];
   const cardHref = href ?? `/${locale}/boat/${getLocalizedSlug(boat.categorySlugsByLocale, locale)}/${getLocalizedSlug(boat.slugsByLocale, locale)}`;
   const boatTypeLabel = getBoatTypeLabel(boat.collectionId, locale);
   const waMessage = buildBoatAvailabilityMessage(locale, boat.collectionId, boat.name, getLocalizedValue(boat.whatsappMessage, locale));
-  const waHref = buildWhatsAppUrl(waMessage, locale);
+  const phoneFromHook = useWhatsAppPhone(locale);
+  const waHref = buildWhatsAppUrl(waMessage, locale, phone ?? phoneFromHook);
 
   const formatSpec = (spec: Boat["specs"][number]) => {
     const value = getLocalizedValue(spec.value, locale);

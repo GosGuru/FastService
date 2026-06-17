@@ -27,6 +27,12 @@ const bannerCopy: Record<Locale, { titleStart: string; titleEnd: string; text: s
     titleEnd: "om te huren op Ibiza",
     text: "Ik help je de juiste boot, route en extra's te kiezen op basis van datum, groep en dagstijl.",
     cta: "Beschikbaarheid checken"
+  },
+  ru: {
+    titleStart: "Типы",
+    titleEnd: "доступных для аренды на Ибице",
+    text: "Я помогу вам выбрать подходящую яхту, маршрут и дополнения в зависимости от даты, группы и стиля отдыха.",
+    cta: "Узнать о доступности"
   }
 };
 

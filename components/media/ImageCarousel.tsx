@@ -47,6 +47,14 @@ const carouselLabels: Record<Locale, {
     next: "Volgende afbeelding",
     previous: "Vorige afbeelding",
     viewImage: (index, total) => `Bekijk afbeelding ${index} van ${total}`
+  },
+  ru: {
+    available: "Доступные изображения",
+    close: "Закрыть изображение",
+    expand: "Открыть изображение на весь экран",
+    next: "Следующее изображение",
+    previous: "Предыдущее изображение",
+    viewImage: (index, total) => `Изображение ${index} из ${total}`
   }
 };
 

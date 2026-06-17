@@ -10,6 +10,7 @@ interface PremiumNotFoundContentProps {
   eyebrow?: string;
   note?: string;
   question?: string;
+  phone?: string;
 }
 
 const copy = {
@@ -32,6 +33,16 @@ const copy = {
     boats: "View available boats",
     whatsapp: "Message us on WhatsApp",
     note: "If you were looking for a specific booking, we can help on WhatsApp."
+  },
+  ru: {
+    eyebrow: "Мы не нашли это",
+    title: "Похоже, то, что вы искали, недоступно.",
+    description: "Возможно, ссылка изменилась или страница больше не опубликована. Вы можете продолжить просмотр отсюда.",
+    question: "Что вы хотите сделать сейчас?",
+    home: "На главную",
+    boats: "Посмотреть доступные яхты",
+    whatsapp: "Написать в WhatsApp",
+    note: "Если вы искали конкретное бронирование, мы можем помочь через WhatsApp."
   }
 };
 
@@ -39,9 +50,9 @@ function getLocale(value: PremiumNotFoundContentProps["locale"]): Locale {
   return typeof value === "string" && isLocale(value) ? value : "es";
 }
 
-export function PremiumNotFoundContent({ locale: rawLocale, title, description, eyebrow, note, question }: PremiumNotFoundContentProps) {
+export function PremiumNotFoundContent({ locale: rawLocale, title, description, eyebrow, note, question, phone }: PremiumNotFoundContentProps) {
   const locale = getLocale(rawLocale);
-  const content = locale === "es" ? copy.es : copy.en;
+  const content = locale === "es" ? copy.es : locale === "ru" ? copy.ru : copy.en;
 
   return (
     <main className="route-feedback route-feedback--not-found">
@@ -65,7 +76,7 @@ export function PremiumNotFoundContent({ locale: rawLocale, title, description, 
               {content.boats}
               <FiArrowRight aria-hidden="true" />
             </Link>
-            <Link href={buildWhatsAppUrl(undefined, locale)} className="route-feedback__button route-feedback__button--ghost" target="_blank" rel="noreferrer">
+            <Link href={buildWhatsAppUrl(undefined, locale, phone)} className="route-feedback__button route-feedback__button--ghost" target="_blank" rel="noreferrer">
               <FiMessageCircle aria-hidden="true" />
               {content.whatsapp}
             </Link>

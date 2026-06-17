@@ -48,7 +48,8 @@ const soundLabels: Record<Locale, { enable: string; disable: string; mutedState:
   es: { enable: "Activar música", disable: "Silenciar música", mutedState: "Música silenciada", enabledState: "Música activada" },
   en: { enable: "Turn music on", disable: "Mute music", mutedState: "Music muted", enabledState: "Music on" },
   de: { enable: "Musik einschalten", disable: "Musik stummschalten", mutedState: "Musik stumm", enabledState: "Musik an" },
-  nl: { enable: "Muziek aanzetten", disable: "Muziek dempen", mutedState: "Muziek gedempt", enabledState: "Muziek aan" }
+  nl: { enable: "Muziek aanzetten", disable: "Muziek dempen", mutedState: "Muziek gedempt", enabledState: "Muziek aan" },
+  ru: { enable: "Включить музыку", disable: "Отключить звук", mutedState: "Музыка отключена", enabledState: "Музыка включена" }
 };
 
 const heroCopy: Record<Locale, { pill: string; text: string; cta: string; message: string }> = {

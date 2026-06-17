@@ -36,7 +36,7 @@ grant execute on function app_private.is_admin() to authenticated;
 
 create table if not exists public.content_items (
   id uuid primary key default gen_random_uuid(),
-  content_type text not null check (content_type in ('boatCollections', 'boats', 'servicePages', 'vehicles', 'waterToys', 'seoPages', 'faqs')),
+  content_type text not null check (content_type in ('boatCollections', 'boats', 'servicePages', 'vehicles', 'waterToys', 'seoPages', 'faqs', 'settings')),
   content_id text not null,
   payload jsonb not null,
   status text not null default 'published' check (status = 'published'),
