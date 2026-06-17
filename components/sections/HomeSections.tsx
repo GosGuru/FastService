@@ -163,6 +163,19 @@ const homeUiCopy: Record<
     mostRequestedItalic: "Bootverhuur",
     mostRequestedText: "Een snelle selectie om te bekijken, vergelijken en beschikbaarheid via WhatsApp aan te vragen.",
     featuredAria: "Uitgelichte boten"
+  },
+  ru: {
+    nauticalEyebrow: "Морские приключения",
+    chooseSail: "Выбери, как хочешь плавать",
+    ibiza: "Ибица",
+    nauticalText: "Чёткие категории, реальный выбор и прямой контакт для подтверждения доступности без лишних хлопот.",
+    fleet: "Наш флот",
+    book: "Забронировать сейчас",
+    mostRequestedEyebrow: "Самые популярные",
+    mostRequestedTitle: "Самые популярные",
+    mostRequestedItalic: "Аренда яхт",
+    mostRequestedText: "Быстрый выбор для просмотра, сравнения и запроса доступности через WhatsApp.",
+    featuredAria: "Рекомендуемые яхты"
   }
 };
 

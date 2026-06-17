@@ -1,4 +1,4 @@
-import { normalizeSlugSegment, type Locale } from "@/lib/i18n";
+import { locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
 import type { AdminContentSnapshot, AdminContentKey } from "@/lib/admin/snapshot";
 
 export type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];

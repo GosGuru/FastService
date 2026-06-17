@@ -74,7 +74,8 @@ function formatPriceTag(value: string, locale: Locale): string {
       es: "Desde",
       en: "From",
       de: "Ab",
-      nl: "Vanaf"
+      nl: "Vanaf",
+      ru: "От"
     };
     const prefix = prefixes[locale] ?? "Desde";
 

@@ -76,6 +76,12 @@ const heroCopy: Record<Locale, { pill: string; text: string; cta: string; messag
     text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één enkel gesprek",
     cta: "Neem contact op",
     message: "Hallo, ik wil graag un privé-ervaring op Ibiza plannen."
+  },
+  ru: {
+    pill: "FastServices Ibiza: ваш надежный морской контакт",
+    text: "Аренда яхт, частных трансферов и водных развлечений — всё из одного разговора",
+    cta: "Связаться",
+    message: "Здравствуйте, я хочу организовать частный отдых на Ибице."
   }
 };
 

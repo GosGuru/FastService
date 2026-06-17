@@ -1002,6 +1002,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
   function addItem() {
     if (activeSection === "settings") return;
+    if (activeSection === "servicePages") {
       const usedServicePageIds = new Set(snapshot.content.servicePages.map((page) => page.serviceId));
       const nextServicePageId = servicePageIds.find((serviceId) => !usedServicePageIds.has(serviceId));
 
