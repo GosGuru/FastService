@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FiArrowRight, FiCompass, FiHome, FiMessageCircle } from "react-icons/fi";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { isLocale, type Locale } from "@/lib/i18n";
+import { isLocale, uiLabels, type Locale } from "@/lib/i18n";
 
 interface PremiumNotFoundContentProps {
   locale?: Locale | string;
@@ -13,36 +13,67 @@ interface PremiumNotFoundContentProps {
   phone?: string;
 }
 
-const copy = {
+type NotFoundCopy = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  question: string;
+  home: string;
+  boats: string;
+  whatsapp: string;
+  note: string;
+};
+
+const copy: Record<Locale, NotFoundCopy> = {
   es: {
-    eyebrow: "No encontramos esto",
-    title: "Ups, parece que lo que buscabas no está disponible.",
-    description: "Puede que el enlace haya cambiado o que esa ficha ya no esté publicada. Puedes seguir navegando desde acá.",
-    question: "¿Qué quieres hacer ahora?",
-    home: "Ir al inicio",
-    boats: "Ver barcos disponibles",
-    whatsapp: "Escribir por WhatsApp",
-    note: "Si buscabas una reserva concreta, te ayudamos por WhatsApp."
+    eyebrow: uiLabels.es.errorEyebrow,
+    title: uiLabels.es.errorTitle,
+    description: uiLabels.es.errorDescription,
+    question: uiLabels.es.errorQuestion,
+    home: uiLabels.es.errorHome,
+    boats: uiLabels.es.errorBoats,
+    whatsapp: uiLabels.es.errorWhatsApp,
+    note: uiLabels.es.errorNote
   },
   en: {
-    eyebrow: "We could not find this",
-    title: "Looks like what you were looking for is not available.",
-    description: "The link may have changed or the listing may no longer be published. You can keep browsing from here.",
-    question: "What would you like to do now?",
-    home: "Go home",
-    boats: "View available boats",
-    whatsapp: "Message us on WhatsApp",
-    note: "If you were looking for a specific booking, we can help on WhatsApp."
+    eyebrow: uiLabels.en.errorEyebrow,
+    title: uiLabels.en.errorTitle,
+    description: uiLabels.en.errorDescription,
+    question: uiLabels.en.errorQuestion,
+    home: uiLabels.en.errorHome,
+    boats: uiLabels.en.errorBoats,
+    whatsapp: uiLabels.en.errorWhatsApp,
+    note: uiLabels.en.errorNote
+  },
+  de: {
+    eyebrow: uiLabels.de.errorEyebrow,
+    title: uiLabels.de.errorTitle,
+    description: uiLabels.de.errorDescription,
+    question: uiLabels.de.errorQuestion,
+    home: uiLabels.de.errorHome,
+    boats: uiLabels.de.errorBoats,
+    whatsapp: uiLabels.de.errorWhatsApp,
+    note: uiLabels.de.errorNote
+  },
+  nl: {
+    eyebrow: uiLabels.nl.errorEyebrow,
+    title: uiLabels.nl.errorTitle,
+    description: uiLabels.nl.errorDescription,
+    question: uiLabels.nl.errorQuestion,
+    home: uiLabels.nl.errorHome,
+    boats: uiLabels.nl.errorBoats,
+    whatsapp: uiLabels.nl.errorWhatsApp,
+    note: uiLabels.nl.errorNote
   },
   ru: {
-    eyebrow: "Мы не нашли это",
-    title: "Похоже, то, что вы искали, недоступно.",
-    description: "Возможно, ссылка изменилась или страница больше не опубликована. Вы можете продолжить просмотр отсюда.",
-    question: "Что вы хотите сделать сейчас?",
-    home: "На главную",
-    boats: "Посмотреть доступные яхты",
-    whatsapp: "Написать в WhatsApp",
-    note: "Если вы искали конкретное бронирование, мы можем помочь через WhatsApp."
+    eyebrow: uiLabels.ru.errorEyebrow,
+    title: uiLabels.ru.errorTitle,
+    description: uiLabels.ru.errorDescription,
+    question: uiLabels.ru.errorQuestion,
+    home: uiLabels.ru.errorHome,
+    boats: uiLabels.ru.errorBoats,
+    whatsapp: uiLabels.ru.errorWhatsApp,
+    note: uiLabels.ru.errorNote
   }
 };
 
@@ -52,7 +83,7 @@ function getLocale(value: PremiumNotFoundContentProps["locale"]): Locale {
 
 export function PremiumNotFoundContent({ locale: rawLocale, title, description, eyebrow, note, question, phone }: PremiumNotFoundContentProps) {
   const locale = getLocale(rawLocale);
-  const content = locale === "es" ? copy.es : locale === "ru" ? copy.ru : copy.en;
+  const content = copy[locale];
 
   return (
     <main className="route-feedback route-feedback--not-found">
@@ -67,7 +98,7 @@ export function PremiumNotFoundContent({ locale: rawLocale, title, description, 
           <h1 id="route-feedback-title">{title ?? content.title}</h1>
           <p>{description ?? content.description}</p>
           <p className="route-feedback__question">{question ?? content.question}</p>
-          <div className="route-feedback__actions" aria-label="Opciones para continuar">
+          <div className="route-feedback__actions" aria-label={uiLabels[locale].errorActionsAriaLabel}>
             <Link href={`/${locale}`} className="route-feedback__button route-feedback__button--primary">
               <FiHome aria-hidden="true" />
               {content.home}

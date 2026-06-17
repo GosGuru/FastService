@@ -77,10 +77,10 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
         </div>
       </div>
       <div className="site-header__inner">
-        <Link href={`/${locale}`} className="brand" aria-label="FastServices">
+        <Link href={`/${locale}`} className="brand" aria-label={labels.ariaHome}>
           <span className="brand__logo" aria-hidden="true" />
         </Link>
-        <nav className="desktop-nav" aria-label="Primary navigation">
+        <nav className="desktop-nav" aria-label={labels.ariaPrimaryNavigation}>
           <DesktopMegaMenu locale={locale} open={isMegaMenuOpen} onOpenChange={handleMegaMenuOpenChange} boatCollections={boatCollections} />
           <DesktopServicesDropdown locale={locale} open={isServicesDropdownOpen} onOpenChange={handleServicesDropdownOpenChange} servicePages={servicePages} />
         </nav>

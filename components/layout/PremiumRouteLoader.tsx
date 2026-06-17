@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { uiLabels, type Locale } from "@/lib/i18n";
 
 type LoaderVideoVariant = "desktop" | "mobile";
 
@@ -14,18 +15,19 @@ type NavigatorWithConnection = Navigator & {
 const desktopPoster = "/videos/loader/fastservices-loader-poster.jpg";
 const mobilePoster = "/videos/loader/fastservices-loader-poster-mobile.jpg";
 
-function getRouteStatus(pathname: string | null) {
+function getRouteStatus(pathname: string | null, locale: Locale) {
   const route = pathname?.toLowerCase() ?? "";
+  const labels = uiLabels[locale];
 
-  if (route.includes("embarcaciones-rapidas")) {
-    return "Preparando embarcaciones rápidas";
+  if (route.includes("embarcaciones-rapidas") || route.includes("fast-boats") || route.includes("schnellboote") || route.includes("snelle") || route.includes("быстроходные")) {
+    return labels.loaderStatusFastBoats;
   }
 
-  if (route.includes("yates-xl")) {
-    return "Preparando Yates XL";
+  if (route.includes("yates-xl") || route.includes("xl-yachts") || route.includes("xl-yachten") || route.includes("xl-jachten") || route.includes("яхты-xl")) {
+    return labels.loaderStatusYachtsXl;
   }
 
-  return "Preparando tu experiencia náutica privada";
+  return labels.loaderStatusDefault;
 }
 
 function prefersReducedMotion() {
@@ -55,13 +57,17 @@ function addMotionListener(query: MediaQueryList, listener: () => void) {
   return () => query.removeEventListener("change", listener);
 }
 
-export function PremiumRouteLoader() {
+interface PremiumRouteLoaderProps {
+  locale: Locale;
+}
+
+export function PremiumRouteLoader({ locale }: PremiumRouteLoaderProps) {
   const pathname = usePathname();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoVariant, setVideoVariant] = useState<LoaderVideoVariant | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [isStillMode, setIsStillMode] = useState(false);
-  const status = useMemo(() => getRouteStatus(pathname), [pathname]);
+  const status = useMemo(() => getRouteStatus(pathname, locale), [pathname, locale]);
 
   useEffect(() => {
     let resizeFrame = 0;
@@ -180,7 +186,7 @@ export function PremiumRouteLoader() {
       <span className="premium-loader__grain" aria-hidden="true" />
 
       <div className="premium-loader__masthead">
-        <p className="premium-loader__eyebrow">Private nautical service</p>
+        <p className="premium-loader__eyebrow">{uiLabels[locale].loaderMastheadEyebrow}</p>
         <h1 className="premium-loader__brand">FastServices Ibiza</h1>
       </div>
 

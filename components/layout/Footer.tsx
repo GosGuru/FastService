@@ -34,11 +34,11 @@ export function Footer({ locale, servicePages, phone }: FooterProps) {
     <footer className="site-footer">
       <div className="container site-footer__grid">
         <div>
-          <Link href={`/${locale}`} className="brand brand--footer" aria-label="Fast Services – Home">
+          <Link href={`/${locale}`} className="brand brand--footer" aria-label={labels.ariaHome}>
             <span className="brand__logo" aria-hidden="true" />
           </Link>
           <p className="site-footer__tagline">
-            <NoWidowText text={locale === "es" ? "Ibiza lifestyle management para mar, movilidad y experiencias." : "Ibiza lifestyle management for sea, mobility and experiences."} />
+            <NoWidowText text={labels.footerTagline} />
           </p>
         </div>
         <div>
@@ -53,7 +53,7 @@ export function Footer({ locale, servicePages, phone }: FooterProps) {
           <h2>{labels.contact}</h2>
           <Link href={buildWhatsAppUrl(undefined, locale, phone)} target="_blank" rel="noreferrer"><FaWhatsapp /> {formatPhoneDisplay(phone)}</Link>
           <a href="mailto:fastservicesibiza@gmail.com">fastservicesibiza@gmail.com</a>
-          <Link href="/admin" className="site-footer__admin-link">Admin</Link>
+          <Link href="/admin" className="site-footer__admin-link">{labels.footerAdmin}</Link>
         </div>
       </div>
     </footer>

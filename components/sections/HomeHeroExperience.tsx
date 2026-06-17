@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { FiVolume2, FiVolumeX } from "react-icons/fi";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
-import type { Locale } from "@/lib/i18n";
+import { uiLabels, type Locale } from "@/lib/i18n";
 
 interface HomeHeroExperienceProps {
-  locale: Locale;
+	locale: Locale;
 }
 
 type SoundPreference = "auto" | "on" | "off";
@@ -19,258 +19,311 @@ const heroVolume = 0.26;
 const soundPreferenceStorageKey = "fastservice.hero.soundPreference";
 
 const readStoredSoundPreference = (): SoundPreference => {
-  if (typeof window === "undefined") {
-    return "auto";
-  }
+	if (typeof window === "undefined") {
+		return "auto";
+	}
 
-  try {
-    const storedPreference = window.localStorage.getItem(soundPreferenceStorageKey);
+	try {
+		const storedPreference = window.localStorage.getItem(
+			soundPreferenceStorageKey,
+		);
 
-    if (storedPreference === "on" || storedPreference === "off") {
-      return storedPreference;
-    }
-  } catch {
-    return "auto";
-  }
+		if (storedPreference === "on" || storedPreference === "off") {
+			return storedPreference;
+		}
+	} catch {
+		return "auto";
+	}
 
-  return "auto";
+	return "auto";
 };
 
 const saveSoundPreference = (preference: ExplicitSoundPreference) => {
-  try {
-    window.localStorage.setItem(soundPreferenceStorageKey, preference);
-  } catch {
-    // Storage can be unavailable in private or restricted browser contexts.
-  }
+	try {
+		window.localStorage.setItem(soundPreferenceStorageKey, preference);
+	} catch {
+		// Storage can be unavailable in private or restricted browser contexts.
+	}
 };
 
-const soundLabels: Record<Locale, { enable: string; disable: string; mutedState: string; enabledState: string }> = {
-  es: { enable: "Activar música", disable: "Silenciar música", mutedState: "Música silenciada", enabledState: "Música activada" },
-  en: { enable: "Turn music on", disable: "Mute music", mutedState: "Music muted", enabledState: "Music on" },
-  de: { enable: "Musik einschalten", disable: "Musik stummschalten", mutedState: "Musik stumm", enabledState: "Musik an" },
-  nl: { enable: "Muziek aanzetten", disable: "Muziek dempen", mutedState: "Muziek gedempt", enabledState: "Muziek aan" },
-  ru: { enable: "Включить музыку", disable: "Отключить звук", mutedState: "Музыка отключена", enabledState: "Музыка включена" }
+const soundLabels: Record<
+	Locale,
+	{ enable: string; disable: string; mutedState: string; enabledState: string }
+> = {
+	es: {
+		enable: "Activar música",
+		disable: "Silenciar música",
+		mutedState: "Música silenciada",
+		enabledState: "Música activada",
+	},
+	en: {
+		enable: "Turn music on",
+		disable: "Mute music",
+		mutedState: "Music muted",
+		enabledState: "Music on",
+	},
+	de: {
+		enable: "Musik einschalten",
+		disable: "Musik stummschalten",
+		mutedState: "Musik stumm",
+		enabledState: "Musik an",
+	},
+	nl: {
+		enable: "Muziek aanzetten",
+		disable: "Muziek dempen",
+		mutedState: "Muziek gedempt",
+		enabledState: "Muziek aan",
+	},
+	ru: {
+		enable: "Включить музыку",
+		disable: "Отключить звук",
+		mutedState: "Музыка отключена",
+		enabledState: "Музыка включена",
+	},
 };
 
-const heroCopy: Record<Locale, { pill: string; text: string; cta: string; message: string }> = {
-  es: {
-    pill: "FastServices Ibiza: tu contacto náutico de confianza",
-    text: "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación",
-    cta: "Ponte en contacto",
-    message: "Hola, quiero organizar una experiencia privada en Ibiza."
-  },
-  en: {
-    pill: "FastServices Ibiza: your trusted nautical contact",
-    text: "Boats, private transfers and water toys coordinated from a single conversation",
-    cta: "Get in touch",
-    message: "Hello, I would like to plan a private experience in Ibiza."
-  },
-  de: {
-    pill: "FastServices Ibiza: dein vertrauter Nautik-Kontakt",
-    text: "Boote, private Transfers und Wasserspielzeug koordiniert in einer einzigen Konversation",
-    cta: "Kontakt aufnehmen",
-    message: "Hallo, ich möchte ein privates Erlebnis auf Ibiza planen."
-  },
-  nl: {
-    pill: "FastServices Ibiza: je vertrouwde nautische contact",
-    text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één enkel gesprek",
-    cta: "Neem contact op",
-    message: "Hallo, ik wil graag un privé-ervaring op Ibiza plannen."
-  },
-  ru: {
-    pill: "FastServices Ibiza: ваш надежный морской контакт",
-    text: "Аренда яхт, частных трансферов и водных развлечений — всё из одного разговора",
-    cta: "Связаться",
-    message: "Здравствуйте, я хочу организовать частный отдых на Ибице."
-  }
+const heroCopy: Record<
+	Locale,
+	{ pill: string; text: string; cta: string; message: string }
+> = {
+	es: {
+		pill: "FastServices Ibiza: tu contacto náutico de confianza",
+		text: "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación",
+		cta: "Ponte en contacto",
+		message: "Hola, quiero organizar una experiencia privada en Ibiza.",
+	},
+	en: {
+		pill: "FastServices Ibiza: your trusted nautical contact",
+		text: "Boats, private transfers and water toys coordinated from a single conversation",
+		cta: "Get in touch",
+		message: "Hello, I would like to plan a private experience in Ibiza.",
+	},
+	de: {
+		pill: "FastServices Ibiza: dein vertrauter Nautik-Kontakt",
+		text: "Boote, private Transfers und Wasserspielzeug koordiniert in einer einzigen Konversation",
+		cta: "Kontakt aufnehmen",
+		message: "Hallo, ich möchte ein privates Erlebnis auf Ibiza planen.",
+	},
+	nl: {
+		pill: "FastServices Ibiza: je vertrouwde nautische contact",
+		text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één enkel gesprek",
+		cta: "Neem contact op",
+		message: "Hallo, ik wil graag un privé-ervaring op Ibiza plannen.",
+	},
+	ru: {
+		pill: "FastServices Ibiza: ваш надежный морской контакт",
+		text: "Аренда яхт, частных трансферов и водных развлечений — всё из одного разговора",
+		cta: "Связаться",
+		message: "Здравствуйте, я хочу организовать частный отдых на Ибице.",
+	},
 };
 
 export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const soundPreferenceRef = useRef<SoundPreference>("auto");
-  const autoplayAttemptedRef = useRef(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [soundBlocked, setSoundBlocked] = useState(false);
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const soundPreferenceRef = useRef<SoundPreference>("auto");
+	const autoplayAttemptedRef = useRef(false);
+	const [soundEnabled, setSoundEnabled] = useState(false);
+	const [soundBlocked, setSoundBlocked] = useState(false);
 
-  useEffect(() => {
-    document.body.classList.add("no-scroll-home");
-    return () => {
-      document.body.classList.remove("no-scroll-home");
-    };
-  }, []);
+	useEffect(() => {
+		document.body.classList.add("no-scroll-home");
+		return () => {
+			document.body.classList.remove("no-scroll-home");
+		};
+	}, []);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+	useEffect(() => {
+		const video = videoRef.current;
+		if (!video) return;
 
-    soundPreferenceRef.current = readStoredSoundPreference();
+		soundPreferenceRef.current = readStoredSoundPreference();
 
-    let active = true;
-    let resumeAfterVisibilityChange = false;
+		let active = true;
+		let resumeAfterVisibilityChange = false;
 
-    const setSafeSoundState = (enabled: boolean, blocked: boolean) => {
-      if (!active) return;
-      setSoundEnabled(enabled);
-      setSoundBlocked(blocked);
-    };
+		const setSafeSoundState = (enabled: boolean, blocked: boolean) => {
+			if (!active) return;
+			setSoundEnabled(enabled);
+			setSoundBlocked(blocked);
+		};
 
-    const playMuted = async () => {
-      video.volume = heroVolume;
-      video.muted = true;
-      setSafeSoundState(false, soundPreferenceRef.current === "auto");
+		const playMuted = async () => {
+			video.volume = heroVolume;
+			video.muted = true;
+			setSafeSoundState(false, soundPreferenceRef.current === "auto");
 
-      try {
-        await video.play();
-      } catch {
-        setSafeSoundState(false, true);
-      }
-    };
+			try {
+				await video.play();
+			} catch {
+				setSafeSoundState(false, true);
+			}
+		};
 
-    const playWithSound = async () => {
-      video.volume = heroVolume;
-      video.muted = false;
+		const playWithSound = async () => {
+			video.volume = heroVolume;
+			video.muted = false;
 
-      try {
-        await video.play();
-        setSafeSoundState(true, false);
-      } catch {
-        await playMuted();
-      }
-    };
+			try {
+				await video.play();
+				setSafeSoundState(true, false);
+			} catch {
+				await playMuted();
+			}
+		};
 
-    const startVideo = async () => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        await playMuted();
-        return;
-      }
+		const startVideo = async () => {
+			if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+				await playMuted();
+				return;
+			}
 
-      if (soundPreferenceRef.current === "off") {
-        await playMuted();
-        return;
-      }
+			if (soundPreferenceRef.current === "off") {
+				await playMuted();
+				return;
+			}
 
-      if (soundPreferenceRef.current === "on" || !autoplayAttemptedRef.current) {
-        autoplayAttemptedRef.current = true;
-        await playWithSound();
-        return;
-      }
+			if (
+				soundPreferenceRef.current === "on" ||
+				!autoplayAttemptedRef.current
+			) {
+				autoplayAttemptedRef.current = true;
+				await playWithSound();
+				return;
+			}
 
-      try {
-        await video.play();
-      } catch {
-        await playMuted();
-      }
-    };
+			try {
+				await video.play();
+			} catch {
+				await playMuted();
+			}
+		};
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          void startVideo();
-          return;
-        }
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry.isIntersecting) {
+					void startVideo();
+					return;
+				}
 
-        video.pause();
-      },
-      { threshold: 0.35 }
-    );
+				video.pause();
+			},
+			{ threshold: 0.35 },
+		);
 
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        resumeAfterVisibilityChange = !video.paused;
-        video.pause();
-        return;
-      }
+		const handleVisibilityChange = () => {
+			if (document.hidden) {
+				resumeAfterVisibilityChange = !video.paused;
+				video.pause();
+				return;
+			}
 
-      if (resumeAfterVisibilityChange) {
-        void startVideo();
-      }
-    };
+			if (resumeAfterVisibilityChange) {
+				void startVideo();
+			}
+		};
 
-    observer.observe(video);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+		observer.observe(video);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    return () => {
-      active = false;
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
+		return () => {
+			active = false;
+			observer.disconnect();
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
+	}, []);
 
-  const handleSoundToggle = async () => {
-    const video = videoRef.current;
-    if (!video) return;
+	const handleSoundToggle = async () => {
+		const video = videoRef.current;
+		if (!video) return;
 
-    video.volume = heroVolume;
+		video.volume = heroVolume;
 
-    if (video.muted || !soundEnabled) {
-      const previousPreference = soundPreferenceRef.current;
-      soundPreferenceRef.current = "on";
-      video.muted = false;
+		if (video.muted || !soundEnabled) {
+			const previousPreference = soundPreferenceRef.current;
+			soundPreferenceRef.current = "on";
+			video.muted = false;
 
-      try {
-        await video.play();
-        saveSoundPreference("on");
-        setSoundEnabled(true);
-        setSoundBlocked(false);
-      } catch {
-        soundPreferenceRef.current = previousPreference;
-        video.muted = true;
-        setSoundEnabled(false);
-        setSoundBlocked(true);
-      }
+			try {
+				await video.play();
+				saveSoundPreference("on");
+				setSoundEnabled(true);
+				setSoundBlocked(false);
+			} catch {
+				soundPreferenceRef.current = previousPreference;
+				video.muted = true;
+				setSoundEnabled(false);
+				setSoundBlocked(true);
+			}
 
-      return;
-    }
+			return;
+		}
 
-    soundPreferenceRef.current = "off";
-    saveSoundPreference("off");
-    video.muted = true;
-    setSoundEnabled(false);
-    setSoundBlocked(false);
-  };
+		soundPreferenceRef.current = "off";
+		saveSoundPreference("off");
+		video.muted = true;
+		setSoundEnabled(false);
+		setSoundBlocked(false);
+	};
 
-  const soundLabel = soundEnabled ? soundLabels[locale].disable : soundLabels[locale].enable;
-  const soundStateLabel = soundEnabled ? soundLabels[locale].enabledState : soundLabels[locale].mutedState;
-  const copy = heroCopy[locale];
+	const soundLabel = soundEnabled
+		? soundLabels[locale].disable
+		: soundLabels[locale].enable;
+	const soundStateLabel = soundEnabled
+		? soundLabels[locale].enabledState
+		: soundLabels[locale].mutedState;
+	const copy = heroCopy[locale];
 
-  return (
-    <section className="hero-section">
-      <div className="hero-section__media">
-        <video
-          ref={videoRef}
-          className="hero-section__video"
-          loop
-          playsInline
-          preload="metadata"
-          poster={heroPoster}
-          aria-hidden="true"
-          tabIndex={-1}
-        >
-          <source src={heroMobileVideoSrc} type="video/mp4" media="(max-width: 768px)" />
-          <source src={heroVideoSrc} type="video/mp4" />
-        </video>
-      </div>
-      <div className="hero-section__overlay" />
-      <div className="container hero-section__content">
-        <h1>Ibiza Lifestyle Management</h1>
-        <p>{copy.text}</p>
-        <div className="hero-section__actions">
-          <WhatsAppCta locale={locale} variant="light" label={copy.cta} message={copy.message} />
-          <button
-            className={`hero-sound-toggle ${soundEnabled ? "is-on" : ""} ${soundBlocked ? "is-blocked" : ""}`}
-            type="button"
-            aria-label={soundLabel}
-            aria-pressed={soundEnabled}
-            title={soundStateLabel}
-            onClick={handleSoundToggle}
-          >
-            {soundEnabled ? <FiVolume2 aria-hidden="true" /> : <FiVolumeX aria-hidden="true" />}
-          </button>
-        </div>
-        <p className="hero-section__location-tagline">
-          Menorca - Formentera - Ibiza - Mallorca
-        </p>
-      </div>
-    </section>
-  );
+	return (
+		<section className="hero-section">
+			<div className="hero-section__media">
+				<video
+					ref={videoRef}
+					className="hero-section__video"
+					loop
+					playsInline
+					preload="metadata"
+					poster={heroPoster}
+					aria-hidden="true"
+					tabIndex={-1}
+				>
+					<source
+						src={heroMobileVideoSrc}
+						type="video/mp4"
+						media="(max-width: 768px)"
+					/>
+					<source src={heroVideoSrc} type="video/mp4" />
+				</video>
+			</div>
+			<div className="hero-section__overlay" />
+			<div className="container hero-section__content">
+				<h1>{uiLabels[locale].homeHeroTitle}</h1>
+				<p>{copy.text}</p>
+				<div className="hero-section__actions">
+					<WhatsAppCta
+						locale={locale}
+						variant="light"
+						label={copy.cta}
+						message={copy.message}
+					/>
+					<button
+						className={`hero-sound-toggle ${soundEnabled ? "is-on" : ""} ${soundBlocked ? "is-blocked" : ""}`}
+						type="button"
+						aria-label={soundLabel}
+						aria-pressed={soundEnabled}
+						title={soundStateLabel}
+						onClick={handleSoundToggle}
+					>
+						{soundEnabled ? (
+							<FiVolume2 aria-hidden="true" />
+						) : (
+							<FiVolumeX aria-hidden="true" />
+						)}
+					</button>
+				</div>
+				<p className="hero-section__location-tagline">
+					Menorca - Formentera - Ibiza - Mallorca
+				</p>
+			</div>
+		</section>
+	);
 }

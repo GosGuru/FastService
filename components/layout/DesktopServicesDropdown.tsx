@@ -44,8 +44,6 @@ export function DesktopServicesDropdown({ locale, open, onOpenChange, servicePag
     };
   }, [open]);
 
-  const servicesLabel = uiLabels[locale].services || "Servicios";
-
   return (
     <div className="nav-dropdown" ref={ref}>
       <button
@@ -55,7 +53,7 @@ export function DesktopServicesDropdown({ locale, open, onOpenChange, servicePag
         aria-controls="services-dropdown-menu"
         onClick={() => onOpenChange(!open)}
       >
-        {servicesLabel}
+        {uiLabels[locale].services}
         <FiChevronDown aria-hidden="true" />
       </button>
       <div
