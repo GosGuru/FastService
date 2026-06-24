@@ -39,6 +39,51 @@ body {
   line-height: 1.6;
 }
 
+/* Scrollbars globales estilo Apple */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+  background-clip: padding-box;
+}
+
+/* Scrollbar específico para el sidebar oscuro */
+.admin-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  background-clip: padding-box !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -846,7 +891,12 @@ button {
 }
 
 .site-header__contact-link:hover {
-  color: var(--header-detail-color);
+  opacity: 0.92;
+}
+
+.site-header__contact-link:hover .site-header__contact-icon {
+  background: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.3);
 }
 
 .site-header__contact-icon {
@@ -4507,22 +4557,50 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 .admin-shell {
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   background: #eef4f5;
   color: var(--color-text);
+}
+
+/* Hamburguesa + backdrop del drawer: solo se muestran en móvil (ver media query) */
+.admin-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(80 133 158 / 18%);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--color-brand);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.admin-drawer-backdrop {
+  display: none;
+}
+
+@keyframes admin-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .admin-sidebar {
   position: sticky;
   top: 0;
   height: 100dvh;
+  width: 280px;
   display: flex;
   flex-direction: column;
   gap: 28px;
   overflow-y: auto;
+  overflow-x: hidden !important;
   padding: 28px 18px;
   background: var(--color-brand-deep);
   color: #fff;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-sidebar__brand {
@@ -4576,6 +4654,37 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   border-radius: 12px;
   background: transparent;
   color: rgb(255 255 255 / 68%);
+}
+
+.admin-sidebar__logout {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  margin-bottom: 24px;
+}
+
+.admin-sidebar__logout-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2);
+}
+
+.admin-sidebar__logout-button:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
 }
 
 .admin-sidebar__nav button span,
@@ -4664,7 +4773,7 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   align-content: start;
   gap: 16px;
   min-width: 0;
-  padding: 100px clamp(12px, 2vw, 24px) 32px; /* extra top padding to account for sticky topbar height (~60px) + kpis and prevent overlap with list heading */
+  padding: 24px clamp(12px, 2vw, 24px) 32px;
 }
 
 .admin-topbar,
@@ -4684,8 +4793,8 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  position: sticky;
-  top: 0;
+  position: relative;
+  top: auto;
   z-index: 20;
   background: #fff;
   padding: 8px 0;
@@ -4699,8 +4808,8 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 
 .admin-topbar {
   flex-wrap: wrap;
-  position: sticky;
-  top: 0;
+  position: relative;
+  top: auto;
   z-index: 50;
   background: #eef4f5;
   padding: 8px 0 8px;
@@ -4709,15 +4818,15 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   min-height: 60px;
 }
 
-.admin-topbar > div:first-child {
-  flex: 1 1 300px;
-  min-width: 0;
-}
-
 .admin-header-title {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.admin-topbar > div:first-child {
+  flex: 1 1 300px;
+  min-width: 0;
 }
 
 .admin-title-subtitle {
@@ -5223,58 +5332,137 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 }
 
 .admin-list-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: stretch;
-  gap: 4px;
+  gap: 0;
   border: 1px solid #e2e8f0;
   border-left: 4px solid transparent;
   border-radius: 8px;
   background: #ffffff;
-  min-height: 56px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
-  transition: all 0.2s ease-in-out;
+  min-height: 112px;
+}
+
+.admin-list-item__grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  color: #94a3b8;
+  cursor: grab;
+  touch-action: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.admin-list-item__grip:hover {
+  color: var(--admin-section-accent, var(--color-brand));
+  transform: scale(1.15);
+}
+
+.admin-list-item__grip:active {
+  cursor: grabbing;
+}
+
+.admin-list-item__grip svg {
+  width: 15px;
+  height: 15px;
 }
 
 .admin-list-item__select {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
-  min-height: 56px;
-  padding: 10px 14px;
-  border: 0;
-  border-radius: 8px 0 0 8px;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
+  min-height: 80px;
+  padding: 14px 12px;
+}
+.admin-list-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.admin-list-item__select > span {
+.admin-list-item__title {
+  font-family: inherit;
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.25;
   color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color 0.15s ease;
+  min-width: 0;
 }
 
-.admin-list-item__select > small {
+.admin-list-item__body small {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   color: #64748b;
   font-size: 12px;
   line-height: 1.35;
   transition: color 0.15s ease;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.admin-list-item__aside {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  padding-right: 2px;
+}
+
+.admin-list-item__order {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-list-item__order button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-list-item__order button:hover:not(:disabled) {
+  border-color: var(--admin-section-accent);
+  color: var(--admin-section-accent);
+  background: color-mix(in srgb, var(--admin-section-accent) 8%, transparent);
+}
+
+.admin-list-item__order button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .admin-list-item__visit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 68px;
-  padding: 0 12px;
+  gap: 0;
+  min-width: 0;
+  padding: 0 9px;
+  font-size: 15px;
   border-left: 1px solid #e2e8f0;
   border-radius: 0 8px 8px 0;
+  align-self: stretch;
   color: var(--admin-section-accent);
   font-size: 12px;
   font-weight: 700;
@@ -5303,11 +5491,18 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-section-accent) 12%, transparent);
 }
 
-.admin-list-item.is-active .admin-list-item__select > span {
+.admin-list-item.is-dragging {
+  z-index: 5;
+  border-color: var(--admin-section-accent);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 14%);
+  opacity: 0.95;
+}
+
+.admin-list-item.is-active .admin-list-item__title {
   color: var(--admin-section-accent);
 }
 
-.admin-list-item.is-active .admin-list-item__select > small {
+.admin-list-item.is-active .admin-list-item__body small {
   color: color-mix(in srgb, var(--admin-section-accent) 75%, #1e293b);
 }
 
@@ -5369,6 +5564,19 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   border: 1px solid var(--color-line);
   background: #fff;
   color: var(--color-brand);
+}
+
+.admin-locale-select {
+  display: none;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-brand);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 .admin-locale-tabs button.is-active,
@@ -5808,26 +6016,89 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   gap: 7px;
   min-height: 148px;
   padding: 18px;
-  border: 1px dashed color-mix(in srgb, var(--admin-section-accent, var(--color-brand)) 46%, white);
+  position: relative;
+  border: none !important;
   border-radius: 14px;
   background: color-mix(in srgb, var(--admin-section-soft, var(--color-aqua)) 54%, white);
   color: var(--admin-section-accent, var(--color-brand));
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-upload-dropzone__border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.admin-upload-dropzone__border rect {
+  width: 100%;
+  height: 100%;
+  rx: 14;
+  ry: 14;
+  fill: none;
+  stroke: color-mix(in srgb, var(--admin-section-accent, var(--color-brand)) 40%, white);
+  stroke-width: 2px;
+  stroke-dasharray: 8 6;
+  transition: stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1), stroke-width 0.25s cubic-bezier(0.4, 0, 0.2, 1), stroke-dasharray 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-upload-dropzone:not(.is-uploading):hover {
+  background: color-mix(in srgb, var(--admin-section-soft, var(--color-aqua)) 82%, white);
+  color: var(--color-brand-deep, #1f4758);
+  box-shadow: none !important;
+  transform: scale(1.02) translateY(-2px);
+}
+
+.admin-upload-dropzone:not(.is-uploading):hover .admin-upload-dropzone__border rect {
+  stroke: #22c55e !important;
+  stroke-width: 3px;
+  stroke-dasharray: 12 8;
+  animation: admin-marching-ants 1s infinite linear;
+}
+
+@keyframes admin-marching-ants {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.admin-upload-dropzone:not(.is-uploading):hover svg:not(.admin-upload-dropzone__border) {
+  animation: admin-bounce-icon 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes admin-bounce-icon {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
 }
 
 .admin-upload-dropzone.is-drag-active {
-  border-color: var(--admin-section-accent, var(--color-brand));
   background: color-mix(in srgb, var(--admin-section-soft, var(--color-aqua)) 76%, white);
-  box-shadow: 0 18px 42px color-mix(in srgb, var(--admin-section-accent, var(--color-brand)) 18%, transparent);
+  box-shadow: none !important;
   transform: translateY(-1px);
+}
+
+.admin-upload-dropzone.is-drag-active .admin-upload-dropzone__border rect {
+  stroke: var(--admin-section-accent, var(--color-brand));
+  stroke-width: 3px;
+  stroke-dasharray: 12 8;
+  animation: admin-marching-ants 1s infinite linear;
 }
 
 .admin-upload-dropzone.is-uploading {
   pointer-events: none;
-  border-style: solid;
   background: color-mix(in srgb, var(--admin-section-soft, var(--color-aqua)) 72%, white);
+}
+
+.admin-upload-dropzone.is-uploading .admin-upload-dropzone__border rect {
+  stroke: var(--admin-section-accent, var(--color-brand));
+  stroke-width: 2px;
+  stroke-dasharray: none;
 }
 
 .admin-upload-dropzone svg {
@@ -5836,6 +6107,7 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 
 .admin-upload-dropzone span {
   font-weight: 900;
+  font-size: 14px;
 }
 
 .admin-upload-dropzone small {
@@ -5937,19 +6209,19 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  border: 1px solid rgb(217 226 229 / 88%);
+  border: 2px solid #e2e8f0;
   border-radius: 16px;
-  background: linear-gradient(180deg, #fff, rgb(250 252 252 / 96%));
-  box-shadow: 0 14px 28px rgb(80 133 158 / 7%);
+  background: #ffffff;
+  box-shadow: none !important;
   font-size: 12px;
   cursor: grab;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-gallery-item:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--admin-section-accent, var(--color-brand)) 26%, white);
-  box-shadow: 0 20px 34px rgb(80 133 158 / 10%);
+  transform: translateY(-3px);
+  border-color: var(--admin-section-accent, var(--color-brand));
+  box-shadow: none !important;
 }
 
 .admin-gallery-item:active {
@@ -5957,8 +6229,8 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 }
 
 .admin-gallery-item.is-main {
-  border-color: color-mix(in srgb, var(--admin-section-accent, var(--color-brand)) 50%, white);
-  box-shadow: 0 18px 32px rgb(80 133 158 / 14%);
+  border-color: var(--admin-section-accent, var(--color-brand));
+  box-shadow: none !important;
 }
 
 .admin-gallery-item__meta {
@@ -5981,6 +6253,12 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 
 .admin-gallery-item__handle {
   color: var(--admin-section-accent, var(--color-brand));
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-gallery-item__handle:hover {
+  color: var(--color-brand-deep, #1f4758);
+  transform: scale(1.05);
 }
 
 .admin-gallery-item__preview {
@@ -5999,6 +6277,11 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-gallery-item:hover .admin-gallery-item__preview img {
+  transform: scale(1.06);
 }
 
 .admin-gallery-item__badge {
@@ -6308,11 +6591,12 @@ body.taxi-boat-fullscreen .floating-whatsapp {
 
 @media (max-width: 1180px) and (min-width: 769px) {
   .admin-shell {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) !important;
   }
 
-  .admin-sidebar {
-    padding: 24px 12px;
+  .admin-sidebar:not(.is-collapsed) {
+    width: 240px !important;
+    padding: 24px 12px !important;
   }
 
   .admin-sidebar__nav button {
@@ -6363,6 +6647,30 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   .admin-list {
     max-height: calc(100vh - 280px);
   }
+
+  /* Compact editor toolbar at medium width */
+  .admin-editor-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .admin-locale-tabs button {
+    min-width: 34px;
+    height: 30px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  .admin-actions--compact .admin-button {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .admin-form-grid--two,
+  .admin-form-grid--three {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -6402,28 +6710,65 @@ body.taxi-boat-fullscreen .floating-whatsapp {
    Flujo: bottom tabs → lista → editor
    ════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Shell: single column, make room for fixed bottom nav */
+  /* Shell: single column */
   .admin-shell {
     grid-template-columns: 1fr;
-    padding-bottom: 64px;
   }
 
-  /* Hide desktop sidebar */
-  .admin-sidebar {
-    display: none;
+  /* Hamburguesa visible en móvil */
+  .admin-nav-toggle {
+    display: inline-flex;
+  }
+
+  /* Sidebar como drawer lateral deslizante.
+     Especificidad elevada (.admin-shell) para ganar al bloque @media ≤980px
+     que define .admin-sidebar como estático. */
+  .admin-shell .admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 300;
+    width: min(82vw, 320px);
+    height: 100dvh;
+    padding: 24px 16px;
+    gap: 22px;
+    transform: translateX(-100%);
+    transition: transform 0.26s ease;
+    box-shadow: 0 0 40px rgb(0 0 0 / 30%);
+  }
+
+  .admin-shell .admin-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  /* Nav del drawer en una sola columna (el bloque ≤980px lo pone a 2 columnas) */
+  .admin-shell .admin-sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Backdrop oscuro del drawer */
+  .admin-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 290;
+    background: rgb(0 0 0 / 45%);
+    animation: admin-backdrop-in 0.2s ease;
   }
 
   /* Main area */
   .admin-main {
     gap: 16px;
-    padding: 0 14px 88px;
+    padding: 0 14px 24px;
   }
 
-  /* Sticky compact header */
-  .admin-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  /* Sticky compact header (especificidad elevada para ganar al bloque ≤980px
+     que lo pone en columna). */
+  .admin-main .admin-topbar {
+    position: relative;
+    z-index: 0;
+    display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -6435,14 +6780,14 @@ body.taxi-boat-fullscreen .floating-whatsapp {
     box-shadow: 0 2px 12px rgb(80 133 158 / 6%);
   }
 
-  .admin-topbar h1,
-  .admin-topbar > div > p:not(.admin-kicker),
-  .admin-topbar .admin-session-label {
+  .admin-main .admin-topbar .admin-header-title,
+  .admin-main .admin-topbar .admin-save-status {
     display: none;
   }
 
-  .admin-topbar .admin-kicker {
-    font-size: 11px;
+  .admin-header-title,
+  .admin-topbar .admin-session-label {
+    display: none;
   }
 
   .admin-topbar .admin-actions {
@@ -6535,6 +6880,16 @@ body.taxi-boat-fullscreen .floating-whatsapp {
     min-height: 60px;
   }
 
+  /* Reorder controls: bigger touch targets on mobile */
+  .admin-list-item__grip {
+    width: 34px;
+  }
+
+  .admin-list-item__order button {
+    width: 32px;
+    height: 28px;
+  }
+
   /* Back button — visible on mobile inside editor */
   .admin-back-button {
     display: inline-flex;
@@ -6551,61 +6906,43 @@ body.taxi-boat-fullscreen .floating-whatsapp {
     font-weight: 900;
   }
 
-  /* Bottom tab navigation */
-  .admin-bottom-nav {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 200;
-    height: calc(60px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--color-brand-deep);
-    border-top: 1px solid rgb(255 255 255 / 10%);
-  }
-
-  .admin-bottom-nav__item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    border: 0;
-    background: transparent;
-    color: rgb(255 255 255 / 52%);
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0;
-    text-transform: uppercase;
-    transition: color 0.15s ease;
-  }
-
-  .admin-bottom-nav__item .admin-section-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    font-size: 14px;
-    background: rgb(255 255 255 / 8%);
-  }
-
-  .admin-bottom-nav__item.is-active {
-    color: #fff;
-  }
-
-  .admin-bottom-nav__item.is-active .admin-section-icon {
-    background: rgb(255 255 255 / 18%);
-  }
-
   /* Editor toolbar: wrap properly */
   .admin-editor-toolbar {
     flex-direction: column;
     gap: 10px;
   }
 
+  /* Locale: hide tab buttons, show dropdown */
+  .admin-locale-tabs {
+    display: none;
+  }
+
+  .admin-locale-select {
+    display: block;
+  }
+
+  /* Action buttons: wrap and compact */
   .admin-actions--compact {
     justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .admin-actions--compact .admin-button {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  /* Form grids: single column */
+  .admin-form-grid--two,
+  .admin-form-grid--three {
+    grid-template-columns: 1fr;
+  }
+
+  /* Subpanel heading */
+  .admin-subpanel h3 {
+    font-size: 14px;
   }
 
   .admin-gallery-list {
@@ -6810,12 +7147,59 @@ body.taxi-boat-fullscreen .floating-whatsapp {
   }
 
   .site-header {
-    --header-top-height: 0px;
+    --header-top-height: 34px;
     --header-main-height: 58px;
   }
 
   .site-header__top {
+    display: block;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .site-header__top-inner {
+    width: 100%;
+    justify-content: space-between !important;
+    gap: 12px;
+    flex-wrap: nowrap !important;
+    padding: 0 10px;
+  }
+
+  .site-header__contact-group {
+    gap: 10px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .site-header__contact-link {
+    gap: 0;
+    padding: 0;
+    border-radius: 0;
+    min-height: auto;
+    justify-content: center;
+    background: transparent;
+    color: var(--header-color);
+  }
+
+  .site-header__contact-link span:not(.site-header__contact-icon) {
     display: none;
+  }
+
+  .site-header__contact-icon,
+  .site-header__contact-icon.site-header__contact-icon--whatsapp,
+  .site-header__contact-icon.site-header__contact-icon--instagram,
+  .site-header__contact-icon.site-header__contact-icon--gmail {
+    width: 22px;
+    height: 22px;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--header-color) !important;
+  }
+
+  .site-header__contact-link:hover {
+    background: transparent;
+    opacity: 0.92;
   }
 
   .desktop-nav,
@@ -7618,4 +8002,648 @@ body.mobile-menu-open .site-header__inner > .site-header__actions > .header-cont
   .page-hero .whatsapp-cta--light:focus-visible {
     transform: none;
   }
+}
+
+/* ════════════════════════════════════════════
+   ADMIN — Mejoras de UI, Sidebar Colapsable,
+   Simetría y Correcciones de Responsividad
+   ════════════════════════════════════════════ */
+
+/* Sidebar colapsado en pantallas grandes */
+@media (min-width: 769px) {
+  .admin-shell--sidebar-collapsed {
+    grid-template-columns: 80px minmax(0, 1fr) !important;
+  }
+
+  .admin-shell--sidebar-collapsed .admin-sidebar {
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    padding: 28px 12px !important;
+    gap: 20px !important;
+    align-items: center !important;
+    overflow-x: hidden !important;
+  }
+
+  .admin-shell--sidebar-collapsed .admin-sidebar__nav button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    min-height: 48px !important;
+    width: 48px !important;
+    height: 48px !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+  }
+
+  .admin-shell--sidebar-collapsed .admin-sidebar__logout-button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* Transiciones fluidas en los botones de navegación */
+.admin-sidebar__nav button,
+.admin-sidebar__logout-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Ocultar textos de forma fluida con desvanecimiento al colapsar */
+.admin-section-copy,
+.admin-sidebar__logout-button span,
+.admin-sidebar__brand-text {
+  transition: opacity 0.25s ease, transform 0.25s ease !important;
+  opacity: 1;
+}
+
+.admin-shell--sidebar-collapsed .admin-section-copy,
+.admin-shell--sidebar-collapsed .admin-sidebar__logout-button span,
+.admin-shell--sidebar-collapsed .admin-sidebar__brand-text {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-10px) !important;
+  display: none !important;
+}
+
+/* Desactivar scroll del sidebar */
+.admin-sidebar::-webkit-scrollbar {
+  display: none !important;
+}
+.admin-sidebar {
+  scrollbar-width: none !important;
+  overflow-x: hidden !important;
+}
+
+/* Botón toggle del sidebar */
+.admin-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.admin-sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar-toggle {
+    display: none !important;
+  }
+}
+
+/* Simetría de paneles global (20px uniformes) */
+.admin-list-panel,
+.admin-editor-panel {
+  padding: 20px !important;
+}
+
+/* Encabezados y barras de herramientas limpias con línea sutil */
+.admin-panel-heading,
+.admin-editor-toolbar {
+  background: transparent !important;
+  padding: 0 0 16px 0 !important;
+  margin: 0 0 16px 0 !important;
+  border-bottom: 1px solid rgb(217 226 229 / 60%) !important;
+}
+
+.admin-topbar {
+  border-bottom: 1px solid rgb(217 226 229 / 60%) !important;
+  background: transparent !important;
+  padding: 0 0 16px 0 !important;
+  margin: 0 0 16px 0 !important;
+}
+
+/* Panel de filtros reorganizado */
+.admin-list-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 8px 0 !important;
+  padding: 0 0 16px 0 !important;
+  border-bottom: 1px solid rgb(217 226 229 / 60%) !important;
+}
+
+/* Prevención de desbordes (flex-layout e hijos grid) */
+.admin-panel-heading,
+.admin-search,
+.admin-list-filters,
+.admin-list,
+.admin-editor-panel > * {
+  min-width: 0 !important;
+}
+
+/* Scrollbars discretos estilo Apple */
+.admin-list::-webkit-scrollbar,
+.admin-sidebar::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+
+.admin-list::-webkit-scrollbar-track,
+.admin-sidebar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.admin-list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2) !important;
+  border-radius: 999px !important;
+  transition: background 0.15s ease !important;
+}
+
+.admin-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4) !important;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 999px !important;
+  transition: background 0.15s ease !important;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ==========================================================================
+   Estilos de Botones Premium de la Barra de Herramientas del Editor
+   ========================================================================== */
+
+/* Altura y padding consistentes para botones del editor */
+.admin-editor-toolbar .admin-button {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 99px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+/* Botón Traducir (IA) */
+.admin-button--translate {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%) !important;
+  border: 1px solid rgba(124, 58, 237, 0.22) !important;
+  color: #6d28d9 !important;
+}
+
+.admin-button--translate:not(:disabled):hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%) !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
+  color: #5b21b6 !important;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12) !important;
+  transform: translateY(-1px) scale(1.015);
+}
+
+.admin-button--translate:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Botón Ver Barco / Vista Previa */
+.admin-button--view {
+  background: rgba(31, 71, 88, 0.04) !important;
+  border: 1px solid rgba(31, 71, 88, 0.18) !important;
+  color: var(--color-accent) !important;
+}
+
+.admin-button--view:not(:disabled):hover {
+  background: rgba(31, 71, 88, 0.08) !important;
+  border-color: rgba(31, 71, 88, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(31, 71, 88, 0.12) !important;
+  transform: translateY(-1px) scale(1.015);
+}
+
+.admin-button--view:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Botón Duplicar */
+.admin-button--duplicate {
+  background: rgba(80, 133, 158, 0.05) !important;
+  border: 1px solid rgba(80, 133, 158, 0.22) !important;
+  color: var(--color-brand-deep) !important;
+}
+
+.admin-button--duplicate:not(:disabled):hover {
+  background: rgba(80, 133, 158, 0.1) !important;
+  border-color: rgba(80, 133, 158, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(80, 133, 158, 0.12) !important;
+  transform: translateY(-1px) scale(1.015);
+}
+
+.admin-button--duplicate:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Botón Eliminar (Peligro) */
+.admin-button--danger {
+  background: rgba(239, 68, 68, 0.05) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  color: #b91c1c !important;
+}
+
+.admin-button--danger:not(:disabled):hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #991b1b !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.12) !important;
+  transform: translateY(-1px) scale(1.015);
+}
+
+.admin-button--danger:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Badge de Estado de Guardado */
+.admin-save-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+/* Estado: Sincronizado (Guardado) */
+.admin-save-badge--synced {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  color: #059669;
+}
+
+.admin-save-badge--synced svg {
+  color: #10b981;
+  font-size: 14px;
+}
+
+/* Estado: Pendiente (Sin guardar) */
+.admin-save-badge--pending {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  color: #d97706;
+}
+
+.admin-save-badge__dot {
+  width: 7px;
+  height: 7px;
+  background-color: #f59e0b;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  animation: admin-pulse-dot 1.4s infinite alternate ease-in-out;
+}
+
+/* Estado: Guardando */
+.admin-save-badge--saving {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  color: #2563eb;
+}
+
+.admin-save-badge--saving svg {
+  color: #3b82f6;
+}
+
+/* Animaciones */
+@keyframes admin-pulse-dot {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Ajustes responsivos para la barra del editor */
+@media (max-width: 650px) {
+  .admin-editor-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-editor-toolbar > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-actions--compact {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .admin-actions--compact .admin-button,
+  .admin-editor-toolbar .admin-button {
+    width: 100%;
+    justify-content: center;
+    height: 38px !important;
+  }
+
+  .admin-save-badge {
+    grid-column: span 2;
+    justify-content: center;
+    width: 100%;
+    height: 38px !important;
+  }
+}
+
+/* Permitir flex-wrap en pantallas de escritorio para evitar desbordamientos si el espacio es reducido */
+@media (min-width: 651px) {
+  .admin-editor-toolbar {
+    flex-wrap: wrap !important;
+    gap: 12px;
+  }
+  .admin-editor-toolbar > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 8px;
+  }
+  .admin-actions--compact {
+    flex-wrap: wrap !important;
+    gap: 8px;
+  }
+}
+
+/* ==========================================================================
+   Estilos Premium para Tarjetas de Checkbox y Seccionado (UX/UI)
+   ========================================================================== */
+
+/* Subtítulos de sección/paneles en el formulario */
+.admin-subpanel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 32px 0 16px 0 !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px dashed rgba(80, 133, 158, 0.18) !important;
+  width: 100%;
+}
+
+.admin-subpanel-icon {
+  font-size: 16px !important;
+  color: var(--color-brand-deep) !important;
+}
+
+.admin-subpanel-header h3 {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: var(--color-brand-deep) !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* Tarjeta Checkbox Premium */
+.admin-check-card {
+  position: relative;
+  display: flex !important;
+  align-items: center;
+  gap: 14px;
+  padding: 16px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(80, 133, 158, 0.15) !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(80, 133, 158, 0.03) !important;
+  width: 100%;
+}
+
+.admin-check-card:hover {
+  border-color: rgba(80, 133, 158, 0.35) !important;
+  background: rgba(80, 133, 158, 0.01) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(80, 133, 158, 0.06) !important;
+}
+
+.admin-check-card.is-active {
+  border-color: var(--color-brand-deep) !important;
+  background: rgba(80, 133, 158, 0.04) !important;
+  box-shadow: 0 4px 12px rgba(80, 133, 158, 0.04) !important;
+}
+
+.admin-check-card input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: var(--color-brand-deep) !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.admin-check-card__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.admin-check-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(80, 133, 158, 0.08);
+  color: var(--color-brand-deep);
+  font-size: 16px;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.admin-check-card.is-active .admin-check-card__icon {
+  background: var(--color-brand-deep);
+  color: #ffffff;
+}
+
+.admin-check-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.admin-check-card__info strong {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--color-text) !important;
+  line-height: 1.25 !important;
+}
+
+.admin-check-card__info small {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--color-muted) !important;
+  line-height: 1.2 !important;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 650px) {
+  .admin-check-card {
+    padding: 12px !important;
+  }
+  .admin-check-card__info strong {
+    font-size: 12px !important;
+  }
+  .admin-check-card__info small {
+    font-size: 10px !important;
+  }
+}
+
+/* Modal de Confirmación Premium */
+.admin-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-modal-backdrop.is-visible {
+  opacity: 1;
+}
+
+.admin-modal-card {
+  background: #ffffff;
+  border: 1px solid rgba(80, 133, 158, 0.12);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 460px;
+  padding: 28px;
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+  transform: scale(0.92) translateY(10px);
+  opacity: 0;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-modal-backdrop.is-visible .admin-modal-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+.admin-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-modal-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.admin-modal-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.admin-modal-body {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #475569;
+  margin-bottom: 24px;
+}
+
+.admin-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.admin-modal-btn {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 99px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.admin-modal-btn--secondary {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.admin-modal-btn--secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.admin-modal-btn--primary {
+  background: #10b981;
+  border: 1px solid #059669;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.admin-modal-btn--primary:hover {
+  background: #059669;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.admin-modal-btn--primary:active {
+  transform: translateY(0);
 }

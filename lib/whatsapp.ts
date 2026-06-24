@@ -64,3 +64,14 @@ export function buildWhatsAppUrl(message?: string, locale: Locale = "es", phone?
   const waPhone = phone?.replace(/\D/g, "") || defaultPhone;
   return `https://wa.me/${waPhone}?text=${text}`;
 }
+
+export function formatPhoneDisplay(phone?: string): string {
+  const cleaned = phone?.replace(/\D/g, "") || defaultPhone;
+  if (cleaned.startsWith("34") && cleaned.length === 11) {
+    return `+34 ${cleaned.slice(2, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`;
+  }
+  if (cleaned.startsWith("7") && cleaned.length === 11) {
+    return `+7 ${cleaned.slice(1, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7, 9)} ${cleaned.slice(9)}`;
+  }
+  return `+${cleaned}`;
+}

@@ -11,7 +11,7 @@ import {
 	FiShield,
 	FiUsers,
 } from "react-icons/fi";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { buildWhatsAppUrl, formatPhoneDisplay } from "@/lib/whatsapp";
 import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 import { NoWidowText } from "@/components/typography/NoWidowText";
 import type { Locale } from "@/lib/i18n";
@@ -318,11 +318,11 @@ export function ContactFormSection({ locale }: ContactFormSectionProps) {
 								</dt>
 								<dd>
 									<Link
-										href="https://wa.me/34655835803"
+										href={buildWhatsAppUrl(undefined, locale, phone)}
 										target="_blank"
 										rel="noreferrer"
 									>
-										+34 655 835 803
+										{formatPhoneDisplay(phone)}
 									</Link>
 								</dd>
 							</div>

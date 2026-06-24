@@ -1,8 +1,12 @@
 "use client";
 
-import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
-import { FiAlertCircle, FiAnchor, FiBriefcase, FiCheckCircle, FiChevronLeft, FiCopy, FiDroplet, FiExternalLink, FiEye, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiLayers, FiLoader, FiLogOut, FiMove, FiPlus, FiSave, FiSearch, FiSettings, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
+import { FiAlertCircle, FiAnchor, FiBold, FiBriefcase, FiCheckCircle, FiChevronDown, FiChevronLeft, FiChevronUp, FiCopy, FiDroplet, FiExternalLink, FiEye, FiEyeOff, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiItalic, FiLayers, FiLoader, FiLogOut, FiMenu, FiMessageCircle, FiMove, FiPlus, FiSave, FiSearch, FiSettings, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
+import { DndContext, type DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { translateItemAction, type AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -43,6 +47,9 @@ const sectionConfig = [
   { key: "faqs", label: "FAQs", description: "Preguntas frecuentes por servicio", icon: FiHelpCircle, tone: "faqs" },
   { key: "settings", label: "Configuración", description: "Números de WhatsApp por idioma", icon: FiSettings, tone: "settings" }
 ] satisfies Array<{ key: AdminContentKey | "settings"; label: string; description: string; icon: IconType; tone: string }>;
+
+// Secciones donde el orden de la lista controla el orden de render en el frontend.
+const REORDERABLE_SECTIONS = new Set<AdminContentKey | "settings">(["boats", "boatCollections", "vehicles", "waterToys"]);
 
 const defaultImage: MediaAsset = {
   src: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?auto=format&fit=crop&w=1200&q=80",
@@ -358,9 +365,20 @@ function getItemTitle(item: AdminItem, locale: Locale) {
 }
 
 function getItemDescription(item: AdminItem, locale: Locale) {
-  if ("seoDescription" in item) return getLocalizedValue(item.seoDescription, locale);
+  if ("seoDescription" in item) {
+    const seo = getLocalizedValue(item.seoDescription, locale);
+    if (seo) return seo;
+  }
+  if ("description" in item && item.description) {
+    const desc = item.description as Record<string, unknown>;
+    if (typeof desc.es === "string" || typeof desc.en === "string") {
+      return getLocalizedValue(item.description as LocalizedText, locale);
+    }
+    const localeVal = (desc[locale] ?? desc.es) as { text?: string } | undefined;
+    if (localeVal?.text) return localeVal.text;
+  }
   if ("answer" in item) return getLocalizedValue(item.answer, locale);
-  return "Contenido preparado para edición";
+  return "";
 }
 
 function isGenericContentItem(item: AdminItem): item is GenericContentItem {
@@ -673,6 +691,95 @@ interface AdminDashboardProps {
   saveSettingsAction: (settings: SiteSettings) => Promise<AdminMutationResult>;
 }
 
+interface SortableAdminListItemProps {
+  item: AdminItem;
+  locale: Locale;
+  activeSection: AdminContentKey | "settings";
+  isActive: boolean;
+  reorderable: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+  visitTarget: { href: string } | null | undefined;
+  onSelect: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onVisitGuard: () => boolean;
+}
+
+function SortableAdminListItem({ item, locale, activeSection, isActive, reorderable, isFirst, isLast, visitTarget, onSelect, onMoveUp, onMoveDown, onVisitGuard }: SortableAdminListItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: !reorderable });
+  const style: CSSProperties = { transform: CSS.Transform.toString(transform), transition };
+  const description = getItemDescription(item, locale);
+
+  return (
+    <article
+      ref={setNodeRef}
+      style={style}
+      className={`admin-list-item ${isActive ? "is-active" : ""} ${isDragging ? "is-dragging" : ""}`}
+    >
+      {reorderable && (
+        <span
+          className="admin-list-item__grip"
+          {...attributes}
+          {...listeners}
+          title="Arrastra para reordenar"
+          aria-label="Arrastra para reordenar"
+        >
+          <FiMove aria-hidden="true" />
+        </span>
+      )}
+      <button type="button" className="admin-list-item__select" onClick={onSelect}>
+        <span className="admin-list-item__body">
+          <span className="admin-list-item__title">{getItemTitle(item, locale)}</span>
+          {description ? <small>{description}</small> : null}
+
+          {activeSection !== "faqs" && (
+            <span className="admin-list__badges">
+              {"collectionId" in item && (
+                <span className="admin-visibility-badge" style={{ backgroundColor: "#f1f5f9", color: "#475569", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", fontSize: "12px" }}>
+                  {item.collectionId === "yachts-xl" ? "Yates XL" : item.collectionId === "yachts" ? "Yates" : "Rápidas"}
+                </span>
+              )}
+              {"visibility" in item && (
+                <span className={`admin-status-badge admin-status-badge--${item.visibility === "hidden" ? "hidden" : "published"}`} style={{ padding: "2px 8px", borderRadius: "999px", fontSize: "12px" }}>
+                  {item.visibility === "hidden" ? "Oculto" : "Visible"}
+                </span>
+              )}
+            </span>
+          )}
+        </span>
+      </button>
+      <div className="admin-list-item__aside">
+        {reorderable && (
+          <div className="admin-list-item__order">
+            <button type="button" onClick={onMoveUp} disabled={isFirst} aria-label="Subir" title="Subir">
+              <FiChevronUp aria-hidden="true" />
+            </button>
+            <button type="button" onClick={onMoveDown} disabled={isLast} aria-label="Bajar" title="Bajar">
+              <FiChevronDown aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        {visitTarget ? (
+          <button
+            type="button"
+            className="admin-list-item__visit"
+            title="Ver página pública"
+            aria-label="Ver página pública"
+            onClick={() => {
+              if (onVisitGuard()) {
+                window.open(visitTarget.href, "_blank", "noopener,noreferrer");
+              }
+            }}
+          >
+            <FiExternalLink aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 export function AdminDashboard({ initialSnapshot, initialSource, initialMessage, adminEmail, saveSnapshotAction, signOutAction, initialSettings, saveSettingsAction }: AdminDashboardProps) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState(() => snapshotFingerprint(initialSnapshot));
@@ -685,9 +792,27 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const [query, setQuery] = useState("");
   const [filterCollection, setFilterCollection] = useState<string>("all");
   const [filterVisibility, setFilterVisibility] = useState<string>("all");
+  const [navOpen, setNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("admin-sidebar-collapsed") === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("admin-sidebar-collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
   const [saveStatus, setSaveStatus] = useState<AdminSaveStatus>(() => getInitialSaveStatus(initialSource, initialMessage));
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
   const [isSaving, setIsSaving] = useState(false);
   const saveStatusRef = useRef<HTMLDivElement>(null);
+  const logoutFormRef = useRef<HTMLFormElement>(null);
 
   // Estados para controlar el progreso de traducción por idioma
   const [translationStatus, setTranslationStatus] = useState<Record<Locale, "pending" | "translating" | "completed" | "error"> | null>(null);
@@ -695,12 +820,25 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationSourceLocale, setTranslationSourceLocale] = useState<Locale | null>(null);
 
-  // Limpiar el estado de traducción cuando el usuario cambie de sección o de item
-  useEffect(() => {
+  // Estados para el modal de confirmación de traducción
+  const [translationConfirmOpen, setTranslationConfirmOpen] = useState(false);
+  const [translationConfirmVisible, setTranslationConfirmVisible] = useState(false);
+
+  function clearTranslationStates() {
     setTranslationStatus(null);
     setTranslationErrors({} as Record<Locale, string>);
     setTranslationSourceLocale(null);
-  }, [activeSection, selectedId]);
+  }
+
+  function openTranslationConfirm() {
+    setTranslationConfirmOpen(true);
+    setTimeout(() => setTranslationConfirmVisible(true), 10);
+  }
+
+  function closeTranslationConfirm() {
+    setTranslationConfirmVisible(false);
+    setTimeout(() => setTranslationConfirmOpen(false), 280);
+  }
 
   // Helper para buscar locales con traducciones faltantes en el item
   function findMissingLocales(item: AdminItem, sourceLocale: Locale): Locale[] {
@@ -830,7 +968,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     });
     setTranslationStatus(initialStatus);
 
-    let currentItemAccumulator = JSON.parse(JSON.stringify(itemToTranslate)) as AdminItem;
+    let currentItemAccumulator = structuredClone(itemToTranslate) as AdminItem;
 
     const translationPromises = targetLocales.map(async (targetLocale) => {
       setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "translating" }));
@@ -859,10 +997,74 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     }
   }
 
+  function hasAnyTranslation(item: AdminItem, targetLocales: Locale[]): boolean {
+    let found = false;
+
+    function check(obj: any) {
+      if (found) return;
+      if (obj === null || obj === undefined) return;
+      if (Array.isArray(obj)) {
+        obj.forEach(check);
+        return;
+      }
+      if (typeof obj === "object") {
+        // LocalizedText
+        const isLocalizedTextObj = typeof obj.es === "string" || typeof obj.en === "string";
+        if (isLocalizedTextObj) {
+          for (const loc of targetLocales) {
+            const val = obj[loc];
+            if (typeof val === "string" && val.trim() !== "") {
+              found = true;
+              return;
+            }
+          }
+          return;
+        }
+
+        // RichTextByLocale
+        const isRichTextObj =
+          (obj.es && typeof obj.es.html === "string") ||
+          (obj.en && typeof obj.en.html === "string") ||
+          (obj.de && typeof obj.de.html === "string") ||
+          (obj.nl && typeof obj.nl.html === "string");
+        if (isRichTextObj) {
+          for (const loc of targetLocales) {
+            const val = obj[loc];
+            if (val && typeof val.html === "string" && val.html.trim() !== "") {
+              found = true;
+              return;
+            }
+          }
+          return;
+        }
+
+        Object.keys(obj).forEach(key => {
+          if (["id", "status", "visibility", "publishedAt", "updatedAt", "source", "collectionId", "serviceId", "kind"].includes(key)) return;
+          check(obj[key]);
+        });
+      }
+    }
+
+    check(item);
+    return found;
+  }
+
+  function handleConfirmTranslation() {
+    if (!selectedItem) return;
+    const targetLocales = locales.filter(loc => loc !== locale);
+    closeTranslationConfirm();
+    void runTranslation(selectedItem, locale, targetLocales);
+  }
+
   function translateCurrentItemManually() {
     if (!selectedItem) return;
     const targetLocales = locales.filter(loc => loc !== locale);
-    void runTranslation(selectedItem, locale, targetLocales);
+    
+    if (hasAnyTranslation(selectedItem, targetLocales)) {
+      openTranslationConfirm();
+    } else {
+      void runTranslation(selectedItem, locale, targetLocales);
+    }
   }
 
   const section = sectionConfig.find((item) => item.key === activeSection) ?? sectionConfig[0];
@@ -891,6 +1093,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
     return true;
   });
+  const canReorder = REORDERABLE_SECTIONS.has(activeSection) && query.trim() === "";
   const selectedItem = filteredItems.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items.find((item) => item.id === selectedId) ?? items[0];
   const visitTarget = selectedItem ? getVisitTarget(activeSection, selectedItem, snapshot, locale) : null;
   const SaveStatusIcon = isSaving ? FiLoader : saveStatus.tone === "success" ? FiCheckCircle : saveStatus.tone === "error" ? FiAlertCircle : FiSave;
@@ -921,25 +1124,113 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }, [hasUnsavedChanges]);
 
   const counters = useMemo(() => {
-    const boats = snapshot.content.boats;
-    const seoPages = snapshot.content.seoPages;
-    const mediaCount = [
-      ...snapshot.content.boats.flatMap((item) => [item.image, ...item.gallery]),
-      ...snapshot.content.vehicles.flatMap((item) => [item.image, ...item.gallery]),
-      ...snapshot.content.waterToys.flatMap((item) => [item.image, ...item.gallery]),
-      ...snapshot.content.servicePages.flatMap((item) => [item.image, ...(item.gallery ?? [])]),
-      ...seoPages.flatMap((item) => [item.image, ...item.gallery])
-    ].length;
+    const content = snapshot.content;
 
-    const collections = snapshot.content.boatCollections;
-
-    return [
-      { label: "Barcos", value: boats.length, note: "rutas indexables" },
-      { label: "Colecciones", value: collections.length, note: "categorías de barcos" },
-      { label: "SEO ocultas", value: seoPages.length, note: "fuera del menú" },
-      { label: "Imágenes", value: mediaCount, note: "con alt por idioma" }
-    ];
-  }, [snapshot]);
+    switch (activeSection) {
+      case "boats": {
+        const boats = content.boats;
+        const indexable = boats.filter(b => b.robotsIndex).length;
+        const visible = boats.filter(b => b.visibility !== "hidden").length;
+        const images = boats.flatMap(b => [b.image, ...b.gallery]).filter(img => img?.src?.trim()).length;
+        return [
+          { label: "Barcos Totales", value: boats.length, note: "rutas de yates" },
+          { label: "Indexables", value: indexable, note: "en motores de búsqueda" },
+          { label: "Visibles en la web", value: visible, note: "públicamente listados" },
+          { label: "Imágenes del Catálogo", value: images, note: "fotos y galerías de barcos" }
+        ];
+      }
+      case "boatCollections": {
+        const collections = content.boatCollections;
+        const indexable = collections.filter(c => c.robotsIndex).length;
+        const hidden = collections.filter(c => c.hiddenPage).length;
+        const visible = collections.length - hidden;
+        return [
+          { label: "Colecciones", value: collections.length, note: "categorías de barcos" },
+          { label: "Indexables", value: indexable, note: "en sitemap público" },
+          { label: "Páginas del menú", value: visible, note: "visibles en la navegación" },
+          { label: "Páginas de filtro", value: hidden, note: "categorías para búsquedas" }
+        ];
+      }
+      case "vehicles": {
+        const vehicles = content.vehicles;
+        const visible = vehicles.filter(v => v.visibility !== "hidden").length;
+        const specs = vehicles.flatMap(v => v.specs ?? []).length;
+        const images = vehicles.flatMap(v => [v.image, ...(v.gallery ?? [])]).filter(img => img?.src?.trim()).length;
+        return [
+          { label: "Vehículos Transfer", value: vehicles.length, note: "traslados y choferes" },
+          { label: "Visibles", value: visible, note: "en la página de transfer" },
+          { label: "Características", value: specs, note: "especificaciones cargadas" },
+          { label: "Imágenes de Galería", value: images, note: "fotos de transfers" }
+        ];
+      }
+      case "waterToys": {
+        const toys = content.waterToys;
+        const visible = toys.filter(t => t.visibility !== "hidden").length;
+        const richDesc = toys.filter(t => t.richDescription?.es?.html || t.richDescription?.en?.html).length;
+        const images = toys.flatMap(t => [t.image, ...(t.gallery ?? [])]).filter(img => img?.src?.trim()).length;
+        return [
+          { label: "Juguetes Náuticos", value: toys.length, note: "catálogo de juguetes" },
+          { label: "Disponibles", value: visible, note: "visibles en la web" },
+          { label: "Con descripción larga", value: richDesc, note: "detallados con editor" },
+          { label: "Imágenes cargadas", value: images, note: "galerías de juguetes" }
+        ];
+      }
+      case "servicePages": {
+        const pages = content.servicePages;
+        const options = pages.flatMap(p => p.options ?? []).length;
+        const indexable = pages.filter(p => p.robotsIndex).length;
+        const images = pages.flatMap(p => [p.image, ...(p.gallery ?? [])]).filter(img => img?.src?.trim()).length;
+        return [
+          { label: "Landings de Servicio", value: pages.length, note: "páginas de servicios" },
+          { label: "Opciones de Servicio", value: options, note: "bloques internos" },
+          { label: "Indexables", value: indexable, note: "en buscadores" },
+          { label: "Imágenes de Servicios", value: images, note: "en secciones y cabeceras" }
+        ];
+      }
+      case "seoPages": {
+        const seo = content.seoPages;
+        const indexable = seo.filter(p => p.robotsIndex).length;
+        const published = seo.filter(p => p.status === "published").length;
+        const images = seo.flatMap(p => [p.image, ...p.gallery]).filter(img => img?.src?.trim()).length;
+        return [
+          { label: "Páginas SEO", value: seo.length, note: "fuera del menú principal" },
+          { label: "Indexables (Robots)", value: indexable, note: "rastreables por Google" },
+          { label: "Páginas Publicadas", value: published, note: "activas en el sitio" },
+          { label: "Imágenes de Artículo", value: images, note: "recursos visuales SEO" }
+        ];
+      }
+      case "faqs": {
+        const faqs = content.faqs;
+        const boatsFaqs = faqs.filter(f => f.serviceId === "boats").length;
+        const transfersFaqs = faqs.filter(f => f.serviceId === "transfers").length;
+        const toysFaqs = faqs.filter(f => f.serviceId === "water-toys").length;
+        return [
+          { label: "FAQs Totales", value: faqs.length, note: "preguntas frecuentes" },
+          { label: "FAQs de Barcos", value: boatsFaqs, note: "asociadas a navegación" },
+          { label: "FAQs de Transfers", value: transfersFaqs, note: "asociadas a traslados" },
+          { label: "FAQs de Juguetes", value: toysFaqs, note: "asociadas a juguetes" }
+        ];
+      }
+      case "settings":
+      default: {
+        const totalItems = content.boats.length + content.boatCollections.length + content.vehicles.length + content.waterToys.length + content.servicePages.length + content.seoPages.length + content.faqs.length;
+        const mediaCount = [
+          ...content.boats.flatMap((item) => [item.image, ...item.gallery]),
+          ...content.vehicles.flatMap((item) => [item.image, ...item.gallery]),
+          ...content.waterToys.flatMap((item) => [item.image, ...item.gallery]),
+          ...content.servicePages.flatMap((item) => [item.image, ...(item.gallery ?? [])]),
+          ...content.seoPages.flatMap((item) => [item.image, ...item.gallery])
+        ].filter(img => img?.src?.trim()).length;
+        const activeWhatsApp = locales.length;
+        return [
+          { label: "Total Contenido", value: totalItems, note: "registros en la base de datos" },
+          { label: "Imágenes del Sitio", value: mediaCount, note: "recursos de galería activos" },
+          { label: "Idiomas del Sistema", value: locales.length, note: "ES, EN, DE, NL, RU" },
+          { label: "WhatsApp Activos", value: activeWhatsApp, note: "canales de chat directos" }
+        ];
+      }
+    }
+  }, [snapshot, activeSection]);
 
   function confirmDiscardUnsavedChanges() {
     if (!hasUnsavedChanges) return true;
@@ -948,6 +1239,8 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }
 
   function selectSection(key: AdminContentKey | "settings") {
+    clearTranslationStates();
+    setNavOpen(false);
     if (key === "settings") {
       setActiveSection(key);
       setSelectedId("");
@@ -967,6 +1260,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }
 
   function selectItem(id: string) {
+    clearTranslationStates();
     setSelectedId(id);
     setMobileView("editor");
   }
@@ -986,6 +1280,39 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     if (!selectedItem) return;
 
     updateSnapshot(activeSection as AdminContentKey, (currentItems) => currentItems.map((item) => (item.id === selectedItem.id ? touch({ ...item, ...patch } as AdminItem) : item)));
+  }
+
+  // Reordena el array completo moviendo `sourceId` a la posición de `targetId`.
+  // Opera por ID sobre el array completo (no la vista filtrada) para que el orden
+  // relativo sea correcto incluso con filtros de colección/visibilidad activos.
+  function reorderItems(sourceId: string, targetId: string) {
+    if (sourceId === targetId) return;
+    updateSnapshot(activeSection as AdminContentKey, (currentItems) => {
+      const from = currentItems.findIndex((item) => item.id === sourceId);
+      const to = currentItems.findIndex((item) => item.id === targetId);
+      if (from < 0 || to < 0) return currentItems;
+      const next = [...currentItems];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  // Mueve un item una posición arriba (-1) o abajo (+1) intercambiando con su vecino
+  // dentro de la vista filtrada actual (botones ↑/↓, compatibles con táctil).
+  function moveItem(itemId: string, direction: -1 | 1) {
+    const visibleIndex = filteredItems.findIndex((item) => item.id === itemId);
+    const neighbor = filteredItems[visibleIndex + direction];
+    if (visibleIndex < 0 || !neighbor) return;
+    reorderItems(itemId, neighbor.id);
+  }
+
+  // Fin de arrastre con @dnd-kit: reordena el array completo por ID.
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      reorderItems(String(active.id), String(over.id));
+    }
   }
 
   function normalizeItemForActiveSection(item: AdminItem) {
@@ -1058,6 +1385,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       return;
     }
 
+    clearTranslationStates();
     const nextItems = items.filter((item) => item.id !== selectedItem.id);
 
     updateSnapshot(activeSection as AdminContentKey, () => nextItems);
@@ -1090,37 +1418,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       return;
     }
 
-    // Comprobar si faltan traducciones en el item actual
-    if (selectedItem) {
-      const missingLocales = findMissingLocales(selectedItem, locale);
-      if (missingLocales.length > 0) {
-        setSaveStatus({
-          tone: "info",
-          title: "Traduciendo y publicando",
-          message: "Traduciendo automáticamente campos vacíos con DeepSeek antes de guardar..."
-        });
-
-        // Ejecutar traducción automática y guardar después
-        await runTranslation(selectedItem, locale, missingLocales, async (finalItem) => {
-          // Construir snapshot actualizado al instante para evitar lag de estado
-          const updatedContent = {
-            ...snapshot.content,
-            [activeSection]: (snapshot.content[activeSection] as AdminItem[]).map((item) => 
-              item.id === selectedItem.id ? touch(finalItem) : item
-            ) as any
-          };
-          const updatedSnapshot = {
-            ...snapshot,
-            content: updatedContent
-          };
-
-          await proceedWithSave(updatedSnapshot);
-        });
-        return;
-      }
-    }
-
-    // Si no faltan traducciones, guardar directamente
+    // Guardar directamente (desenlazado de la traducción automática)
     await proceedWithSave(snapshot);
   }
 
@@ -1195,11 +1493,27 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   }
 
   return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar" aria-label="Secciones del administrador">
+    <div className={`admin-shell ${navOpen ? "admin-shell--nav-open" : ""} ${sidebarCollapsed ? "admin-shell--sidebar-collapsed" : ""}`}>
+      {navOpen ? <div className="admin-drawer-backdrop" onClick={() => setNavOpen(false)} aria-hidden="true" /> : null}
+      <aside className={`admin-sidebar ${navOpen ? "is-open" : ""} ${sidebarCollapsed ? "is-collapsed" : ""}`} aria-label="Secciones del administrador">
         <div className="admin-sidebar__brand">
-          <span>FAST</span>
-          <strong>Admin</strong>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: sidebarCollapsed ? "center" : "space-between", width: "100%" }}>
+            {!sidebarCollapsed && (
+              <div className="admin-sidebar__brand-text" style={{ display: "grid", gap: "2px", lineHeight: "1" }}>
+                <span style={{ color: "var(--color-accent-soft)", fontSize: "12px", fontWeight: 900 }}>FAST</span>
+                <strong style={{ fontFamily: "var(--font-marcellus), serif", fontSize: "24px", fontWeight: 400 }}>Admin</strong>
+              </div>
+            )}
+            <button
+              type="button"
+              className="admin-sidebar-toggle"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
+              aria-label={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
+            >
+              <FiChevronLeft style={{ transform: sidebarCollapsed ? "rotate(180deg)" : "none", transition: "transform 0.3s ease" }} />
+            </button>
+          </div>
         </div>
         <nav className="admin-sidebar__nav">
           {sectionConfig.map((item) => {
@@ -1218,58 +1532,35 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
             );
           })}
         </nav>
+        <form
+          ref={logoutFormRef}
+          action={signOutAction}
+          className="admin-sidebar__logout"
+        >
+          <button
+            type="button"
+            className="admin-sidebar__logout-button"
+            onClick={() => {
+              if (confirmDiscardUnsavedChanges()) {
+                logoutFormRef.current?.submit();
+              }
+            }}
+          >
+            <FiLogOut aria-hidden="true" />
+            <span>Cerrar sesión</span>
+          </button>
+        </form>
       </aside>
 
       <main className="admin-main">
         <header className="admin-topbar">
+          <button type="button" className="admin-nav-toggle" onClick={() => setNavOpen(true)} aria-label="Abrir menú de secciones">
+            <FiMenu aria-hidden="true" />
+          </button>
           <div className="admin-header-title">
             <p className="admin-kicker">Panel preparado para Supabase</p>
             <h1>Administrador</h1>
             <span className="admin-title-subtitle">de contenido</span>
-          </div>
-          <div
-            ref={saveStatusRef}
-            className={`admin-save-status admin-save-status--${saveStatus.tone}`}
-            role={saveStatus.tone === "error" ? "alert" : "status"}
-            aria-live="polite"
-            tabIndex={-1}
-          >
-            <span className="admin-save-status__icon">
-              <SaveStatusIcon aria-hidden="true" className={isSaving ? "admin-spin" : undefined} />
-            </span>
-            <div>
-              <strong>{isSaving ? "Publicando..." : saveStatus.title}</strong>
-              <p>{saveStatus.message}</p>
-              {saveStatus.details?.length ? (
-                <ul>
-                  {saveStatus.details.map((detail) => (
-                    <li key={detail}>{detail}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          </div>
-          <div className="admin-actions">
-            <button
-              type="button"
-              className={`admin-button admin-button--save-cta ${hasUnsavedChanges || isSaving ? "admin-button--primary" : "admin-button--ghost"}`}
-              onClick={() => void saveToSupabase()}
-              disabled={isSaving || !hasUnsavedChanges}
-              aria-busy={isSaving}
-              title="Guarda y publica todos los cambios del panel en la web"
-            >
-              {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : hasUnsavedChanges ? <FiSave aria-hidden="true" /> : <FiCheckCircle aria-hidden="true" />}
-              {headerSaveLabel}
-            </button>
-            {hasUnsavedChanges ? <span className="admin-unsaved-pill">Cambios pendientes</span> : null}
-            <form
-              action={signOutAction}
-              onSubmit={(event) => {
-                if (!confirmDiscardUnsavedChanges()) event.preventDefault();
-              }}
-            >
-              <button type="submit" className="admin-button admin-button--ghost"><FiLogOut aria-hidden="true" /> Salir</button>
-            </form>
           </div>
         </header>
 
@@ -1284,141 +1575,128 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
         </section>
 
         <section className={`admin-workspace admin-workspace--${section.tone} admin-workspace--show-${mobileView}`}>
-          <div className="admin-list-panel">
-            <div className="admin-panel-heading">
-              <span className="admin-heading-icon">
-                <SectionIcon aria-hidden="true" />
-              </span>
-              <div>
-                <h2>{section.label}</h2>
+          {activeSection !== "settings" && (
+            <div className="admin-list-panel">
+              <div className="admin-panel-heading">
+                <span className="admin-heading-icon">
+                  <SectionIcon aria-hidden="true" />
+                </span>
+                <div>
+                  <h2>{section.label}</h2>
+                </div>
+                <button type="button" className="admin-icon-button" onClick={addItem} aria-label="Crear contenido">
+                  <FiPlus aria-hidden="true" />
+                </button>
               </div>
-              <button type="button" className="admin-icon-button" onClick={addItem} aria-label="Crear contenido">
-                <FiPlus aria-hidden="true" />
-              </button>
-            </div>
-            <label className="admin-search">
-              <FiSearch aria-hidden="true" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por título o ID" />
-            </label>
-            
-            {/* Panel de Filtros rápidos */}
-            {activeSection !== "faqs" && (
-              <div className="admin-list-filters" style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "2px 2px 8px 2px", borderBottom: "1px solid #f1f5f9", marginBottom: "4px" }}>
-                {activeSection === "boats" && (
+              <label className="admin-search">
+                <FiSearch aria-hidden="true" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por título o ID" />
+              </label>
+              
+              {/* Panel de Filtros rápidos */}
+              {activeSection !== "faqs" && (
+                <div className="admin-list-filters">
+                  {activeSection === "boats" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Colección</span>
+                      <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "2px" }}>
+                        {[
+                          { key: "all", label: "Todas" },
+                          { key: "yachts-xl", label: "Yates XL" },
+                          { key: "yachts", label: "Yates" },
+                          { key: "fast-boats", label: "Rápidas" }
+                        ].map((col) => (
+                          <button
+                            type="button"
+                            key={col.key}
+                            onClick={() => setFilterCollection(col.key)}
+                            style={{
+                              padding: "5px 11px",
+                              borderRadius: "999px",
+                              fontSize: "12px",
+                              fontWeight: 800,
+                              border: "1px solid",
+                              borderColor: filterCollection === col.key ? "var(--admin-section-accent)" : "#e2e8f0",
+                              background: filterCollection === col.key ? "var(--admin-section-accent)" : "#ffffff",
+                              color: filterCollection === col.key ? "#ffffff" : "#64748b",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              boxShadow: filterCollection === col.key ? "0 2px 5px rgb(80 133 158 / 15%)" : "none",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            {col.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <span style={{ fontSize: "10px", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Colección</span>
-                    <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "2px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Visibilidad</span>
+                    <div style={{ display: "flex", gap: "6px" }}>
                       {[
-                        { key: "all", label: "Todas" },
-                        { key: "yachts-xl", label: "Yates XL" },
-                        { key: "yachts", label: "Yates" },
-                        { key: "fast-boats", label: "Rápidas" }
-                      ].map((col) => (
+                        { key: "all", label: "Todos" },
+                        { key: "listed", label: "Visibles" },
+                        { key: "hidden", label: "Ocultos" }
+                      ].map((vis) => (
                         <button
                           type="button"
-                          key={col.key}
-                          onClick={() => setFilterCollection(col.key)}
+                          key={vis.key}
+                          onClick={() => setFilterVisibility(vis.key)}
                           style={{
-                            padding: "5px 11px",
+                            padding: "4px 10px",
                             borderRadius: "999px",
-                            fontSize: "11px",
+                            fontSize: "12px",
                             fontWeight: 800,
                             border: "1px solid",
-                            borderColor: filterCollection === col.key ? "var(--admin-section-accent)" : "#e2e8f0",
-                            background: filterCollection === col.key ? "var(--admin-section-accent)" : "#ffffff",
-                            color: filterCollection === col.key ? "#ffffff" : "#64748b",
+                            borderColor: filterVisibility === vis.key ? "#475569" : "#e2e8f0",
+                            background: filterVisibility === vis.key ? "#475569" : "#ffffff",
+                            color: filterVisibility === vis.key ? "#ffffff" : "#64748b",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
-                            boxShadow: filterCollection === col.key ? "0 2px 5px rgb(80 133 158 / 15%)" : "none",
+                            boxShadow: filterVisibility === vis.key ? "0 2px 4px rgba(71, 85, 105, 0.12)" : "none",
                             transition: "all 0.15s ease",
                           }}
                         >
-                          {col.label}
+                          {vis.label}
                         </button>
                       ))}
                     </div>
                   </div>
-                )}
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <span style={{ fontSize: "10px", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Visibilidad</span>
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    {[
-                      { key: "all", label: "Todos" },
-                      { key: "listed", label: "Visibles" },
-                      { key: "hidden", label: "Ocultos" }
-                    ].map((vis) => (
-                      <button
-                        type="button"
-                        key={vis.key}
-                        onClick={() => setFilterVisibility(vis.key)}
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: "999px",
-                          fontSize: "10px",
-                          fontWeight: 800,
-                          border: "1px solid",
-                          borderColor: filterVisibility === vis.key ? "#475569" : "#e2e8f0",
-                          background: filterVisibility === vis.key ? "#475569" : "#ffffff",
-                          color: filterVisibility === vis.key ? "#ffffff" : "#64748b",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                          boxShadow: filterVisibility === vis.key ? "0 2px 4px rgba(71, 85, 105, 0.12)" : "none",
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        {vis.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
-              </div>
-            )}
-
-            <div className="admin-list">
-              {activeSection === "settings" ? (
-                <div className="admin-empty-state">
-                  <FiSettings aria-hidden="true" />
-                  <h2>Configuración del sitio</h2>
-                  <p>Edita los números de WhatsApp por idioma en el panel derecho.</p>
-                </div>
-              ) : (
-                filteredItems.map((item) => {
-                const itemVisitTarget = getVisitTarget(activeSection, item, snapshot, locale);
-
-                return (
-                  <article key={item.id} className={`admin-list-item ${item.id === selectedItem?.id ? "is-active" : ""}`}>
-                    <button type="button" className="admin-list-item__select" onClick={() => selectItem(item.id)} style={{ textAlign: "left" }}>
-                      <span>{getItemTitle(item, locale)}</span>
-                      <small>{getItemDescription(item, locale)}</small>
-                      
-                      {activeSection !== "faqs" && (
-                        <div className="admin-list__badges" style={{ marginTop: "6px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                          {"collectionId" in item && (
-                            <span className="admin-visibility-badge" style={{ backgroundColor: "#f1f5f9", color: "#475569", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", fontSize: "10px" }}>
-                              {item.collectionId === "yachts-xl" ? "Yates XL" : item.collectionId === "yachts" ? "Yates" : "Rápidas"}
-                            </span>
-                          )}
-                          {"visibility" in item && (
-                            <span className={`admin-status-badge admin-status-badge--${item.visibility === "hidden" ? "hidden" : "published"}`} style={{ padding: "2px 8px", borderRadius: "999px", fontSize: "10px" }}>
-                              {item.visibility === "hidden" ? "Oculto" : "Visible"}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </button>
-                    {itemVisitTarget ? (
-                      <a className="admin-list-item__visit" href={itemVisitTarget.href} target="_blank" rel="noreferrer" title="Ver página pública" onClick={(event) => { if (!confirmDiscardUnsavedChanges()) event.preventDefault(); }}>
-                        <FiExternalLink aria-hidden="true" />
-                        <span>Ver</span>
-                      </a>
-                    ) : null}
-                  </article>
-                );
-              })
               )}
+
+              <div className="admin-list">
+                <DndContext
+                  sensors={dndSensors}
+                  collisionDetection={closestCenter}
+                  modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={filteredItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                    {filteredItems.map((item, visibleIndex) => (
+                      <SortableAdminListItem
+                        key={item.id}
+                        item={item}
+                        locale={locale}
+                        activeSection={activeSection}
+                        isActive={item.id === selectedItem?.id}
+                        reorderable={canReorder}
+                        isFirst={visibleIndex === 0}
+                        isLast={visibleIndex === filteredItems.length - 1}
+                        visitTarget={getVisitTarget(activeSection, item, snapshot, locale)}
+                        onSelect={() => selectItem(item.id)}
+                        onMoveUp={() => moveItem(item.id, -1)}
+                        onMoveDown={() => moveItem(item.id, 1)}
+                        onVisitGuard={confirmDiscardUnsavedChanges}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="admin-editor-panel">
             {activeSection === "settings" ? (
@@ -1431,16 +1709,25 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
             {selectedItem ? (
               <>
                 <div className="admin-editor-toolbar">
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     <div className="admin-locale-tabs" aria-label="Idioma de edición" style={{ marginRight: 0 }}>
                       {locales.map((item) => (
                         <button type="button" key={item} className={item === locale ? "is-active" : ""} onClick={() => setLocale(item)}>{item.toUpperCase()}</button>
                       ))}
                     </div>
+                    <select
+                      className="admin-locale-select"
+                      value={locale}
+                      aria-label="Idioma de edición"
+                      onChange={(e) => setLocale(e.target.value as Locale)}
+                    >
+                      {locales.map((item) => (
+                        <option key={item} value={item}>{item.toUpperCase()}</option>
+                      ))}
+                    </select>
                     <button
                       type="button"
-                      className="admin-button admin-button--ghost"
-                      style={{ padding: "0 10px", height: "32px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem" }}
+                      className="admin-button admin-button--translate"
                       onClick={translateCurrentItemManually}
                       disabled={isTranslating || isSaving}
                       title="Traducir campos vacíos a todos los demás idiomas usando DeepSeek"
@@ -1448,27 +1735,74 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                       <FiGlobe aria-hidden="true" className={isTranslating ? "admin-spin" : ""} />
                       {isTranslating ? "Traduciendo..." : "Traducir"}
                     </button>
+
+                    {/* Indicador de estado de guardado discreto */}
+                    <div className={`admin-save-badge admin-save-badge--${isSaving ? "saving" : hasUnsavedChanges ? "pending" : "synced"}`}>
+                      {isSaving ? (
+                        <>
+                          <FiLoader className="admin-spin" />
+                          <span>Guardando...</span>
+                        </>
+                      ) : hasUnsavedChanges ? (
+                        <>
+                          <span className="admin-save-badge__dot" />
+                          <span>Sin guardar</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiCheckCircle />
+                          <span>Guardado</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="admin-actions admin-actions--compact">
+                  <div className="admin-actions admin-actions--compact" style={{ gap: "12px" }}>
                     {visitTarget ? (
-                      <a className="admin-button admin-button--ghost" href={visitTarget.href} target="_blank" rel="noreferrer" title="Abre la versión pública guardada" onClick={(event) => { if (!confirmDiscardUnsavedChanges()) event.preventDefault(); }}>
+                      <button
+                        type="button"
+                        className="admin-button admin-button--view"
+                        title="Abre la versión pública guardada"
+                        onClick={() => {
+                          if (confirmDiscardUnsavedChanges()) {
+                            window.open(visitTarget.href, "_blank", "noopener,noreferrer");
+                          }
+                        }}
+                      >
                         <FiExternalLink aria-hidden="true" /> {visitTarget.label}
-                      </a>
+                      </button>
                     ) : null}
-                    <button type="button" className="admin-button admin-button--ghost" onClick={duplicateItem}><FiCopy aria-hidden="true" /> Duplicar</button>
+                    <button type="button" className="admin-button admin-button--duplicate" onClick={duplicateItem}><FiCopy aria-hidden="true" /> Duplicar</button>
                     <button type="button" className="admin-button admin-button--danger" onClick={deleteItem}><FiTrash2 aria-hidden="true" /> Eliminar</button>
-                    <button
-                      type="button"
-                      className={`admin-button ${hasUnsavedChanges ? "admin-button--primary" : "admin-button--ghost"}`}
-                      onClick={() => void saveToSupabase()}
-                      disabled={isSaving}
-                      aria-busy={isSaving}
-                      title="Guarda y publica todos los cambios de esta sesión de edición"
-                    >
-                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : hasUnsavedChanges ? <FiSave aria-hidden="true" /> : <FiCheckCircle aria-hidden="true" />} {editorSaveLabel}
-                    </button>
                   </div>
                 </div>
+
+                {saveStatus.tone === "error" && (
+                  <div 
+                    className={`admin-save-status admin-save-status--${saveStatus.tone}`} 
+                    style={{ 
+                      margin: "12px 0 18px 0",
+                      width: "100%",
+                      maxWidth: "none"
+                    }}
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    <span className="admin-save-status__icon">
+                      {isSaving ? <FiLoader className="admin-spin" /> : <FiAlertCircle />}
+                    </span>
+                    <div>
+                      <strong>{saveStatus.title}</strong>
+                      <p>{saveStatus.message}</p>
+                      {saveStatus.details?.length ? (
+                        <ul>
+                          {saveStatus.details.map((detail) => (
+                            <li key={detail}>{detail}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
 
                 {translationStatus && translationSourceLocale && (
                   <div className="admin-translation-panel" style={{
@@ -1536,7 +1870,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                               {icon} {statusText}
                             </div>
                             {errorMsg && (
-                              <span style={{ fontSize: "0.7rem", color: "#ef4444", marginTop: "2px", wordBreak: "break-word" }} title={errorMsg}>
+                              <span style={{ fontSize: "12px", color: "#ef4444", marginTop: "2px", wordBreak: "break-word" }} title={errorMsg}>
                                 {errorMsg.substring(0, 40)}{errorMsg.length > 40 ? "..." : ""}
                               </span>
                             )}
@@ -1548,19 +1882,6 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
                 )}
 
                 <ItemEditor activeSection={activeSection} item={selectedItem} locale={locale} onChange={updateSelectedItem} />
-                {hasUnsavedChanges && (
-                  <div className="admin-floating-publish">
-                    <button
-                      type="button"
-                      className="admin-button admin-button--primary"
-                      onClick={() => void saveToSupabase()}
-                      disabled={isSaving}
-                      aria-busy={isSaving}
-                    >
-                      {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Guardando" : "Guardar cambios"}
-                    </button>
-                  </div>
-                )}
               </>
             ) : (
               <div className="admin-empty-state">
@@ -1574,27 +1895,42 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           </div>
         </section>
       </main>
-
-      <nav className="admin-bottom-nav" aria-label="Navegación de secciones">
-        {sectionConfig.map((item) => {
-          const NavIcon = item.icon;
-
-          return (
-            <button
-              type="button"
-              key={item.key}
-              className={`admin-bottom-nav__item${item.key === activeSection ? " is-active" : ""}`}
-              onClick={() => selectSection(item.key)}
-              aria-label={item.label}
-            >
-              <span className={`admin-section-icon admin-section-icon--${item.tone}`}>
-                <NavIcon aria-hidden="true" />
-              </span>
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+      {hasUnsavedChanges && activeSection !== "settings" && (
+        <div className="admin-floating-publish">
+          <button
+            type="button"
+            className="admin-button admin-button--primary"
+            onClick={() => void saveToSupabase()}
+            disabled={isSaving}
+            aria-busy={isSaving}
+          >
+            {isSaving ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiSave aria-hidden="true" />} {isSaving ? "Guardando" : "Guardar cambios"}
+          </button>
+        </div>
+      )}
+      {translationConfirmOpen && (
+        <div className={`admin-modal-backdrop ${translationConfirmVisible ? "is-visible" : ""}`} onClick={closeTranslationConfirm}>
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <div className="admin-modal-icon-container">
+                <FiGlobe aria-hidden="true" />
+              </div>
+              <h3 className="admin-modal-title">Confirmar traducción</h3>
+            </div>
+            <div className="admin-modal-body">
+              Ya existen traducciones guardadas para otros idiomas. ¿Estás seguro de que deseas ejecutar la traducción automática con DeepSeek para los campos que aún están vacíos? Esto respetará las traducciones ya hechas y solo completará las faltantes.
+            </div>
+            <div className="admin-modal-actions">
+              <button type="button" className="admin-modal-btn admin-modal-btn--secondary" onClick={closeTranslationConfirm}>
+                Cancelar
+              </button>
+              <button type="button" className="admin-modal-btn admin-modal-btn--primary" onClick={handleConfirmTranslation}>
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1613,31 +1949,33 @@ function SettingsEditor({
   isSaving: boolean;
 }) {
   return (
-    <div className="admin-form" style={{ maxWidth: "640px" }}>
+    <div className="admin-form" style={{ maxWidth: "800px" }}>
       <div className="admin-editor-toolbar" style={{ justifyContent: "flex-start" }}>
         <h2 style={{ margin: 0, fontSize: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
           <FiSettings aria-hidden="true" /> Configuración
         </h2>
       </div>
       <p className="admin-kicker">Números de WhatsApp por idioma</p>
-      <label className="admin-field">
-        <span>Default (sin idioma específico)</span>
-        <input
-          value={settings.whatsappNumbers?.default ?? ""}
-          onChange={(e) => onChange({ ...settings, whatsappNumbers: { ...settings.whatsappNumbers, default: e.target.value } })}
-          placeholder="+34 600 000 000"
-        />
-      </label>
-      {locales.map((loc) => (
-        <label className="admin-field" key={loc}>
-          <span>{loc.toUpperCase()}</span>
+      <div className="admin-form-grid admin-form-grid--two">
+        <label className="admin-field">
+          <span>Default (sin idioma específico)</span>
           <input
-            value={settings.whatsappNumbers?.[loc] ?? ""}
-            onChange={(e) => onChange({ ...settings, whatsappNumbers: { ...settings.whatsappNumbers, [loc]: e.target.value } })}
+            value={settings.whatsappNumbers?.default ?? ""}
+            onChange={(e) => onChange({ ...settings, whatsappNumbers: { ...settings.whatsappNumbers, default: e.target.value } })}
             placeholder="+34 600 000 000"
           />
         </label>
-      ))}
+        {locales.map((loc) => (
+          <label className="admin-field" key={loc}>
+            <span>{loc.toUpperCase()}</span>
+            <input
+              value={settings.whatsappNumbers?.[loc] ?? ""}
+              onChange={(e) => onChange({ ...settings, whatsappNumbers: { ...settings.whatsappNumbers, [loc]: e.target.value } })}
+              placeholder="+34 600 000 000"
+            />
+          </label>
+        ))}
+      </div>
       <div className="admin-actions" style={{ marginTop: "16px" }}>
         <button
           type="button"
@@ -1700,7 +2038,12 @@ function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: 
 function BoatCollectionEditor({ collection, locale, onChange }: { collection: BoatCollection; locale: Locale; onChange: (patch: Partial<BoatCollection>) => void }) {
   return (
     <div className="admin-form">
-      <div className="admin-form-grid admin-form-grid--three">
+      {/* Sección 1: Organización y Metas */}
+      <div className="admin-subpanel-header" style={{ marginTop: 0 }}>
+        <FiLayers className="admin-subpanel-icon" />
+        <h3>Clasificación y Metas</h3>
+      </div>
+      <div className="admin-form-grid admin-form-grid--two" style={{ marginBottom: "24px" }}>
         <label className="admin-field">
           <span>Tipo de colección</span>
           <select value={collection.collectionId} onChange={(event) => onChange({ collectionId: event.target.value as BoatCollection["collectionId"] })}>
@@ -1710,28 +2053,73 @@ function BoatCollectionEditor({ collection, locale, onChange }: { collection: Bo
           </select>
         </label>
         <TextField label="Objetivo de barcos" value={String(collection.countTarget ?? 0)} onChange={(value) => onChange({ countTarget: Number.parseInt(value, 10) || 0 })} />
-        <label className="admin-check-field">
+      </div>
+
+      {/* Sección 2: Visibilidad */}
+      <div className="admin-subpanel-header">
+        <FiEyeOff className="admin-subpanel-icon" />
+        <h3>Configuración de Visibilidad</h3>
+      </div>
+      <div className="admin-form-grid admin-form-grid--two" style={{ marginBottom: "28px" }}>
+        <label className={`admin-check-card ${collection.hiddenPage ? "is-active" : ""}`}>
           <input type="checkbox" checked={collection.hiddenPage} onChange={(event) => onChange({ hiddenPage: event.target.checked })} />
-          <span>Página oculta en menú</span>
+          <div className="admin-check-card__content">
+            <span className="admin-check-card__icon">
+              {collection.hiddenPage ? <FiEyeOff /> : <FiEye />}
+            </span>
+            <div className="admin-check-card__info">
+              <strong>Página oculta en menú</strong>
+              <small>{collection.hiddenPage ? "No visible en navegación" : "Visible en el menú"}</small>
+            </div>
+          </div>
         </label>
-        <label className="admin-check-field">
+
+        <label className={`admin-check-card ${collection.hideWhatsappButton ? "is-active" : ""}`}>
           <input type="checkbox" checked={!!collection.hideWhatsappButton} onChange={(event) => onChange({ hideWhatsappButton: event.target.checked })} />
-          <span>Ocultar botón de WhatsApp</span>
+          <div className="admin-check-card__content">
+            <span className="admin-check-card__icon">
+              <FiMessageCircle />
+            </span>
+            <div className="admin-check-card__info">
+              <strong>Ocultar botón de WhatsApp</strong>
+              <small>{collection.hideWhatsappButton ? "Chat desactivado en la colección" : "Chat activo en la colección"}</small>
+            </div>
+          </div>
         </label>
       </div>
+
       <MediaEditor image={collection.image} gallery={[]} locale={locale} itemLabel={getLocalizedValue(collection.title, locale)} onChange={(image) => onChange({ image })} />
       <LocalizedTextEditor label="Título" value={collection.title} locale={locale} onChange={(value) => onChange({ title: value })} />
       <LocalizedTextEditor label="Título Hero (Personalizado)" value={collection.heroTitle ?? localized("")} locale={locale} onChange={(value) => onChange({ heroTitle: value })} />
       <LocalizedTextEditor label="Etiqueta de Precio/Badge" value={collection.priceTag ?? localized("")} locale={locale} onChange={(value) => onChange({ priceTag: value })} />
       <LocalizedTextEditor label="Descripción" value={collection.description} locale={locale} multiline onChange={(value) => onChange({ description: value })} />
-      <div className="admin-form-grid admin-form-grid--two">
-        <label className="admin-check-field">
+
+      {/* Sección 3: Formato de la Descripción */}
+      <div className="admin-form-grid admin-form-grid--two" style={{ marginTop: "12px", marginBottom: "28px" }}>
+        <label className={`admin-check-card ${collection.descriptionBold ? "is-active" : ""}`}>
           <input type="checkbox" checked={!!collection.descriptionBold} onChange={(event) => onChange({ descriptionBold: event.target.checked })} />
-          <span>Descripción en negrita (Bold)</span>
+          <div className="admin-check-card__content">
+            <span className="admin-check-card__icon">
+              <FiBold />
+            </span>
+            <div className="admin-check-card__info">
+              <strong>Texto en Negrita</strong>
+              <small>{collection.descriptionBold ? "Texto destacado activado" : "Texto estándar"}</small>
+            </div>
+          </div>
         </label>
-        <label className="admin-check-field">
+
+        <label className={`admin-check-card ${collection.descriptionItalic ? "is-active" : ""}`}>
           <input type="checkbox" checked={!!collection.descriptionItalic} onChange={(event) => onChange({ descriptionItalic: event.target.checked })} />
-          <span>Descripción en cursiva (Italic)</span>
+          <div className="admin-check-card__content">
+            <span className="admin-check-card__icon">
+              <FiItalic />
+            </span>
+            <div className="admin-check-card__info">
+              <strong>Texto en Cursiva</strong>
+              <small>{collection.descriptionItalic ? "Texto inclinado activado" : "Texto estándar"}</small>
+            </div>
+          </div>
         </label>
       </div>
       {!collection.hideWhatsappButton && (
@@ -2141,7 +2529,7 @@ function AmenitiesEditor({ amenities, locale, onChange }: { amenities: Array<str
       </div>
       <div className="admin-spec-list">
         {normalizedAmenities.map((item, index) => (
-          <div className="admin-amenity-row" key={index}>
+          <div className="admin-amenity-row" key={`amenity-${index}-${item.es || index}`}>
             <LocalizedTextEditor
               label={`Equipamiento ${index + 1}`}
               value={item}
@@ -2300,7 +2688,7 @@ function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: L
       </div>
       <div className="admin-spec-list">
         {specs.map((spec, index) => (
-          <div className="admin-spec-row" key={index}>
+          <div className="admin-spec-row" key={`spec-${index}-${getLocalizedValue(spec.label, locale) || index}`}>
             <select value={spec.icon ?? "water"} onChange={(event) => updateSpec(index, { icon: event.target.value as SpecItem["icon"] })} aria-label="Icono del spec">
               <option value="cabins">Cabinas</option>
               <option value="length">Eslora</option>
@@ -2322,6 +2710,72 @@ function SpecsEditor({ specs, locale, onChange }: { specs: SpecItem[]; locale: L
   );
 }
 
+function galleryAssetId(asset: MediaAsset, index: number) {
+  return asset.storagePath ?? asset.src ?? `gallery-${index}`;
+}
+
+interface SortableGalleryItemProps {
+  id: string;
+  asset: MediaAsset;
+  index: number;
+  locale: Locale;
+  isUploading: boolean;
+  onSetMain: () => void;
+  onDelete: () => void;
+  onAltChange: (value: string) => void;
+}
+
+function SortableGalleryItem({ id, asset, index, locale, isUploading, onSetMain, onDelete, onAltChange }: SortableGalleryItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: isUploading });
+  const style: CSSProperties = { transform: CSS.Transform.toString(transform), transition };
+  const isMain = index === 0;
+
+  return (
+    <article ref={setNodeRef} style={style} className={`admin-gallery-item ${isMain ? "is-main" : ""} ${isDragging ? "is-dragging" : ""}`}>
+      <div className="admin-gallery-item__meta">
+        <span className="admin-gallery-item__position">Foto {index + 1}</span>
+        <span className="admin-gallery-item__handle" {...attributes} {...listeners} title="Arrastra para reordenar" aria-label="Arrastra para reordenar">
+          <FiMove aria-hidden="true" /> Arrastra
+        </span>
+      </div>
+      <div className="admin-gallery-item__preview">
+        {isMain ? <span className="admin-gallery-item__badge">Principal</span> : null}
+        {asset.src ? <MediaImage asset={asset} locale={locale} sizes="80px" /> : <FiImage aria-hidden="true" />}
+      </div>
+      <div className="admin-gallery-item__fields">
+        <TextField label={`Alt (${locale.toUpperCase()})`} value={getLocalizedValue(asset.alt, locale)} onChange={onAltChange} />
+        <small className="admin-gallery-item__hint">
+          {isMain ? "Imagen de portada activa." : "Disponible en la galeria publica."}
+        </small>
+      </div>
+      <div className="admin-gallery-item__actions">
+        <button
+          type="button"
+          className={`admin-gallery-item__action ${isMain ? "is-active" : ""}`}
+          onClick={onSetMain}
+          disabled={isMain || isUploading}
+          aria-label="Marcar como imagen principal"
+          title="Hacer principal (mover al inicio)"
+        >
+          <FiStar aria-hidden="true" />
+          <span>{isMain ? "Portada" : "Hacer portada"}</span>
+        </button>
+        <button
+          type="button"
+          className="admin-gallery-item__action admin-gallery-item__action--danger"
+          onClick={onDelete}
+          disabled={isUploading}
+          aria-label="Eliminar imagen"
+          title="Eliminar"
+        >
+          <FiTrash2 aria-hidden="true" />
+          <span>Eliminar</span>
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: MediaAsset; gallery: MediaAsset[]; locale: Locale; itemLabel?: string; onChange: (image: MediaAsset, gallery: MediaAsset[]) => void }) {
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadTone, setUploadTone] = useState<FeedbackTone>("info");
@@ -2330,6 +2784,10 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
   const [isDragActive, setIsDragActive] = useState(false);
   const assets = gallery.length > 0 ? gallery : image.src.trim() ? [image] : [];
   const visibleImageCount = assets.filter((asset) => asset.src).length;
+  const gallerySensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   function updateQueueItem(id: string, patch: Partial<UploadQueueItem>) {
     setUploadQueue((currentItems) => currentItems.map((item) => (item.id === id ? { ...item, ...patch } : item)));
@@ -2373,6 +2831,14 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
     const [moved] = newAssets.splice(from, 1);
     newAssets.splice(to, 0, moved);
     commitGallery(newAssets);
+  }
+
+  function handleGalleryDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = assets.findIndex((asset, index) => galleryAssetId(asset, index) === active.id);
+    const to = assets.findIndex((asset, index) => galleryAssetId(asset, index) === over.id);
+    if (from >= 0 && to >= 0) reorderGallery(from, to);
   }
 
   async function deleteAsset(index: number) {
@@ -2512,6 +2978,9 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        <svg className="admin-upload-dropzone__border" aria-hidden="true">
+          <rect width="100%" height="100%" fill="none" />
+        </svg>
         {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiUploadCloud aria-hidden="true" />}
         <span>{isUploading ? "Subiendo fotos a Storage" : isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
         <small>JPG, PNG, WebP o GIF. Las imágenes se suben inmediatamente a Storage; pulsa Guardar cambios para que aparezcan en la web.</small>
@@ -2544,67 +3013,31 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
             <span>Sube la imagen principal para este contenido.</span>
           </div>
         ) : null}
-        {assets.map((asset, index) => (
-          <article 
-            className={`admin-gallery-item ${index === 0 ? "is-main" : ""}`} 
-            key={asset.storagePath ?? asset.src}
-            draggable={!isUploading}
-            onDragStart={(e) => {
-              e.dataTransfer.setData('text/plain', index.toString());
-              e.dataTransfer.effectAllowed = 'move';
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
-              if (!isNaN(from) && from !== index) {
-                reorderGallery(from, index);
-              }
-            }}
-          >
-            <div className="admin-gallery-item__meta">
-              <span className="admin-gallery-item__position">Foto {index + 1}</span>
-              <span className="admin-gallery-item__handle"><FiMove aria-hidden="true" /> Arrastra</span>
-            </div>
-            <div className="admin-gallery-item__preview">
-              {index === 0 ? <span className="admin-gallery-item__badge">Principal</span> : null}
-              {asset.src ? <MediaImage asset={asset} locale={locale} sizes="80px" /> : <FiImage aria-hidden="true" />}
-            </div>
-            <div className="admin-gallery-item__fields">
-              <TextField label={`Alt (${locale.toUpperCase()})`} value={getLocalizedValue(asset.alt, locale)} onChange={(value) => updateAssetAlt(index, value)} />
-              <small className="admin-gallery-item__hint">
-                {index === 0 ? "Imagen de portada activa." : "Disponible en la galeria publica."}
-              </small>
-            </div>
-            <div className="admin-gallery-item__actions">
-              <button
-                type="button"
-                className={`admin-gallery-item__action ${index === 0 ? "is-active" : ""}`}
-                onClick={() => setMainImage(index)}
-                disabled={index === 0 || isUploading}
-                aria-label="Marcar como imagen principal"
-                title="Hacer principal (mover al inicio)"
-              >
-                <FiStar aria-hidden="true" />
-                <span>{index === 0 ? "Portada" : "Hacer portada"}</span>
-              </button>
-              <button
-                type="button"
-                className="admin-gallery-item__action admin-gallery-item__action--danger"
-                onClick={() => deleteAsset(index)}
-                disabled={isUploading}
-                aria-label="Eliminar imagen"
-                title="Eliminar"
-              >
-                <FiTrash2 aria-hidden="true" />
-                <span>Eliminar</span>
-              </button>
-            </div>
-          </article>
-        ))}
+        <DndContext
+          sensors={gallerySensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToParentElement]}
+          onDragEnd={handleGalleryDragEnd}
+        >
+          <SortableContext items={assets.map((asset, index) => galleryAssetId(asset, index))} strategy={rectSortingStrategy}>
+            {assets.map((asset, index) => {
+              const id = galleryAssetId(asset, index);
+              return (
+                <SortableGalleryItem
+                  key={id}
+                  id={id}
+                  asset={asset}
+                  index={index}
+                  locale={locale}
+                  isUploading={isUploading}
+                  onSetMain={() => setMainImage(index)}
+                  onDelete={() => void deleteAsset(index)}
+                  onAltChange={(value) => updateAssetAlt(index, value)}
+                />
+              );
+            })}
+          </SortableContext>
+        </DndContext>
       </div>
     </section>
   );

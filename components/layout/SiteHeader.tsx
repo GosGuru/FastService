@@ -8,9 +8,9 @@ import { DesktopMegaMenu } from "@/components/layout/DesktopMegaMenu";
 import { DesktopServicesDropdown } from "@/components/layout/DesktopServicesDropdown";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
-import { getLocalizedSlug, uiLabels, type Locale } from "@/lib/i18n";
+import { uiLabels, type Locale } from "@/lib/i18n";
 import type { LanguageRouteMap } from "@/lib/language-routing";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { buildWhatsAppUrl, formatPhoneDisplay } from "@/lib/whatsapp";
 import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 import type { BoatCollection, ServicePage } from "@/types/content";
 
@@ -52,8 +52,7 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
   };
 
   const labels = uiLabels[locale];
-  const contactPage = servicePages.find((page) => page.serviceId === "contact");
-  const contactHref = `/${locale}/${contactPage ? getLocalizedSlug(contactPage.slugsByLocale, locale) : "contact"}`;
+  const contactHref = buildWhatsAppUrl(undefined, locale, phone);
   const headerIsActive = isScrolled || isMegaMenuOpen || isServicesDropdownOpen;
 
   return (
@@ -61,11 +60,11 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
       <div className="site-header__top">
         <div className="site-header__top-inner">
           <div className="site-header__contact-group">
-            <Link href={buildWhatsAppUrl(undefined, locale, phone)} className="site-header__contact-link" target="_blank" rel="noreferrer">
+            <Link href={buildWhatsAppUrl(undefined, locale, phone)} className="site-header__contact-link" target="_blank" rel="noreferrer" aria-label="WhatsApp">
               <span className="site-header__contact-icon site-header__contact-icon--whatsapp"><FaWhatsapp aria-hidden="true" /></span>
-              <span>{phone ? `+${phone.replace(/\D/g, "")}` : "+34 655 835 803"}</span>
+              <span>{formatPhoneDisplay(phone)}</span>
             </Link>
-            <Link href="https://www.instagram.com/fastservicesibiza/?hl=en" className="site-header__contact-link" target="_blank" rel="noreferrer">
+            <Link href="https://www.instagram.com/fastservicesibiza/?hl=en" className="site-header__contact-link" target="_blank" rel="noreferrer" aria-label="Instagram">
               <span className="site-header__contact-icon site-header__contact-icon--instagram"><FaInstagram aria-hidden="true" /></span>
               <span>@fastservicesibiza</span>
             </Link>
@@ -86,7 +85,7 @@ export function SiteHeader({ locale, boatCollections, servicePages, languageRout
         </nav>
         <div className="site-header__actions">
           <LanguageSwitcher locale={locale} routes={languageRoutes} />
-          <Link href={contactHref} className="header-contact">
+          <Link href={contactHref} className="header-contact" target="_blank" rel="noreferrer">
             {labels.contact}
           </Link>
           <MobileMenu locale={locale} boatCollections={boatCollections} servicePages={servicePages} languageRoutes={languageRoutes} />

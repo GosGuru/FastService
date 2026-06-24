@@ -25,7 +25,6 @@ export function getPrimaryNavigation(locale: Locale, content?: NavigationContent
   const waterToys = getServicePage(content, "water-toys");
   const security = getServicePage(content, "security");
   const selfDrive = getServicePage(content, "self-drive");
-  const contact = getServicePage(content, "contact");
   const labels = uiLabels[locale];
 
   return [
@@ -34,7 +33,6 @@ export function getPrimaryNavigation(locale: Locale, content?: NavigationContent
     { label: labels.waterToys, href: `/${locale}/${waterToys ? getLocalizedSlug(waterToys.slugsByLocale, locale) : "water-toys"}` },
     { label: labels.security, href: `/${locale}/${security ? getLocalizedSlug(security.slugsByLocale, locale) : "security"}` },
     { label: labels.selfDriveVehicles, href: `/${locale}/${selfDrive ? getLocalizedSlug(selfDrive.slugsByLocale, locale) : "self-drive-car-rental"}` },
-    { label: labels.contact, href: `/${locale}/${contact ? getLocalizedSlug(contact.slugsByLocale, locale) : "contact"}`, cta: true }
   ];
 }
 

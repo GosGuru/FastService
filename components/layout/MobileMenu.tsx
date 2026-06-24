@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import { FiArrowRight, FiChevronDown, FiGlobe, FiMenu, FiX } from "react-icons/fi";
 import { MediaImage } from "@/components/MediaImage";
 import { getBoatNavigation, getMobilePageNavigation } from "@/data/navigation";
-import { languageOptions, uiLabels, getLocalizedSlug, type Locale } from "@/lib/i18n";
+import { languageOptions, uiLabels, type Locale } from "@/lib/i18n";
 import { resolveLocalizedPath, type LanguageRouteMap } from "@/lib/language-routing";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
 import type { BoatCollection, ServicePage } from "@/types/content";
 
 interface MobileMenuProps {
@@ -33,12 +35,12 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
   const [languageOpen, setLanguageOpen] = useState(false);
   const pathname = usePathname();
   const labels = uiLabels[locale];
+  const phone = useWhatsAppPhone(locale);
   const boatItems = getBoatNavigation(locale, { boatCollections });
   const pageItems = getMobilePageNavigation(locale, { servicePages });
   const activeLanguage = languageOptions.find((item) => item.locale === locale) ?? languageOptions[0];
 
-  const contactPage = servicePages.find((page) => page.serviceId === "contact");
-  const contactHref = `/${locale}/${contactPage ? getLocalizedSlug(contactPage.slugsByLocale, locale) : "contact"}`;
+  const contactHref = buildWhatsAppUrl(undefined, locale, phone);
 
   const contactNowLabel = {
     es: "Contacta ahora",
@@ -167,7 +169,7 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
                 </Link>
               ))}
               <div className="mobile-menu-cta">
-                <Link href={contactHref} className="mobile-menu-cta__button" onClick={closeMenu}>
+                <Link href={contactHref} className="mobile-menu-cta__button" onClick={closeMenu} target="_blank" rel="noreferrer">
                   {contactNowLabel}
                 </Link>
               </div>

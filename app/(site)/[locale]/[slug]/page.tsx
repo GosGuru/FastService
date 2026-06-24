@@ -365,6 +365,8 @@ export default async function DynamicPage({ params }: Props) {
 		);
 	}
 
+	if (page.serviceId === "contact") notFound();
+
 	return (
 		<main>
 			<ServiceHero page={page} locale={locale} />
@@ -405,7 +407,7 @@ function ServiceOptionsGrid({
 						{description &&
 							description
 								.split("\n")
-								.map((line, idx) => <p key={idx}>{line}</p>)}
+								.map((line, idx) => <p key={`line-${idx}-${line.substring(0, 10)}`}>{line}</p>)}
 					</div>
 				)}
 				<div className="content-grid content-grid--three catalog-grid">
