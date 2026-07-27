@@ -1,45 +1,88 @@
 # FastService
 
-## Supabase admin
+Sitio bilingüe para una empresa de servicios premium en Ibiza, con catálogo de embarcaciones, blog, galerías y un panel para administrar contenido sin modificar código.
 
-El proyecto ya esta preparado para usar Supabase como fuente de contenido, Auth para el panel y Storage para galerias.
+[Ver sitio](https://fast-service-pi.vercel.app/)
 
-Variables locales usadas por la app:
+## Qué problema resuelve
+
+El sitio reúne servicios con estructuras distintas —lifestyle management, seguridad, alquiler y embarcaciones— y permite que el equipo mantenga contenido e imágenes desde un único panel.
+
+## Funcionalidad principal
+
+- Navegación y contenido en español e inglés.
+- Páginas dinámicas para servicios y elementos de catálogo.
+- Catálogo de embarcaciones por categoría.
+- Blog con rutas individuales.
+- Panel autenticado para editar y ordenar contenido.
+- Editor enriquecido para textos e imágenes.
+- Galerías con subida firmada.
+- Fallback local cuando Supabase no está configurado.
+
+## Arquitectura
+
+```text
+Next.js App Router
+├── (site)/[locale]       sitio público bilingüe
+├── admin                 panel de contenido
+├── content_items         contenido publicado
+└── Storage               imágenes y galerías
+
+Supabase Auth    → acceso administrativo
+Supabase RLS     → autorización de datos y archivos
+Supabase Storage → medios
+```
+
+## Decisiones técnicas
+
+| Decisión | Motivo |
+|---|---|
+| Contenido dinámico con fallback local | El sitio sigue siendo navegable durante una falla o configuración incompleta del CMS. |
+| Auth y RLS en Supabase | La autorización se aplica en el backend, no solo en la interfaz. |
+| Slugs y texto por idioma | Evita mezclar rutas o contenido entre locales. |
+| Subida firmada desde el panel | Limita las operaciones de Storage al flujo autorizado. |
+
+## Stack
+
+Next.js 16 · React 19 · TypeScript · Supabase Auth · PostgreSQL · Storage · Tailwind CSS · Tiptap
+
+## Ejecutar localmente
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://srmdwudjynqovzoejcay.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<tu_publishable_key>
+npm install
+npm run dev
+```
+
+Configura las variables en un archivo local:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_SUPABASE_GALLERY_BUCKET=fastservice-gallery
 ```
 
-Para activar una base nueva y dejar el panel de admin sin contenido:
+Para inicializar una base nueva:
 
-1. En Supabase SQL Editor, ejecuta `supabase/schema.sql`.
-2. Crea el usuario admin en Supabase Auth.
-3. Ejecuta el bloque bootstrap del final de `supabase/schema.sql`, cambiando el email por el del admin.
-4. Entra en `/admin/login`. Si `content_items` esta vacia, el panel queda vacio para cargar todo manualmente.
+1. Ejecuta `supabase/schema.sql`.
+2. Crea el usuario en Supabase Auth.
+3. Registra ese usuario en `public.admin_users`.
+4. Inicia sesión en `/admin/login`.
 
-Para agregar las paginas nuevas de `Seguridad` y `Alquiler vehiculos sin conductor` en una base que ya tiene contenido guardado, ejecuta tambien:
+## Verificación
 
-```sql
-supabase/add-security-self-drive-services.sql
+```bash
+npm run lint
+npm run build
 ```
 
-El frontend lee primero `content_items` publicados desde Supabase. Si Supabase esta configurado y la tabla esta vacia, muestra el contenido vacio; si Supabase no esta configurado o falla la lectura, usa el contenido local como fallback.
+## Seguridad operativa
 
-### Checklist si falla `Guardar Supabase`
+- No se almacenan claves privadas en el repositorio.
+- Las políticas RLS controlan escritura y subida de archivos.
+- El usuario debe pertenecer a `admin_users` para operar el panel.
+- Los cambios se publican explícitamente desde el administrador.
 
-1. Confirma que `supabase/schema.sql` se ejecuto completo: tabla `content_items`, politicas RLS y bucket `fastservice-gallery`.
-2. Confirma que el usuario autenticado existe en `public.admin_users` con `role = 'admin'`.
-3. Confirma que `NEXT_PUBLIC_SUPABASE_URL` apunta al proyecto correcto. La configuracion de `next/image` usa ese host para mostrar imagenes de Storage.
-4. Confirma que `NEXT_PUBLIC_SUPABASE_GALLERY_BUCKET` coincide con el bucket publico usado por el uploader.
-5. Si el panel muestra un error de RLS/permisos, vuelve a ejecutar las politicas del schema y reinicia sesion en `/admin/login`.
-6. Si solo falla la subida de fotos/videos con `403` o `new row violates row-level security policy`, ejecuta `supabase/repair-gallery-storage-policies.sql` en Supabase SQL Editor y vuelve a iniciar sesion.
+## Documentación
 
-### Flujo recomendado para barcos
+La propuesta y las decisiones del sistema de contenido están documentadas en [SDD-Content-System-Refactor.md](SDD-Content-System-Refactor.md).
 
-1. Crea o duplica el barco desde el panel.
-2. Sube las fotos desde `Galeria e imagen principal`; la primera imagen queda como principal.
-3. Completa alt ES/EN y slug ES/EN antes de publicar.
-4. Pulsa `Guardar Supabase`; hasta ese paso, las fotos pueden estar en Storage pero el frontend no usa el cambio de contenido.
-5. Abre `Ver barco` para comprobar imagen principal, galeria y ruta publica.
