@@ -10,26 +10,46 @@ export interface TranslatableText {
   isSlug: boolean;
 }
 
+type MutableContainer = Record<string, unknown> | unknown[];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isMutableContainer(value: unknown): value is MutableContainer {
+  return Array.isArray(value) || isRecord(value);
+}
+
+function getContainerValue(container: MutableContainer, key: string) {
+  return Array.isArray(container) ? container[Number(key)] : container[key];
+}
+
+function setContainerValue(container: MutableContainer, key: string, value: unknown) {
+  if (Array.isArray(container)) {
+    container[Number(key)] = value;
+  } else {
+    container[key] = value;
+  }
+}
+
 // Comprueba si un objeto es un LocalizedText
-function isLocalizedText(obj: any): boolean {
+function isLocalizedText(obj: unknown): obj is Record<string, unknown> {
   return (
-    typeof obj === "object" &&
-    obj !== null &&
-    !Array.isArray(obj) &&
+    isRecord(obj) &&
     !("html" in obj) && // No es un RichTextContent
     (typeof obj.es === "string" || typeof obj.en === "string")
   );
 }
 
 // Comprueba si un objeto es un RichTextByLocale
-function isRichTextByLocale(obj: any): boolean {
-  if (typeof obj !== "object" || obj === null || Array.isArray(obj)) return false;
-  const keys = Object.keys(obj);
-  return keys.some(key => obj[key] && typeof obj[key] === "object" && typeof obj[key].html === "string");
+function isRichTextByLocale(obj: unknown): obj is Record<string, unknown> {
+  if (!isRecord(obj)) return false;
+
+  return Object.values(obj).some(value => isRecord(value) && typeof value.html === "string");
 }
 
 // Extrae recursivamente los textos traducibles para un idioma dado que falten en el idioma destino
-export function extractTranslatableTexts(obj: any, sourceLocale: Locale, targetLocale: Locale, path = ""): TranslatableText[] {
+export function extractTranslatableTexts(obj: unknown, sourceLocale: Locale, targetLocale: Locale, path = ""): TranslatableText[] {
   if (obj === null || obj === undefined) return [];
 
   // Si es un array
@@ -60,13 +80,13 @@ export function extractTranslatableTexts(obj: any, sourceLocale: Locale, targetL
   if (isRichTextByLocale(obj)) {
     const richText = obj[sourceLocale];
     const targetRichText = obj[targetLocale];
-    const hasSource = richText && typeof richText.html === "string" && richText.html.trim() !== "";
-    const hasTarget = targetRichText && typeof targetRichText.html === "string" && targetRichText.html.trim() !== "";
+    const hasSource = isRecord(richText) && typeof richText.html === "string" && richText.html.trim() !== "";
+    const hasTarget = isRecord(targetRichText) && typeof targetRichText.html === "string" && targetRichText.html.trim() !== "";
 
     if (hasSource && !hasTarget) {
       return [{
         path: `${path}.${sourceLocale}.html`,
-        text: richText.html,
+        text: richText.html as string,
         isHtml: true,
         isSlug: false
       }];
@@ -75,7 +95,7 @@ export function extractTranslatableTexts(obj: any, sourceLocale: Locale, targetL
   }
 
   // Si es un objeto genérico, recorremos sus propiedades
-  if (typeof obj === "object") {
+  if (isRecord(obj)) {
     return Object.keys(obj).flatMap(key => {
       // Ignorar propiedades de control y lógicas que no deben ser traducidas
       const ignoredKeys = [
@@ -95,25 +115,33 @@ export function extractTranslatableTexts(obj: any, sourceLocale: Locale, targetL
 }
 
 // Reinserta un valor traducido en el path correspondiente
-export function setNestedValue(obj: any, path: string, value: any) {
+export function setNestedValue(obj: unknown, path: string, value: unknown) {
+  if (!isMutableContainer(obj)) return;
+
   const parts = path.split(".");
-  let current = obj;
+  let current: MutableContainer = obj;
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
     const nextPart = parts[i + 1];
     const isNextNumber = !isNaN(Number(nextPart));
+    const nextValue = getContainerValue(current, part);
+    const nextContainer: MutableContainer = isMutableContainer(nextValue)
+      ? nextValue
+      : isNextNumber
+        ? []
+        : {};
 
-    if (current[part] === undefined) {
-      current[part] = isNextNumber ? [] : {};
+    if (!isMutableContainer(nextValue)) {
+      setContainerValue(current, part, nextContainer);
     }
-    current = current[part];
+    current = nextContainer;
   }
   const lastPart = parts[parts.length - 1];
-  current[lastPart] = value;
+  setContainerValue(current, lastPart, value);
 }
 
 // Aplica el valor traducido en el path de destino con su respectivo locale
-export function applyTranslation(item: any, sourceText: TranslatableText, targetLocale: Locale, translatedValue: string) {
+export function applyTranslation(item: AdminItem, sourceText: TranslatableText, targetLocale: Locale, translatedValue: string) {
   let targetPath = "";
   let finalValue = translatedValue;
 
@@ -185,8 +213,11 @@ Formato de salida esperado:
       throw new Error(`Error de API de DeepSeek (${response.status}): ${errText || response.statusText}`);
     }
 
-    const result = await response.json();
-    let responseText = result.choices?.[0]?.message?.content;
+    const result: unknown = await response.json();
+    const choices = isRecord(result) && Array.isArray(result.choices) ? result.choices : [];
+    const firstChoice = choices[0];
+    const message = isRecord(firstChoice) && isRecord(firstChoice.message) ? firstChoice.message : null;
+    let responseText = message && typeof message.content === "string" ? message.content : "";
     if (!responseText) {
       throw new Error("Respuesta vacía o inválida de la API de DeepSeek.");
     }
@@ -196,11 +227,11 @@ Formato de salida esperado:
       responseText = responseText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
     }
 
-    const translationsArray = JSON.parse(responseText);
+    const translationsArray: unknown = JSON.parse(responseText);
     const translationsMap: Record<string, string> = {};
     if (Array.isArray(translationsArray)) {
-      translationsArray.forEach((item: any) => {
-        if (item && typeof item.id === "string" && typeof item.translatedText === "string") {
+      translationsArray.forEach((item: unknown) => {
+        if (isRecord(item) && typeof item.id === "string" && typeof item.translatedText === "string") {
           translationsMap[item.id] = item.translatedText;
         }
       });

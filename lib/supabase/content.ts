@@ -130,10 +130,19 @@ function snapshotFromRows(rows: ContentRow[], fallback = createEmptyContentSnaps
 }
 
 async function loadRows(selectAll: boolean, getClient: () => SupabaseClient | Promise<SupabaseClient>): Promise<ContentSnapshotResult> {
-  const unavailableFallback = createEmptyContentSnapshot();
+  // Public pages must stay navigable when the CMS is unavailable or only has a
+  // partial snapshot. Admin reads remain fail-closed so local seed data is never
+  // mistaken for the editable remote state.
+  const unavailableFallback = selectAll ? createEmptyContentSnapshot() : createInitialAdminSnapshot();
 
   if (!hasSupabaseConfig()) {
-    return { snapshot: unavailableFallback, source: "static", message: "Supabase no esta configurado; sin fallback local." };
+    return {
+      snapshot: unavailableFallback,
+      source: "static",
+      message: selectAll
+        ? "Supabase no esta configurado; el panel no tiene contenido remoto disponible."
+        : "Supabase no esta configurado; se usa el contenido local publicado."
+    };
   }
 
   try {
@@ -153,14 +162,16 @@ async function loadRows(selectAll: boolean, getClient: () => SupabaseClient | Pr
     if (!data?.length) {
       return {
         snapshot: unavailableFallback,
-        source: "supabase",
+        source: selectAll ? "supabase" : "static",
         message: selectAll
           ? "Supabase esta vacio; no se cargan seeds locales automaticamente."
-          : "Supabase esta vacio; sin fallback local publicado."
+          : "Supabase esta vacio; se usa el contenido local publicado."
       };
     }
 
-    return { snapshot: snapshotFromRows(data as ContentRow[], createEmptyContentSnapshot()), source: "supabase" };
+    const rowFallback = selectAll ? createEmptyContentSnapshot() : createInitialAdminSnapshot();
+
+    return { snapshot: snapshotFromRows(data as ContentRow[], rowFallback), source: "supabase" };
   } catch (error) {
     return { snapshot: unavailableFallback, source: "static", message: error instanceof Error ? error.message : "No se pudo leer Supabase." };
   }

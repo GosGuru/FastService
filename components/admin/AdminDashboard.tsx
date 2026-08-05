@@ -98,6 +98,10 @@ function getUnknownErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "No se pudo completar la accion.";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function getDirectLocalizedValue(value: LocalizedText, locale: Locale) {
   return String(value[locale] ?? "").trim();
 }
@@ -780,7 +784,7 @@ function SortableAdminListItem({ item, locale, activeSection, isActive, reordera
   );
 }
 
-export function AdminDashboard({ initialSnapshot, initialSource, initialMessage, adminEmail, saveSnapshotAction, signOutAction, initialSettings, saveSettingsAction }: AdminDashboardProps) {
+export function AdminDashboard({ initialSnapshot, initialSource, initialMessage, saveSnapshotAction, signOutAction, initialSettings, saveSettingsAction }: AdminDashboardProps) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState(() => snapshotFingerprint(initialSnapshot));
   const [lastSavedSettingsFingerprint, setLastSavedSettingsFingerprint] = useState(() => JSON.stringify(initialSettings));
@@ -840,65 +844,8 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     setTimeout(() => setTranslationConfirmOpen(false), 280);
   }
 
-  // Helper para buscar locales con traducciones faltantes en el item
-  function findMissingLocales(item: AdminItem, sourceLocale: Locale): Locale[] {
-    const targetLocales = locales.filter(loc => loc !== sourceLocale);
-    const missing = new Set<Locale>();
-
-    function check(obj: any) {
-      if (obj === null || obj === undefined) return;
-      if (Array.isArray(obj)) {
-        obj.forEach(check);
-        return;
-      }
-      if (typeof obj === "object") {
-        // LocalizedText
-        const isLocalizedTextObj = typeof obj.es === "string" || typeof obj.en === "string";
-        if (isLocalizedTextObj) {
-          const sourceVal = obj[sourceLocale];
-          if (typeof sourceVal === "string" && sourceVal.trim() !== "") {
-            targetLocales.forEach(loc => {
-              const targetVal = obj[loc];
-              if (typeof targetVal !== "string" || targetVal.trim() === "") {
-                missing.add(loc);
-              }
-            });
-          }
-          return;
-        }
-
-        // RichTextByLocale
-        const isRichTextObj =
-          (obj.es && typeof obj.es.html === "string") ||
-          (obj.en && typeof obj.en.html === "string") ||
-          (obj.de && typeof obj.de.html === "string") ||
-          (obj.nl && typeof obj.nl.html === "string");
-        if (isRichTextObj) {
-          const sourceVal = obj[sourceLocale];
-          if (sourceVal && typeof sourceVal.html === "string" && sourceVal.html.trim() !== "") {
-            targetLocales.forEach(loc => {
-              const targetVal = obj[loc];
-              if (!targetVal || typeof targetVal.html !== "string" || targetVal.html.trim() === "") {
-                missing.add(loc);
-              }
-            });
-          }
-          return;
-        }
-
-        Object.keys(obj).forEach(key => {
-          if (["id", "status", "visibility", "publishedAt", "updatedAt", "source", "collectionId", "serviceId", "kind"].includes(key)) return;
-          check(obj[key]);
-        });
-      }
-    }
-
-    check(item);
-    return Array.from(missing);
-  }
-
   // Combinar recursivamente los datos de un idioma destino traducidos con el item actual
-  function mergeLocaleData(current: any, translated: any, targetLocale: Locale): any {
+  function mergeLocaleData(current: unknown, translated: unknown, targetLocale: Locale): unknown {
     if (translated === null || translated === undefined) {
       return current;
     }
@@ -914,13 +861,13 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
       }
       return result;
     }
-    if (typeof current === "object" && typeof translated === "object") {
+    if (isRecord(current) && isRecord(translated)) {
       const isLocalizedTextObj = typeof current.es === "string" || typeof current.en === "string" || typeof translated.es === "string" || typeof translated.en === "string";
       const isRichTextObj =
-        (current.es && typeof current.es.html === "string") ||
-        (current.en && typeof current.en.html === "string") ||
-        (translated.es && typeof translated.es.html === "string") ||
-        (translated.en && typeof translated.en.html === "string");
+        (isRecord(current.es) && typeof current.es.html === "string") ||
+        (isRecord(current.en) && typeof current.en.html === "string") ||
+        (isRecord(translated.es) && typeof translated.es.html === "string") ||
+        (isRecord(translated.en) && typeof translated.en.html === "string");
 
       if (isLocalizedTextObj) {
         return {
@@ -934,7 +881,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           [targetLocale]: translated[targetLocale] !== undefined ? translated[targetLocale] : current[targetLocale]
         };
       }
-      const merged: any = {};
+      const merged: Record<string, unknown> = {};
       const allKeys = new Set([...Object.keys(current), ...Object.keys(translated)]);
       for (const key of allKeys) {
         merged[key] = mergeLocaleData(current[key], translated[key], targetLocale);
@@ -976,7 +923,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
         const result = await translateItemAction(itemToTranslate, sourceLocale, targetLocale);
         if (result.ok && result.item) {
           setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "completed" }));
-          currentItemAccumulator = mergeLocaleData(currentItemAccumulator, result.item, targetLocale);
+          currentItemAccumulator = mergeLocaleData(currentItemAccumulator, result.item, targetLocale) as AdminItem;
         } else {
           setTranslationStatus(prev => ({ ...prev!, [targetLocale]: "error" }));
           setTranslationErrors(prev => ({ ...prev, [targetLocale]: result.message || "Error de traducción." }));
@@ -1000,14 +947,14 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   function hasAnyTranslation(item: AdminItem, targetLocales: Locale[]): boolean {
     let found = false;
 
-    function check(obj: any) {
+    function check(obj: unknown) {
       if (found) return;
       if (obj === null || obj === undefined) return;
       if (Array.isArray(obj)) {
         obj.forEach(check);
         return;
       }
-      if (typeof obj === "object") {
+      if (isRecord(obj)) {
         // LocalizedText
         const isLocalizedTextObj = typeof obj.es === "string" || typeof obj.en === "string";
         if (isLocalizedTextObj) {
@@ -1023,14 +970,14 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
         // RichTextByLocale
         const isRichTextObj =
-          (obj.es && typeof obj.es.html === "string") ||
-          (obj.en && typeof obj.en.html === "string") ||
-          (obj.de && typeof obj.de.html === "string") ||
-          (obj.nl && typeof obj.nl.html === "string");
+          (isRecord(obj.es) && typeof obj.es.html === "string") ||
+          (isRecord(obj.en) && typeof obj.en.html === "string") ||
+          (isRecord(obj.de) && typeof obj.de.html === "string") ||
+          (isRecord(obj.nl) && typeof obj.nl.html === "string");
         if (isRichTextObj) {
           for (const loc of targetLocales) {
             const val = obj[loc];
-            if (val && typeof val.html === "string" && val.html.trim() !== "") {
+            if (isRecord(val) && typeof val.html === "string" && val.html.trim() !== "") {
               found = true;
               return;
             }
@@ -1096,14 +1043,11 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const canReorder = REORDERABLE_SECTIONS.has(activeSection) && query.trim() === "";
   const selectedItem = filteredItems.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items.find((item) => item.id === selectedId) ?? items[0];
   const visitTarget = selectedItem ? getVisitTarget(activeSection, selectedItem, snapshot, locale) : null;
-  const SaveStatusIcon = isSaving ? FiLoader : saveStatus.tone === "success" ? FiCheckCircle : saveStatus.tone === "error" ? FiAlertCircle : FiSave;
   const currentFingerprint = useMemo(() => snapshotFingerprint(snapshot), [snapshot]);
   const currentSettingsFingerprint = useMemo(() => JSON.stringify(settings), [settings]);
   const hasUnsavedSnapshotChanges = currentFingerprint !== lastSavedFingerprint;
   const hasUnsavedSettingsChanges = currentSettingsFingerprint !== lastSavedSettingsFingerprint;
   const hasUnsavedChanges = hasUnsavedSnapshotChanges || hasUnsavedSettingsChanges;
-  const headerSaveLabel = isSaving ? "Guardando" : hasUnsavedChanges ? "Guardar" : "Guardado";
-  const editorSaveLabel = isSaving ? "Guardando" : hasUnsavedChanges ? "Guardar cambios" : "Todo guardado";
 
   useEffect(() => {
     if (saveStatus.tone === "error") {

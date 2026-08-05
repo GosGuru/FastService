@@ -19,8 +19,6 @@ export default function LocaleError({ error }: Props) {
 		console.error(error);
 	}, [error]);
 
-	const isSpanish = locale === "es";
-
 	const labels = uiLabels[locale];
 
 	return (
