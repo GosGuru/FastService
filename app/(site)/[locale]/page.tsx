@@ -3,6 +3,8 @@ import { HomeHero } from "@/components/sections/HomeSections";
 import { HomeConversionSections } from "@/components/sections/HomeConversionSections";
 import { buildHomeAlternates, getPublicContent } from "@/lib/content";
 import { assertLocale, siteUrl, uiLabels, type Locale } from "@/lib/i18n";
+import { resolveHomeSettings } from "@/lib/homeSettings";
+import { loadPublicSiteSettings } from "@/lib/siteSettings";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -25,11 +27,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function HomePage({ params }: Props) {
 	const { locale: rawLocale } = await params;
 	const locale = assertLocale(rawLocale) as Locale;
-	const content = await getPublicContent();
+	const [content, siteSettings] = await Promise.all([getPublicContent(), loadPublicSiteSettings()]);
+	const homeSettings = resolveHomeSettings(siteSettings, content.boats, content.boatCollections);
 	return (
 		<main>
-			<HomeHero locale={locale} />
-			<HomeConversionSections boats={content.boats} collections={content.boatCollections} locale={locale} />
+			<HomeHero locale={locale} settings={homeSettings.hero} />
+			<HomeConversionSections boats={content.boats} collections={content.boatCollections} locale={locale} settings={homeSettings} />
 		</main>
 	);
 }

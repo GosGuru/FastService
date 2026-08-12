@@ -1,12 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { defaultSiteSettings, type SiteSettings } from "@/types/settings";
+import type { SiteSettings } from "@/types/settings";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { cloneDefaultSiteSettings, normalizeSiteSettings } from "@/lib/homeSettings";
 
 export async function loadSiteSettings(): Promise<SiteSettings> {
   if (!hasSupabaseConfig()) {
-    return defaultSiteSettings;
+    return cloneDefaultSiteSettings();
   }
 
   try {
@@ -19,26 +20,18 @@ export async function loadSiteSettings(): Promise<SiteSettings> {
       .single();
 
     if (error || !data) {
-      return defaultSiteSettings;
+      return cloneDefaultSiteSettings();
     }
 
-    const payload = data.payload as SiteSettings;
-    return {
-      ...defaultSiteSettings,
-      ...payload,
-      whatsappNumbers: {
-        ...defaultSiteSettings.whatsappNumbers,
-        ...payload.whatsappNumbers
-      }
-    };
+    return normalizeSiteSettings(data.payload);
   } catch {
-    return defaultSiteSettings;
+    return cloneDefaultSiteSettings();
   }
 }
 
 export async function loadPublicSiteSettings(): Promise<SiteSettings> {
   if (!hasSupabaseConfig()) {
-    return defaultSiteSettings;
+    return cloneDefaultSiteSettings();
   }
 
   try {
@@ -52,29 +45,22 @@ export async function loadPublicSiteSettings(): Promise<SiteSettings> {
       .single();
 
     if (error || !data) {
-      return defaultSiteSettings;
+      return cloneDefaultSiteSettings();
     }
 
-    const payload = data.payload as SiteSettings;
-    return {
-      ...defaultSiteSettings,
-      ...payload,
-      whatsappNumbers: {
-        ...defaultSiteSettings.whatsappNumbers,
-        ...payload.whatsappNumbers
-      }
-    };
+    return normalizeSiteSettings(data.payload);
   } catch {
-    return defaultSiteSettings;
+    return cloneDefaultSiteSettings();
   }
 }
 
 export async function saveSiteSettings(supabase: SupabaseClient, settings: SiteSettings): Promise<SiteSettings> {
+  const normalizedSettings = normalizeSiteSettings(settings);
   const row = {
     content_type: "settings",
     content_id: "site-settings",
     payload: {
-      ...settings,
+      ...normalizedSettings,
       updatedAt: new Date().toISOString()
     },
     status: "published",
@@ -91,5 +77,5 @@ export async function saveSiteSettings(supabase: SupabaseClient, settings: SiteS
     throw new Error(`Supabase fallo al guardar settings: ${error.message}`);
   }
 
-  return settings;
+  return normalizedSettings;
 }

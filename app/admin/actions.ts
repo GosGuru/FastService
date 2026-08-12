@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/supabase/admin-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { saveAdminSnapshotToSupabase } from "@/lib/supabase/content";
+import { loadAdminContentSnapshot } from "@/lib/supabase/content";
 import { saveSiteSettings } from "@/lib/siteSettings";
+import { normalizeSiteSettings, resolveHomeSettings, validateHomeSettings } from "@/lib/homeSettings";
 import type { AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { translateItem, type AdminItem } from "@/lib/admin/deepseek";
 import type { Locale } from "@/lib/i18n";
@@ -92,8 +94,28 @@ export async function saveSiteSettingsAction(settings: SiteSettings): Promise<Ad
   }
 
   try {
+    const normalizedSettings = normalizeSiteSettings(settings);
+    const contentResult = await loadAdminContentSnapshot();
+    const resolvedSettings = {
+      ...normalizedSettings,
+      home: resolveHomeSettings(normalizedSettings, contentResult.snapshot.content.boats, contentResult.snapshot.content.boatCollections)
+    };
+    const validationErrors = validateHomeSettings(
+      resolvedSettings,
+      contentResult.snapshot.content.boats,
+      contentResult.snapshot.content.boatCollections
+    );
+
+    if (validationErrors.length) {
+      return {
+        ok: false,
+        message: "Revisa la configuración de Inicio antes de publicarla.",
+        details: validationErrors
+      };
+    }
+
     const supabase = await createSupabaseServerClient();
-    await saveSiteSettings(supabase, settings);
+    await saveSiteSettings(supabase, resolvedSettings);
 
     revalidatePath("/", "layout");
     revalidatePath("/admin");

@@ -2,7 +2,7 @@
 
 import { type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { IconType } from "react-icons";
-import { FiAlertCircle, FiAnchor, FiBold, FiBriefcase, FiCheckCircle, FiChevronDown, FiChevronLeft, FiChevronUp, FiCopy, FiDroplet, FiExternalLink, FiEye, FiEyeOff, FiFileText, FiGlobe, FiHelpCircle, FiImage, FiItalic, FiLayers, FiLoader, FiLogOut, FiMenu, FiMessageCircle, FiMove, FiPlus, FiSave, FiSearch, FiSettings, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
+import { FiAlertCircle, FiAnchor, FiBold, FiBriefcase, FiCheckCircle, FiChevronDown, FiChevronLeft, FiChevronUp, FiCopy, FiDroplet, FiExternalLink, FiEye, FiEyeOff, FiFileText, FiGlobe, FiHelpCircle, FiHome, FiImage, FiItalic, FiLayers, FiLoader, FiLogOut, FiMenu, FiMessageCircle, FiMove, FiPlus, FiSave, FiSearch, FiSettings, FiStar, FiTrash2, FiTruck, FiUploadCloud, FiVideo } from "react-icons/fi";
 import { DndContext, type DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -10,13 +10,16 @@ import { CSS } from "@dnd-kit/utilities";
 import { translateItemAction, type AdminMutationResult } from "@/app/admin/actions";
 import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { HomeSettingsEditor } from "@/components/admin/HomeSettingsEditor";
 import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
+import { validateHomeSettings } from "@/lib/homeSettings";
 import { publicServiceIds, servicePageIds, type Boat, type BoatCollection, type FaqItem, type LocalizedText, type MediaAsset, type RichTextByLocale, type SeoPage, type ServiceId, type ServiceOption, type ServicePage, type ServicePageId, type SpecItem, type Vehicle, type VideoAsset, type WaterToy } from "@/types/content";
 import type { SiteSettings } from "@/types/settings";
 
 type AdminItem = AdminContentSnapshot["content"][AdminContentKey][number];
 type GenericContentItem = BoatCollection;
+type AdminSectionKey = AdminContentKey | "home" | "settings";
 type ManagedDetailsPatch = Partial<Pick<Vehicle, "image" | "gallery" | "specs" | "slugsByLocale" | "seoTitle" | "seoDescription" | "priceLabel" | "marina" | "richDescription" | "amenities" | "whatsappMessage">>;
 
 type FeedbackTone = "info" | "success" | "error";
@@ -36,6 +39,7 @@ interface UploadQueueItem {
 }
 
 const sectionConfig = [
+  { key: "home", label: "Inicio", description: "Portada, destacados y categorías", icon: FiHome, tone: "home" },
   { key: "boats", label: "Barcos", description: "Yates XL, yates y embarcaciones rápidas", icon: FiAnchor, tone: "boats" },
   { key: "boatCollections", label: "Colecciones", description: "Categorías públicas de barcos", icon: FiLayers, tone: "collections" },
   { key: "vehicles", label: "Transfer", description: "Vehículos y traslados privados", icon: FiTruck, tone: "transfers" },
@@ -44,10 +48,10 @@ const sectionConfig = [
   { key: "seoPages", label: "SEO ocultas", description: "Páginas SEO fuera del menú", icon: FiGlobe, tone: "seo" },
   { key: "faqs", label: "FAQs", description: "Preguntas frecuentes por servicio", icon: FiHelpCircle, tone: "faqs" },
   { key: "settings", label: "Configuración", description: "Números de WhatsApp por idioma", icon: FiSettings, tone: "settings" }
-] satisfies Array<{ key: AdminContentKey | "settings"; label: string; description: string; icon: IconType; tone: string }>;
+] satisfies Array<{ key: AdminSectionKey; label: string; description: string; icon: IconType; tone: string }>;
 
 // Secciones donde el orden de la lista controla el orden de render en el frontend.
-const REORDERABLE_SECTIONS = new Set<AdminContentKey | "settings">(["boats", "boatCollections", "vehicles", "waterToys"]);
+const REORDERABLE_SECTIONS = new Set<AdminSectionKey>(["boats", "boatCollections", "vehicles", "waterToys"]);
 
 const defaultImage: MediaAsset = {
   src: "https://images.unsplash.com/photo-1605281317010-fe5ffe798166?auto=format&fit=crop&w=1200&q=80",
@@ -457,7 +461,7 @@ function isServicePageId(value: unknown): value is ServicePageId {
   return typeof value === "string" && servicePageIds.includes(value as ServicePageId);
 }
 
-function getVisitTarget(activeSection: AdminContentKey | "settings", item: AdminItem, snapshot: AdminContentSnapshot, locale: Locale) {
+function getVisitTarget(activeSection: AdminSectionKey, item: AdminItem, snapshot: AdminContentSnapshot, locale: Locale) {
   if (activeSection === "boats" && "kind" in item && item.kind === "boat") {
     const collection = snapshot.content.boatCollections.find((collectionItem) => collectionItem.collectionId === item.collectionId);
     const categorySlugs = collection?.slugsByLocale ?? item.categorySlugsByLocale;
@@ -741,7 +745,7 @@ interface AdminDashboardProps {
 interface SortableAdminListItemProps {
   item: AdminItem;
   locale: Locale;
-  activeSection: AdminContentKey | "settings";
+  activeSection: AdminSectionKey;
   isActive: boolean;
   reorderable: boolean;
   isFirst: boolean;
@@ -832,7 +836,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState(() => snapshotFingerprint(initialSnapshot));
   const [lastSavedSettingsFingerprint, setLastSavedSettingsFingerprint] = useState(() => JSON.stringify(initialSettings));
   const [settings, setSettings] = useState(initialSettings);
-  const [activeSection, setActiveSection] = useState<AdminContentKey | "settings">("boats");
+  const [activeSection, setActiveSection] = useState<AdminSectionKey>("home");
   const [selectedId, setSelectedId] = useState(initialSnapshot.content.boats[0]?.id ?? "");
   const [mobileView, setMobileView] = useState<"list" | "editor">("list");
   const [locale, setLocale] = useState<Locale>("es");
@@ -1059,8 +1063,9 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
   const section = sectionConfig.find((item) => item.key === activeSection) ?? sectionConfig[0];
   const SectionIcon = section.icon;
-  const items = activeSection === "settings" ? [] : (snapshot.content[activeSection] as AdminItem[]);
-  const filteredItems = activeSection === "settings" ? [] : items.filter((item) => {
+  const isSettingsSection = activeSection === "home" || activeSection === "settings";
+  const items = isSettingsSection ? [] : (snapshot.content[activeSection] as AdminItem[]);
+  const filteredItems = isSettingsSection ? [] : items.filter((item) => {
     const title = getItemTitle(item, locale).toLowerCase();
     const id = item.id.toLowerCase();
     const slug = "slugsByLocale" in item ? getLocalizedValue(item.slugsByLocale, locale).toLowerCase() : "";
@@ -1198,6 +1203,16 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           { label: "FAQs de Juguetes", value: toysFaqs, note: "asociadas a juguetes" }
         ];
       }
+      case "home": {
+        const selectedBoats = settings.home.featured.boatIds.length;
+        const categoryOrder = settings.home.categories.collectionIds.map((id) => id === "fast-boats" ? "Rápidas" : id === "yachts" ? "Yates" : "Yates XL").join(" · ");
+        return [
+          { label: "Idiomas editables", value: locales.length, note: "ES, EN, DE, NL y RU" },
+          { label: "Barcos destacados", value: selectedBoats, note: "de 4 requeridos" },
+          { label: "Categorías", value: settings.home.categories.collectionIds.length, note: categoryOrder },
+          { label: "Estado", value: hasUnsavedSettingsChanges ? "Pendiente" : "Publicado", note: "configuración de Inicio" }
+        ];
+      }
       case "settings":
       default: {
         const totalItems = content.boats.length + content.boatCollections.length + content.vehicles.length + content.waterToys.length + content.servicePages.length + content.seoPages.length + content.faqs.length;
@@ -1217,7 +1232,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
         ];
       }
     }
-  }, [snapshot, activeSection]);
+  }, [snapshot, activeSection, settings, hasUnsavedSettingsChanges]);
 
   function confirmDiscardUnsavedChanges() {
     if (!hasUnsavedChanges) return true;
@@ -1225,13 +1240,13 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
     return window.confirm("Tienes cambios sin guardar. Si sales ahora, se perderan. ¿Quieres continuar sin guardar?");
   }
 
-  function selectSection(key: AdminContentKey | "settings") {
+  function selectSection(key: AdminSectionKey) {
     clearTranslationStates();
     setNavOpen(false);
-    if (key === "settings") {
+    if (key === "home" || key === "settings") {
       setActiveSection(key);
       setSelectedId("");
-      setMobileView("list");
+      setMobileView("editor");
       setQuery("");
       setFilterCollection("all");
       setFilterVisibility("all");
@@ -1388,7 +1403,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   async function saveToSupabase() {
     if (isSaving || isTranslating) return;
 
-    if (activeSection === "settings") {
+    if (activeSection === "home" || activeSection === "settings") {
       await handleSaveSettings();
       return;
     }
@@ -1444,11 +1459,18 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
 
   async function handleSaveSettings() {
     if (isSaving) return;
+    if (activeSection === "home") {
+      const validationErrors = validateHomeSettings(settings, snapshot.content.boats, snapshot.content.boatCollections);
+      if (validationErrors.length) {
+        setSaveStatus({ tone: "error", title: "Revisá la página de Inicio", message: "Hay campos o selecciones pendientes.", details: validationErrors });
+        return;
+      }
+    }
     setIsSaving(true);
     setSaveStatus({
       tone: "info",
-      title: "Guardando configuración",
-      message: "Publicando números de WhatsApp en el sitio..."
+      title: activeSection === "home" ? "Publicando Inicio" : "Guardando configuración",
+      message: activeSection === "home" ? "Actualizando la portada, destacados y categorías..." : "Publicando números de WhatsApp en el sitio..."
     });
     try {
       const result = await saveSettingsAction(settings);
@@ -1456,7 +1478,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
         setLastSavedSettingsFingerprint(JSON.stringify(settings));
         setSaveStatus({
           tone: "success",
-          title: "Configuración guardada",
+          title: activeSection === "home" ? "Inicio publicado" : "Configuración guardada",
           message: result.message,
           details: result.details
         });
@@ -1562,7 +1584,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
         </section>
 
         <section className={`admin-workspace admin-workspace--${section.tone} admin-workspace--show-${mobileView}`}>
-          {activeSection !== "settings" && (
+          {!isSettingsSection && (
             <div className="admin-list-panel">
               <div className="admin-panel-heading">
                 <span className="admin-heading-icon">
@@ -1686,7 +1708,9 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           )}
 
           <div className="admin-editor-panel">
-            {activeSection === "settings" ? (
+            {activeSection === "home" ? (
+              <HomeSettingsEditor settings={settings} boats={snapshot.content.boats} collections={snapshot.content.boatCollections} locale={locale} onLocaleChange={setLocale} onChange={setSettings} onSave={handleSaveSettings} saveStatus={saveStatus} isSaving={isSaving} hasUnsavedChanges={hasUnsavedSettingsChanges} />
+            ) : activeSection === "settings" ? (
               <SettingsEditor settings={settings} onChange={setSettings} onSave={handleSaveSettings} saveStatus={saveStatus} isSaving={isSaving} />
             ) : (
               <>
@@ -1882,7 +1906,7 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
           </div>
         </section>
       </main>
-      {hasUnsavedChanges && activeSection !== "settings" && (
+      {hasUnsavedSnapshotChanges && !isSettingsSection && (
         <div className="admin-floating-publish">
           <button
             type="button"
@@ -1990,7 +2014,7 @@ function SettingsEditor({
   );
 }
 
-function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: AdminContentKey | "settings"; item: AdminItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
+function ItemEditor({ activeSection, item, locale, onChange }: { activeSection: AdminSectionKey; item: AdminItem; locale: Locale; onChange: (patch: Partial<AdminItem>) => void }) {
   if (activeSection === "boats" && "kind" in item && item.kind === "boat") {
     return <BoatEditor boat={item} locale={locale} onChange={(patch) => onChange(patch as Partial<AdminItem>)} />;
   }

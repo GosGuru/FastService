@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FiVolume2, FiVolumeX } from "react-icons/fi";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
-import { uiLabels, type Locale } from "@/lib/i18n";
+import { getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
+import type { HomeSettings } from "@/types/settings";
 
 interface HomeHeroExperienceProps {
 	locale: Locale;
+	settings: HomeSettings["hero"];
 }
 
 type SoundPreference = "auto" | "on" | "off";
@@ -86,51 +88,39 @@ const soundLabels: Record<
 const heroCopy: Record<
 	Locale,
 		{
-			title: string;
-		text: string;
-		cta: string;
+			cta: string;
 		secondary: string;
 		message: string;
 	}
 > = {
 	es: {
-		title: "Alquiler de barcos en Ibiza & Formentera",
-		text: "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación.",
 		cta: "Consultar barcos por WhatsApp",
 		secondary: "Ver barcos disponibles",
 		message: "Hola, quiero que me ayuden a encontrar un barco en Ibiza.",
 	},
 	en: {
-		title: "Boat rental in Ibiza & Formentera",
-		text: "Boats, private transfers and water toys coordinated from a single conversation.",
 		cta: "Ask about boats on WhatsApp",
 		secondary: "View available boats",
 		message: "Hello, I would like help finding a boat in Ibiza.",
 	},
 	de: {
-		title: "Bootsverleih auf Ibiza & Formentera",
-		text: "Boote, private Transfers und Wasserspielzeug aus einer einzigen Unterhaltung koordiniert.",
 		cta: "Boote per WhatsApp anfragen",
 		secondary: "Verfügbare Boote ansehen",
 		message: "Hallo, ich möchte Hilfe bei der Suche nach einem Boot auf Ibiza.",
 	},
 	nl: {
-		title: "Bootverhuur op Ibiza & Formentera",
-		text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één gesprek.",
 		cta: "Boten via WhatsApp aanvragen",
 		secondary: "Beschikbare boten bekijken",
 		message: "Hallo, ik wil graag hulp bij het vinden van een boot op Ibiza.",
 	},
 	ru: {
-		title: "Аренда яхт на Ибице и Форментере",
-		text: "Яхты, частные трансферы и водные развлечения — всё из одного разговора.",
 		cta: "Подобрать яхту в WhatsApp",
 		secondary: "Посмотреть доступные яхты",
 		message: "Здравствуйте, помогите мне подобрать яхту на Ибице.",
 	},
 };
 
-export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
+export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const soundPreferenceRef = useRef<SoundPreference>("auto");
 	const autoplayAttemptedRef = useRef(false);
@@ -284,9 +274,11 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
 				<video
 					ref={videoRef}
 					className="hero-section__video"
+					autoPlay
 					loop
+					muted
 					playsInline
-					preload="metadata"
+					preload="auto"
 					poster={heroPoster}
 					aria-hidden="true"
 					tabIndex={-1}
@@ -301,8 +293,8 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
 			</div>
 			<div className="hero-section__overlay" />
 			<div className="container hero-section__content">
-				<h1>{copy.title}</h1>
-				<p>{copy.text}</p>
+				<h1>{getLocalizedValue(settings.title, locale)}</h1>
+				<p>{getLocalizedValue(settings.description, locale)}</p>
 				<div className="hero-section__actions">
 					<WhatsAppCta
 						locale={locale}
