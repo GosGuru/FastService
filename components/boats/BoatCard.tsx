@@ -9,6 +9,7 @@ import type { Boat } from "@/types/content";
 import { getLocalizedSlug, getLocalizedValue, type Locale } from "@/lib/i18n";
 import { buildBoatAvailabilityMessage, buildWhatsAppUrl, getBoatTypeLabel } from "@/lib/whatsapp";
 import { useWhatsAppPhone } from "@/lib/useWhatsAppSettings";
+import { trackWhatsAppClick } from "@/lib/conversionTracking";
 
 const icons = {
   cabins: PiBed,
@@ -18,11 +19,11 @@ const icons = {
 };
 
 const cardLabels: Record<Locale, { details: string; view: string; availability: string; metres: string }> = {
-  es: { details: "Más información", view: "Ver modelo", availability: "Disponibilidad", metres: "Metros" },
-  en: { details: "More information", view: "View model", availability: "Availability", metres: "Metres" },
-  de: { details: "Mehr Informationen", view: "Modell ansehen", availability: "Verfügbarkeit", metres: "Meter" },
-  nl: { details: "Meer informatie", view: "Model bekijken", availability: "Beschikbaarheid", metres: "Meter" },
-  ru: { details: "Подробнее", view: "Посмотреть модель", availability: "Доступность", metres: "Метров" }
+  es: { details: "Más información", view: "Ver modelo", availability: "Consultar por WhatsApp", metres: "Metros" },
+  en: { details: "More information", view: "View model", availability: "Ask on WhatsApp", metres: "Metres" },
+  de: { details: "Mehr Informationen", view: "Modell ansehen", availability: "Per WhatsApp anfragen", metres: "Meter" },
+  nl: { details: "Meer informatie", view: "Model bekijken", availability: "Vraag via WhatsApp", metres: "Meter" },
+  ru: { details: "Подробнее", view: "Посмотреть модель", availability: "Уточнить в WhatsApp", metres: "Метров" }
 };
 
 interface BoatCardProps {
@@ -81,7 +82,7 @@ export function BoatCard({ boat, locale, href, phone }: BoatCardProps) {
       </div>
 
       <div className="boat-card__actions">
-        <Link href={waHref} className="boat-card__btn boat-card__btn--wa" target="_blank" rel="noreferrer">
+        <Link href={waHref} className="boat-card__btn boat-card__btn--wa" target="_blank" rel="noreferrer" onClick={() => trackWhatsAppClick({ placement: "boat-card", locale, boatId: boat.id, category: boat.collectionId })}>
           <FaWhatsapp aria-hidden="true" />
           <span>{labels.availability}</span>
         </Link>

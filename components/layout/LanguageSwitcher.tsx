@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiChevronDown, FiGlobe } from "react-icons/fi";
+import { FiChevronDown } from "react-icons/fi";
 import { languageNames, locales, uiLabels, type Locale } from "@/lib/i18n";
 import { resolveLocalizedPath, type LanguageRouteMap } from "@/lib/language-routing";
 
@@ -11,6 +11,14 @@ interface LanguageSwitcherProps {
   locale: Locale;
   routes?: LanguageRouteMap;
 }
+
+const localeFlags: Record<Locale, string> = {
+  es: "/flags/es.svg",
+  en: "/flags/gb.svg",
+  de: "/flags/de.svg",
+  nl: "/flags/nl.svg",
+  ru: "/flags/ru.svg",
+};
 
 export function LanguageSwitcher({ locale, routes }: LanguageSwitcherProps) {
   const [open, setOpen] = useState(false);
@@ -35,7 +43,7 @@ export function LanguageSwitcher({ locale, routes }: LanguageSwitcherProps) {
         aria-label={uiLabels[locale].language}
         onClick={() => setOpen((v) => !v)}
       >
-        <FiGlobe aria-hidden="true" />
+        <span className="lang-dropdown__flag" style={{ backgroundImage: `url(${localeFlags[locale]})` }} aria-hidden="true" />
         <span>{locale.toUpperCase()}</span>
         <FiChevronDown aria-hidden="true" className={open ? "lang-dropdown__chevron--open" : ""} />
       </button>
@@ -49,7 +57,8 @@ export function LanguageSwitcher({ locale, routes }: LanguageSwitcherProps) {
               aria-current={item === locale ? "page" : undefined}
               onClick={() => setOpen(false)}
             >
-              {languageNames[item]}
+              <span className="lang-dropdown__flag" style={{ backgroundImage: `url(${localeFlags[item]})` }} aria-hidden="true" />
+              <span>{languageNames[item]}</span>
             </Link>
           ))}
         </div>

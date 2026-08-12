@@ -26,13 +26,14 @@ import type {
 	Vehicle,
 	WaterToy,
 } from "@/types/content";
+import type { HomeSettings } from "@/types/settings";
 
 interface HomeSectionsProps {
 	locale: Locale;
 }
 
-export function HomeHero({ locale }: HomeSectionsProps) {
-	return <HomeHeroExperience locale={locale} />;
+export function HomeHero({ locale, settings }: HomeSectionsProps & { settings: HomeSettings["hero"] }) {
+	return <HomeHeroExperience locale={locale} settings={settings} />;
 }
 
 const homeIntroCopy: Record<

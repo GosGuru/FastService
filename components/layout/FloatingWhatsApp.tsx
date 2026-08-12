@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { FaWhatsapp } from "react-icons/fa";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { type Locale } from "@/lib/i18n";
+import { trackWhatsAppClick } from "@/lib/conversionTracking";
 
 interface FloatingWhatsAppProps {
   locale: Locale;
@@ -16,6 +19,7 @@ export function FloatingWhatsApp({ locale, phone }: FloatingWhatsAppProps) {
       target="_blank"
       rel="noreferrer"
       aria-label="WhatsApp"
+      onClick={() => trackWhatsAppClick({ placement: "floating", locale })}
     >
       <FaWhatsapp aria-hidden="true" />
     </Link>

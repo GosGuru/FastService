@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { FiVolume2, FiVolumeX } from "react-icons/fi";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
-import { uiLabels, type Locale } from "@/lib/i18n";
+import { getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
+import type { HomeSettings } from "@/types/settings";
 
 interface HomeHeroExperienceProps {
 	locale: Locale;
+	settings: HomeSettings["hero"];
 }
 
 type SoundPreference = "auto" | "on" | "off";
@@ -84,53 +87,45 @@ const soundLabels: Record<
 
 const heroCopy: Record<
 	Locale,
-	{ pill: string; text: string; cta: string; message: string }
+		{
+			cta: string;
+		secondary: string;
+		message: string;
+	}
 > = {
 	es: {
-		pill: "FastServices Ibiza: tu contacto náutico de confianza",
-		text: "Barcos, transfers privados y juguetes náuticos coordinados desde una sola conversación",
-		cta: "Ponte en contacto",
-		message: "Hola, quiero organizar una experiencia privada en Ibiza.",
+		cta: "Consultar barcos por WhatsApp",
+		secondary: "Ver barcos disponibles",
+		message: "Hola, quiero que me ayuden a encontrar un barco en Ibiza.",
 	},
 	en: {
-		pill: "FastServices Ibiza: your trusted nautical contact",
-		text: "Boats, private transfers and water toys coordinated from a single conversation",
-		cta: "Get in touch",
-		message: "Hello, I would like to plan a private experience in Ibiza.",
+		cta: "Ask about boats on WhatsApp",
+		secondary: "View available boats",
+		message: "Hello, I would like help finding a boat in Ibiza.",
 	},
 	de: {
-		pill: "FastServices Ibiza: dein vertrauter Nautik-Kontakt",
-		text: "Boote, private Transfers und Wasserspielzeug koordiniert in einer einzigen Konversation",
-		cta: "Kontakt aufnehmen",
-		message: "Hallo, ich möchte ein privates Erlebnis auf Ibiza planen.",
+		cta: "Boote per WhatsApp anfragen",
+		secondary: "Verfügbare Boote ansehen",
+		message: "Hallo, ich möchte Hilfe bei der Suche nach einem Boot auf Ibiza.",
 	},
 	nl: {
-		pill: "FastServices Ibiza: je vertrouwde nautische contact",
-		text: "Boten, privétransfers en waterspeelgoed geregeld vanuit één enkel gesprek",
-		cta: "Neem contact op",
-		message: "Hallo, ik wil graag un privé-ervaring op Ibiza plannen.",
+		cta: "Boten via WhatsApp aanvragen",
+		secondary: "Beschikbare boten bekijken",
+		message: "Hallo, ik wil graag hulp bij het vinden van een boot op Ibiza.",
 	},
 	ru: {
-		pill: "FastServices Ibiza: ваш надежный морской контакт",
-		text: "Аренда яхт, частных трансферов и водных развлечений — всё из одного разговора",
-		cta: "Связаться",
-		message: "Здравствуйте, я хочу организовать частный отдых на Ибице.",
+		cta: "Подобрать яхту в WhatsApp",
+		secondary: "Посмотреть доступные яхты",
+		message: "Здравствуйте, помогите мне подобрать яхту на Ибице.",
 	},
 };
 
-export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
+export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const soundPreferenceRef = useRef<SoundPreference>("auto");
 	const autoplayAttemptedRef = useRef(false);
 	const [soundEnabled, setSoundEnabled] = useState(false);
 	const [soundBlocked, setSoundBlocked] = useState(false);
-
-	useEffect(() => {
-		document.body.classList.add("no-scroll-home");
-		return () => {
-			document.body.classList.remove("no-scroll-home");
-		};
-	}, []);
 
 	useEffect(() => {
 		const video = videoRef.current;
@@ -279,9 +274,11 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
 				<video
 					ref={videoRef}
 					className="hero-section__video"
+					autoPlay
 					loop
+					muted
 					playsInline
-					preload="metadata"
+					preload="auto"
 					poster={heroPoster}
 					aria-hidden="true"
 					tabIndex={-1}
@@ -296,15 +293,20 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
 			</div>
 			<div className="hero-section__overlay" />
 			<div className="container hero-section__content">
-				<h1>{uiLabels[locale].homeHeroTitle}</h1>
-				<p>{copy.text}</p>
+				<h1>{getLocalizedValue(settings.title, locale)}</h1>
+				<p>{getLocalizedValue(settings.description, locale)}</p>
 				<div className="hero-section__actions">
 					<WhatsAppCta
 						locale={locale}
 						variant="light"
 						label={copy.cta}
 						message={copy.message}
+						className="hero-section__primary"
+						placement="home-hero"
 					/>
+					<Link className="hero-section__secondary" href="#barcos-destacados">
+						{copy.secondary}
+					</Link>
 					<button
 						className={`hero-sound-toggle ${soundEnabled ? "is-on" : ""} ${soundBlocked ? "is-blocked" : ""}`}
 						type="button"
@@ -320,8 +322,11 @@ export function HomeHeroExperience({ locale }: HomeHeroExperienceProps) {
 						)}
 					</button>
 				</div>
-				<p className="hero-section__location-tagline">
-					Menorca - Formentera - Ibiza - Mallorca
+				<p className="hero-section__location-tagline" aria-label={uiLabels[locale].homeHeroTitle}>
+					<span>Menorca</span><i aria-hidden="true" />
+					<span>Formentera</span><i aria-hidden="true" />
+					<span>Ibiza</span><i aria-hidden="true" />
+					<span>Mallorca</span>
 				</p>
 			</div>
 		</section>
