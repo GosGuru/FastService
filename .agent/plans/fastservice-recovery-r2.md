@@ -1,6 +1,6 @@
 # FastService production recovery
 
-**Status:** Production cutover complete; admin activation pending
+**Status:** Public recovery complete; admin activation pending
 **Started:** 2026-08-12
 **Specification:** `docs/sdd/supabase-storage-recovery-r2.md`
 
@@ -67,6 +67,8 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 | Application checks | Passed locally | `npm run lint`; `npm run build`; `npm audit` 0 vulnerabilities |
 | Production deploy | Passed | Vercel deployment from commit `26b3a354221831c1859dffd8e2693029acce38c0` reached `READY` with all production aliases |
 | Public route smoke | Passed | `/es`, `/es/yates`, `/es/transfer-privado`, `/es/juguetes-nauticos`, `/es/contacto` returned HTTP 200 |
+| Recovered catalog/media | Passed | Production HTML contains the admin-authored `MANGUSTA 108` record and R2 media origins; no paused-project origin remains |
+| Canonical SEO URLs | Passed | Production sitemap uses `https://fastservicesibiza.com` and no longer emits the Vercel alias |
 | Anonymous media write | Passed | `POST /admin/storage/sign-upload` returned HTTP 401 |
 | Runtime errors | Passed | Vercel reported no runtime errors after the production smoke requests |
 
@@ -87,4 +89,4 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 - With explicit authorization, the empty unhealthy replacement was deleted to free the account slot. The clean organization now hosts the healthy replacement project; SomosCamper was not modified.
 - R2 bucket `fastservice-gallery` uses EU jurisdiction and a least-privilege account token scoped to object read/write on that bucket only. CORS is limited to FastService production/main origins.
 - The temporary public origin is rate-limited `r2.dev`. It unblocks recovery but remains a production follow-up until the DNS zone can provide a custom media domain.
-- The first production smoke exposed a stale Vercel Supabase publishable key: routes returned local seed content even though the new database was healthy. The key and canonical site URL were corrected and their Vercel update timestamps were verified; final catalog/media confirmation must use the deployment triggered after both persisted changes.
+- The first production smoke exposed a stale Vercel Supabase publishable key: routes returned local seed content even though the new database was healthy. After persisting the replacement key and canonical site URL, the next deployment generated 230 pages (versus 195 on fallback) and live HTML showed recovered admin content with R2 media.
