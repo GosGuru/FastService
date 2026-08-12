@@ -1,6 +1,6 @@
 # FastService production recovery
 
-**Status:** Public recovery complete; admin activation pending
+**Status:** Recovery and admin E2E complete; custom media domain pending
 **Started:** 2026-08-12
 **Specification:** `docs/sdd/supabase-storage-recovery-r2.md`
 
@@ -25,7 +25,7 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 - [x] Authorized resume attempted; blocked by organization Fair Use restriction.
 - [x] Create a healthy replacement Supabase Free project in `eu-west-1` under the clean FastService Recovery organization.
 - [x] Apply reviewed schema/RLS and import all 52 CMS rows.
-- [ ] Create a new admin identity and revoke reliance on exposed bootstrap credentials.
+- [x] Create a new admin identity and revoke reliance on exposed bootstrap credentials.
 - [x] Produce optimized referenced-media package and manifest.
 - [x] Create an EU-jurisdiction R2 Standard bucket; enable a temporary public `r2.dev` origin pending a custom domain.
 - [x] Upload all 223 verified objects and rewrite CMS media origins.
@@ -70,6 +70,9 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 | Recovered catalog/media | Passed | Production HTML contains the admin-authored `MANGUSTA 108` record and R2 media origins; no paused-project origin remains |
 | Canonical SEO URLs | Passed | Production sitemap uses `https://fastservicesibiza.com` and no longer emits the Vercel alias |
 | Anonymous media write | Passed | `POST /admin/storage/sign-upload` returned HTTP 401 |
+| Admin authentication | Passed | New Auth user is registered in `admin_users` and production redirected the authenticated owner to `/admin` |
+| CMS write | Passed | Reversible alt-text change saved successfully, then the original value was restored and confirmed after reload |
+| R2 admin lifecycle | Passed | Signed upload and completion returned HTTP 200; the temporary image was then deleted and the gallery reloaded with its original single image |
 | Runtime errors | Passed | Vercel reported no runtime errors after the production smoke requests |
 
 ## Rollback

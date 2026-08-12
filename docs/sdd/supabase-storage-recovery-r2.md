@@ -1,6 +1,6 @@
 # FastService storage recovery and R2 migration
 
-**Status:** Production cutover complete; final admin activation and custom media domain pending
+**Status:** Production recovery and admin E2E complete; custom media domain pending
 **Date:** 2026-08-12
 **Owners:** FastService / engineering
 
@@ -26,6 +26,7 @@ The desired outcome is to recover the authoritative content and media, restore t
 - Cloudflare R2 is active with an EU-jurisdiction Standard bucket. All 223 optimized objects (166,728,752 bytes) were uploaded and list-verified with zero errors. CMS payloads now contain no old Supabase Storage origin or either missing source key; the missing boat gallery entry was removed and the missing water-taxi option image uses its valid service image fallback.
 - Application commit `26b3a354221831c1859dffd8e2693029acce38c0` is deployed to production and all FastService aliases are active. Representative localized routes return HTTP 200, anonymous upload signing returns HTTP 401, and Vercel reported no runtime errors after the smoke requests.
 - The post-configuration deployment generated 230 routes and production HTML now contains recovered admin-authored catalog records and R2 media URLs, with no old Supabase Storage origin. The sitemap emits the FastService custom domain rather than the Vercel alias.
+- A fresh Auth identity was registered in `admin_users`. Production admin login, an authenticated reversible CMS save, R2 signing/upload completion, and deletion of the temporary test object were exercised successfully; the edited record was restored to its original state.
 - An explicitly authorized Resume attempt returned the project to the paused state. Organization Billing confirms an active Fair Use restriction for `Storage Size Exceeded`; immediate service restoration requires upgrading the plan, while the alternative is to wait for the next billing period or restore into a different active hosted project.
 - The application stores structured CMS rows in `public.content_items` and media in the public `fastservice-gallery` Storage bucket.
 - `app/admin/storage/sign-upload/route.ts` currently signs uploads against Supabase Storage.
