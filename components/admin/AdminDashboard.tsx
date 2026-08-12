@@ -12,8 +12,6 @@ import { MediaImage } from "@/components/MediaImage";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { supabaseGalleryBucket } from "@/lib/supabase/config";
 import { publicServiceIds, servicePageIds, type Boat, type BoatCollection, type FaqItem, type LocalizedText, type MediaAsset, type RichTextByLocale, type SeoPage, type ServiceId, type ServiceOption, type ServicePage, type ServicePageId, type SpecItem, type Vehicle, type VideoAsset, type WaterToy } from "@/types/content";
 import type { SiteSettings } from "@/types/settings";
 
@@ -307,7 +305,34 @@ function getUploadErrorMessage(error: unknown) {
     if (parts.length) return parts.join(" ");
   }
 
-  return "No se pudo subir el archivo a Supabase Storage.";
+  return "No se pudo subir el archivo a R2.";
+}
+
+const MAX_IMAGE_DIMENSION = 2560;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+async function optimizeImageForUpload(file: File) {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") {
+    if (file.size > MAX_IMAGE_BYTES && file.type.startsWith("image/")) throw new Error("La imagen supera 8 MB.");
+    return file;
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("El navegador no pudo preparar la imagen.");
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
+  if (!blob) throw new Error("El navegador no pudo comprimir la imagen.");
+  const optimized = new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", { type: "image/webp", lastModified: file.lastModified });
+  const selected = optimized.size < file.size ? optimized : file;
+  if (selected.size > MAX_IMAGE_BYTES) throw new Error("La imagen sigue superando 8 MB despues de optimizarla.");
+  return selected;
 }
 
 async function readErrorResponse(response: Response) {
@@ -326,8 +351,8 @@ async function getSignedUpload(file: File, prefix: string) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      fileName: file.name,
       contentType: file.type,
+      fileSize: file.size,
       prefix
     })
   });
@@ -336,28 +361,46 @@ async function getSignedUpload(file: File, prefix: string) {
     throw new Error(await readErrorResponse(response));
   }
 
-  return response.json() as Promise<{ path: string; token: string; publicUrl: string }>;
+  return response.json() as Promise<{ path: string; uploadUrl: string; contentType: string; maxBytes: number }>;
 }
 
 async function uploadAdminStorageFile(file: File, prefix: string): Promise<MediaAsset> {
-  const signedUpload = await getSignedUpload(file, prefix);
-  const supabase = createSupabaseBrowserClient();
-  const { error } = await supabase.storage.from(supabaseGalleryBucket).uploadToSignedUrl(signedUpload.path, signedUpload.token, file, {
-    cacheControl: "31536000",
-    contentType: file.type || undefined,
-    upsert: false
+  const uploadFile = await optimizeImageForUpload(file);
+  const signedUpload = await getSignedUpload(uploadFile, prefix);
+  const uploadResponse = await fetch(signedUpload.uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": signedUpload.contentType,
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    body: uploadFile
   });
 
-  if (error) {
-    throw new Error(`Supabase Storage rechazo el archivo firmado: ${getUploadErrorMessage(error)}`);
-  }
+  if (!uploadResponse.ok) throw new Error(`R2 rechazo el archivo firmado. HTTP ${uploadResponse.status}.`);
+
+  const completeResponse = await fetch("/admin/storage/complete-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: signedUpload.path, contentType: signedUpload.contentType })
+  });
+  if (!completeResponse.ok) throw new Error(await readErrorResponse(completeResponse));
+  const completed = await completeResponse.json() as { path: string; publicUrl: string };
 
   return {
-    src: signedUpload.publicUrl,
+    src: completed.publicUrl,
     alt: localized(""),
-    source: "supabase",
-    storagePath: signedUpload.path
+    source: "r2",
+    storagePath: completed.path
   };
+}
+
+async function deleteAdminStorageFile(path: string) {
+  const response = await fetch("/admin/storage/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path })
+  });
+  if (!response.ok) throw new Error(await readErrorResponse(response));
 }
 
 function getItemTitle(item: AdminItem, locale: Locale) {
@@ -2526,15 +2569,15 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
       return;
     }
 
-    if (file.size > 200 * 1024 * 1024) {
+    if (file.size > 100 * 1024 * 1024) {
       setStatusTone("error");
-      setStatus("El video supera 200 MB. Comprimelo antes de subirlo.");
+      setStatus("El video supera 100 MB. Comprimelo antes de subirlo.");
       return;
     }
 
     setIsUploading(true);
     setStatusTone("info");
-    setStatus("Subiendo video a Supabase Storage...");
+    setStatus("Subiendo video a R2...");
 
     try {
       const asset = await uploadAdminStorageFile(file, "boat-video");
@@ -2542,7 +2585,7 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
       onChange({
         src: asset.src,
         title: currentTitle,
-        source: "supabase",
+        source: "r2",
         storagePath: asset.storagePath,
         mimeType: file.type || undefined
       });
@@ -2561,8 +2604,7 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
 
     if (video?.storagePath) {
       try {
-        const supabase = createSupabaseBrowserClient();
-        await supabase.storage.from(supabaseGalleryBucket).remove([video.storagePath]);
+        await deleteAdminStorageFile(video.storagePath);
       } catch {
         setStatusTone("info");
         setStatus("El video se quito del contenido, pero no se pudo borrar el archivo del bucket.");
@@ -2584,7 +2626,7 @@ function BoatVideoEditor({ video, locale, itemLabel, onChange }: { video?: Video
       <label className={`admin-upload-dropzone ${isUploading ? "is-uploading" : ""}`} aria-disabled={isUploading}>
         {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiVideo aria-hidden="true" />}
         <span>{isUploading ? "Subiendo video" : "Subir MP4, WebM o MOV"}</span>
-        <small>Máximo 200 MB. También puedes pegar una URL directa al video.</small>
+        <small>Máximo 100 MB. También puedes pegar una URL directa al video.</small>
         <input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={isUploading} onChange={(event) => { void uploadVideo(event.target.files); event.target.value = ""; }} />
       </label>
 
@@ -2792,8 +2834,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
 
     if (asset.storagePath) {
       try {
-        const supabase = createSupabaseBrowserClient();
-        await supabase.storage.from(supabaseGalleryBucket).remove([asset.storagePath]);
+        await deleteAdminStorageFile(asset.storagePath);
       } catch {
         setUploadStatus("La imagen se quito del contenido, pero no se pudo borrar el archivo del bucket.");
       }
@@ -2825,7 +2866,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
     setIsUploading(true);
     setUploadTone("info");
     setUploadQueue(queueItems);
-    setUploadStatus(`Subiendo ${files.length} ${files.length === 1 ? "imagen" : "imagenes"} a Supabase Storage...`);
+    setUploadStatus(`Optimizando y subiendo ${files.length} ${files.length === 1 ? "imagen" : "imagenes"} a R2...`);
 
     try {
       const uploadedAssets: MediaAsset[] = [];
@@ -2835,7 +2876,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
       for (const [fileIndex, file] of files.entries()) {
         const queueItem = queueItems[fileIndex];
 
-        updateQueueItem(queueItem.id, { status: "uploading", message: "Subiendo al bucket" });
+        updateQueueItem(queueItem.id, { status: "uploading", message: "Optimizando y subiendo a R2" });
 
         let uploadedAsset: MediaAsset;
 
@@ -2870,7 +2911,7 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
       }
 
       setUploadTone("success");
-      setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen subida" : "imagenes subidas"} a Storage. Pulsa "Publicar en el sitio" para que aparezcan en la web pública.`);
+      setUploadStatus(`${uploadedAssets.length} ${uploadedAssets.length === 1 ? "imagen optimizada y subida" : "imagenes optimizadas y subidas"} a R2. Pulsa "Publicar en el sitio" para que aparezcan en la web pública.`);
     } catch (error) {
       setUploadTone("error");
       setUploadStatus(error instanceof Error ? error.message : "No se pudieron subir las imagenes.");
@@ -2926,8 +2967,8 @@ function MediaEditor({ image, gallery, locale, itemLabel, onChange }: { image: M
           <rect width="100%" height="100%" fill="none" />
         </svg>
         {isUploading ? <FiLoader aria-hidden="true" className="admin-spin" /> : <FiUploadCloud aria-hidden="true" />}
-        <span>{isUploading ? "Subiendo fotos a Storage" : isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
-        <small>JPG, PNG, WebP o GIF. Las imágenes se suben inmediatamente a Storage; pulsa Guardar cambios para que aparezcan en la web.</small>
+        <span>{isUploading ? "Optimizando y subiendo fotos a R2" : isDragActive ? "Suelta las fotos aqui" : "Arrastra fotos o haz clic para subir"}</span>
+        <small>JPG, PNG, WebP o GIF. Se reducen a 2560 px y máximo 8 MB antes de subir; pulsa Guardar cambios para publicarlas.</small>
         <input type="file" accept="image/*" multiple disabled={isUploading} onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ""; }} />
       </label>
       {/* Removed "Agregar URL" as per UX feedback - only direct uploads supported */}

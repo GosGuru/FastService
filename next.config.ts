@@ -12,6 +12,12 @@ function getSupabaseHostname() {
   }
 }
 
+function getR2Hostname() {
+  const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  if (!publicUrl) return null;
+  try { return new URL(publicUrl).hostname; } catch { return null; }
+}
+
 const supabaseHostnames = Array.from(new Set([getSupabaseHostname(), "uuvpspxnijthjwmksrer.supabase.co"].filter((hostname): hostname is string => Boolean(hostname))));
 
 const nextConfig: NextConfig = {
@@ -32,7 +38,8 @@ const nextConfig: NextConfig = {
         protocol: "https" as const,
         hostname,
         pathname: "/storage/v1/object/public/**"
-      }))
+      })),
+      ...(getR2Hostname() ? [{ protocol: "https" as const, hostname: getR2Hostname() as string, pathname: "/**" }] : [])
     ]
   }
 };

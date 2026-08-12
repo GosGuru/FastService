@@ -21,7 +21,7 @@ export interface MediaAsset {
   alt: LocalizedText;
   width?: number;
   height?: number;
-  source?: "unsplash" | "dropbox" | "local" | "mock" | "supabase";
+  source?: "unsplash" | "dropbox" | "local" | "mock" | "supabase" | "r2";
   dropboxPath?: string;
   storagePath?: string;
 }
@@ -29,7 +29,7 @@ export interface MediaAsset {
 export interface VideoAsset {
   src: string;
   title?: LocalizedText;
-  source?: "local" | "supabase" | "external";
+  source?: "local" | "supabase" | "r2" | "external";
   storagePath?: string;
   mimeType?: string;
 }
