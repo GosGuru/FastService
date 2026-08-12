@@ -174,7 +174,6 @@ export function HomeSettingsEditor({ settings, boats, collections, locale, onLoc
           <label><span>Título principal · {locale.toUpperCase()}</span><input value={settings.home.hero.title[locale] ?? ""} onChange={(event) => updateLocalized("hero.title", event.target.value)} /><small>{String(settings.home.hero.title[locale] ?? "").length} caracteres</small></label>
           <label><span>Descripción · {locale.toUpperCase()}</span><textarea rows={3} value={settings.home.hero.description[locale] ?? ""} onChange={(event) => updateLocalized("hero.description", event.target.value)} /><small>{String(settings.home.hero.description[locale] ?? "").length} caracteres</small></label>
         </div>
-        <div className="home-admin-hero-preview" aria-label="Vista previa del texto del hero"><small>Vista previa</small><strong>{settings.home.hero.title[locale]}</strong><p>{settings.home.hero.description[locale]}</p></div>
       </section>
 
       <section className="home-admin-card">

@@ -1213,23 +1213,6 @@ button {
   border-color: #4da8c6;
 }
 
-.home-admin-hero-preview {
-  position: relative;
-  display: grid;
-  gap: 8px;
-  overflow: hidden;
-  margin-top: 18px;
-  padding: 22px;
-  border-radius: 15px;
-  background: linear-gradient(125deg, #0a2937, #205c6c);
-  color: #fff;
-}
-.home-admin-hero-preview::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 85% 0, rgb(92 193 218 / 26%), transparent 38%); pointer-events: none; }
-.home-admin-hero-preview > * { position: relative; z-index: 1; }
-.home-admin-hero-preview small { color: #8cd8e9; font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
-.home-admin-hero-preview strong { max-width: 680px; font: 400 clamp(23px, 4vw, 36px)/1.04 var(--font-marcellus), serif; }
-.home-admin-hero-preview p { max-width: 680px; color: rgb(255 255 255 / 82%); }
-
 .home-admin-selection-heading {
   display: flex;
   align-items: center;
