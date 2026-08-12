@@ -1,6 +1,6 @@
 # FastService production recovery
 
-**Status:** In progress
+**Status:** Production cutover complete; admin activation pending
 **Started:** 2026-08-12
 **Specification:** `docs/sdd/supabase-storage-recovery-r2.md`
 
@@ -30,8 +30,8 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 - [x] Create an EU-jurisdiction R2 Standard bucket; enable a temporary public `r2.dev` origin pending a custom domain.
 - [x] Upload all 223 verified objects and rewrite CMS media origins.
 - [x] Implement R2 signed upload/delete flow and future image controls.
-- [ ] Configure Vercel preview and run security/content/media tests.
-- [ ] Cut over production and verify live behavior.
+- [x] Configure Vercel and run local/security/content/media tests.
+- [x] Cut over production and verify public routes and anonymous upload denial.
 
 ## Source evidence
 
@@ -65,8 +65,10 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 | CMS URL rewrite | Passed | 52 rows; 0 old-origin rows; 0 missing-path rows; 40 R2-backed rows |
 | Public R2 sample | Passed | HTTP 200; MP4 length/type/cache headers match manifest |
 | Application checks | Passed locally | `npm run lint`; `npm run build`; `npm audit` 0 vulnerabilities |
-| Preview E2E | Pending | — |
-| Production cutover | Pending | — |
+| Production deploy | Passed | Vercel deployment from commit `26b3a354221831c1859dffd8e2693029acce38c0` reached `READY` with all production aliases |
+| Public route smoke | Passed | `/es`, `/es/yates`, `/es/transfer-privado`, `/es/juguetes-nauticos`, `/es/contacto` returned HTTP 200 |
+| Anonymous media write | Passed | `POST /admin/storage/sign-upload` returned HTTP 401 |
+| Runtime errors | Passed | Vercel reported no runtime errors after the production smoke requests |
 
 ## Rollback
 
@@ -85,3 +87,4 @@ Rebuild FastService on a replacement hosted Supabase Free project, migrate verif
 - With explicit authorization, the empty unhealthy replacement was deleted to free the account slot. The clean organization now hosts the healthy replacement project; SomosCamper was not modified.
 - R2 bucket `fastservice-gallery` uses EU jurisdiction and a least-privilege account token scoped to object read/write on that bucket only. CORS is limited to FastService production/main origins.
 - The temporary public origin is rate-limited `r2.dev`. It unblocks recovery but remains a production follow-up until the DNS zone can provide a custom media domain.
+- The first production smoke exposed a stale Vercel Supabase publishable key: routes returned local seed content even though the new database was healthy. The key and canonical site URL were corrected; a new deployment is required before final catalog/media confirmation.
