@@ -13,7 +13,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { HomeSettingsEditor } from "@/components/admin/HomeSettingsEditor";
 import { normalizeAdminContentSnapshot, type AdminContentKey, type AdminContentSnapshot } from "@/lib/admin/snapshot";
 import { getLocalizedSlug, getLocalizedValue, locales, normalizeSlugSegment, type Locale } from "@/lib/i18n";
-import { validateHomeSettings } from "@/lib/homeSettings";
+import { resolveHomeSettings, validateHomeSettings } from "@/lib/homeSettings";
 import { publicServiceIds, servicePageIds, type Boat, type BoatCollection, type FaqItem, type LocalizedText, type MediaAsset, type RichTextByLocale, type SeoPage, type ServiceId, type ServiceOption, type ServicePage, type ServicePageId, type SpecItem, type Vehicle, type VideoAsset, type WaterToy } from "@/types/content";
 import type { SiteSettings } from "@/types/settings";
 
@@ -835,7 +835,14 @@ export function AdminDashboard({ initialSnapshot, initialSource, initialMessage,
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState(() => snapshotFingerprint(initialSnapshot));
   const [lastSavedSettingsFingerprint, setLastSavedSettingsFingerprint] = useState(() => JSON.stringify(initialSettings));
-  const [settings, setSettings] = useState(initialSettings);
+  const [settings, setSettings] = useState<SiteSettings>(() => ({
+    ...initialSettings,
+    home: resolveHomeSettings(
+      initialSettings,
+      initialSnapshot.content.boats,
+      initialSnapshot.content.boatCollections
+    )
+  }));
   const [activeSection, setActiveSection] = useState<AdminSectionKey>("home");
   const [selectedId, setSelectedId] = useState(initialSnapshot.content.boats[0]?.id ?? "");
   const [mobileView, setMobileView] = useState<"list" | "editor">("list");
