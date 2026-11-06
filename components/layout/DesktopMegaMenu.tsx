@@ -21,10 +21,23 @@ export function DesktopMegaMenu({
 	onOpenChange,
 	boatCollections,
 }: DesktopMegaMenuProps) {
-	const ref = useRef<HTMLDivElement>(null);
+	const ref = useRef<HTMLDetailsElement>(null);
+	const initialSync = useRef(true);
 	const items = getBoatNavigation(locale, { boatCollections });
 	const labels = uiLabels[locale];
 	const handleOpenChange = useEffectEvent(onOpenChange);
+
+	useEffect(() => {
+		if (ref.current?.open) handleOpenChange(true);
+	}, []);
+
+	useEffect(() => {
+		if (initialSync.current) {
+			initialSync.current = false;
+			return;
+		}
+		if (ref.current && ref.current.open !== open) ref.current.open = open;
+	}, [open]);
 
 	useEffect(() => {
 		if (!open) return;
@@ -51,19 +64,16 @@ export function DesktopMegaMenu({
 	}, [open]);
 
 	return (
-		<div className="nav-dropdown" ref={ref}>
-			<button
-				type="button"
+		<details className="nav-dropdown nav-dropdown--boats" ref={ref} onToggle={(event) => onOpenChange(event.currentTarget.open)}>
+			<summary
 				className={`nav-link nav-link--dropdown ${open ? "is-open" : ""}`}
-				aria-expanded={open}
 				aria-controls="boat-mega-menu"
-				onClick={() => onOpenChange(!open)}
 			>
 				{labels.boats}
 				<FiChevronDown aria-hidden="true" />
-			</button>
+			</summary>
 			<div
-				className={`mega-menu ${open ? "is-open" : ""}`}
+				className="mega-menu is-open"
 				id="boat-mega-menu"
 				aria-label={labels.ariaBoatCollections}
 			>
@@ -91,6 +101,6 @@ export function DesktopMegaMenu({
 					))}
 				</div>
 			</div>
-		</div>
+		</details>
 	);
 }

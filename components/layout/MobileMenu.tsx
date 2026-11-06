@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiArrowRight, FiChevronDown, FiGlobe, FiMenu, FiX } from "react-icons/fi";
 import { MediaImage } from "@/components/MediaImage";
 import { getBoatNavigation, getMobilePageNavigation } from "@/data/navigation";
@@ -31,6 +31,8 @@ const boatCardPrefixes: Record<Locale, string> = {
 
 export function MobileMenu({ locale, boatCollections, servicePages, languageRoutes }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const initialSync = useRef(true);
   const [activeTab, setActiveTab] = useState<MobileTab>("boats");
   const [languageOpen, setLanguageOpen] = useState(false);
   const pathname = usePathname();
@@ -49,6 +51,18 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
     nl: "Contact opnemen",
     ru: "Связаться сейчас"
   }[locale];
+
+  useEffect(() => {
+    if (detailsRef.current?.open) setOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (initialSync.current) {
+      initialSync.current = false;
+      return;
+    }
+    if (detailsRef.current && detailsRef.current.open !== open) detailsRef.current.open = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -76,16 +90,15 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
   }
 
   return (
-    <>
-      <button
-        className={`mobile-menu-button ${open ? "is-open" : ""}`}
-        type="button"
-        onClick={() => setOpen((v) => !v)}
+    <details className="mobile-menu-root" ref={detailsRef} onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary
+        className="mobile-menu-button"
         aria-label={open ? labels.close : labels.menu}
       >
-        {open ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
-      </button>
-      <div className={`mobile-panel ${open ? "is-open" : ""}`} aria-hidden={!open}>
+        <FiMenu className="mobile-menu-button__open" aria-hidden="true" />
+        <FiX className="mobile-menu-button__close" aria-hidden="true" />
+      </summary>
+      <div className={`mobile-panel ${open ? "is-open" : ""}`}>
         <div className="mobile-panel__bar">
           <Link href={`/${locale}`} className="brand brand--mobile" onClick={closeMenu} aria-label="FastServices">
             <span className="brand__logo" aria-hidden="true" />
@@ -103,8 +116,7 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
                 <span>{activeLanguage.code}</span>
                 <FiChevronDown aria-hidden="true" />
               </button>
-              {languageOpen ? (
-                <div className="mobile-language__menu">
+                <div className={`mobile-language__menu${languageOpen ? " is-open" : ""}`} aria-hidden={!languageOpen} inert={!languageOpen}>
                   {languageOptions.map((item) => (
                     <Link
                       key={item.locale}
@@ -116,7 +128,6 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
                     </Link>
                   ))}
                 </div>
-              ) : null}
             </div>
             <button className="mobile-panel__close" type="button" onClick={closeMenu} aria-label={labels.close}>
               <FiX aria-hidden="true" />
@@ -178,6 +189,6 @@ export function MobileMenu({ locale, boatCollections, servicePages, languageRout
         </div>
 
       </div>
-    </>
+    </details>
   );
 }

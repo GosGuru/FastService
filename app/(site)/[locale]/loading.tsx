@@ -8,5 +8,9 @@ export default function SiteRouteLoading() {
   const params = useParams();
   const locale = assertLocale(typeof params?.locale === "string" ? params.locale : "es") as Locale;
 
-  return <PremiumRouteLoader locale={locale} />;
+  return (
+    <div className="site-route-loading">
+      <PremiumRouteLoader locale={locale} />
+    </div>
+  );
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NauticalLoaderMark } from "@/components/layout/NauticalLoaderMark";
 
+const showDelayMs = 180;
 const minVisibleMs = 280;
 const maxVisibleMs = 1400;
 
@@ -41,17 +42,25 @@ export function SiteLoader() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
   const startedAt = useRef(0);
+  const fallbackPending = useRef(false);
   const hideTimer = useRef<number | null>(null);
+  const showTimer = useRef<number | null>(null);
   const maxTimer = useRef<number | null>(null);
 
   useEffect(() => {
     function startLoader() {
       clearTimer(hideTimer);
+      clearTimer(showTimer);
       clearTimer(maxTimer);
       startedAt.current = performance.now();
-      setActive(true);
+      setActive(false);
+      showTimer.current = window.setTimeout(() => {
+        showTimer.current = null;
+        setActive(true);
+      }, showDelayMs);
 
       maxTimer.current = window.setTimeout(() => {
+        clearTimer(showTimer);
         startedAt.current = 0;
         setActive(false);
       }, maxVisibleMs);
@@ -73,17 +82,42 @@ export function SiteLoader() {
       startLoader();
     }
 
+    function onFullscreenLoader() {
+      clearTimer(hideTimer);
+      clearTimer(showTimer);
+      clearTimer(maxTimer);
+      startedAt.current = 0;
+      setActive(false);
+    }
+
+    function onRoutePending() {
+      fallbackPending.current = true;
+      if (!startedAt.current) startLoader();
+    }
+
+    function onRouteReady() {
+      fallbackPending.current = false;
+      onFullscreenLoader();
+    }
+
     document.addEventListener("click", onDocumentClick, true);
+    document.addEventListener("fastservice:route-pending", onRoutePending);
+    document.addEventListener("fastservice:route-ready", onRouteReady);
+    document.addEventListener("fastservice:fullscreen-loader", onFullscreenLoader);
 
     return () => {
       document.removeEventListener("click", onDocumentClick, true);
+      document.removeEventListener("fastservice:route-pending", onRoutePending);
+      document.removeEventListener("fastservice:route-ready", onRouteReady);
+      document.removeEventListener("fastservice:fullscreen-loader", onFullscreenLoader);
       clearTimer(hideTimer);
+      clearTimer(showTimer);
       clearTimer(maxTimer);
     };
   }, []);
 
   useEffect(() => {
-    if (!startedAt.current) {
+    if (!startedAt.current || fallbackPending.current) {
       return;
     }
 
@@ -91,7 +125,13 @@ export function SiteLoader() {
     clearTimer(maxTimer);
 
     const elapsedMs = performance.now() - startedAt.current;
-    const remainingMs = Math.max(minVisibleMs - elapsedMs, 0);
+    if (showTimer.current !== null) {
+      clearTimer(showTimer);
+      startedAt.current = 0;
+      setActive(false);
+      return;
+    }
+    const remainingMs = Math.max(showDelayMs + minVisibleMs - elapsedMs, 0);
 
     hideTimer.current = window.setTimeout(() => {
       startedAt.current = 0;

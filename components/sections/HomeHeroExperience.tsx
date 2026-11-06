@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { FiVolume2, FiVolumeX } from "react-icons/fi";
 import { WhatsAppCta } from "@/components/cta/WhatsAppCta";
 import { getLocalizedValue, uiLabels, type Locale } from "@/lib/i18n";
@@ -16,8 +17,8 @@ type SoundPreference = "auto" | "on" | "off";
 type ExplicitSoundPreference = Exclude<SoundPreference, "auto">;
 
 const heroPoster = "/videos/ibiza-boats-header-poster.jpg";
-const heroMobileVideoSrc = "/videos/ibiza-boats-header.mobile.mp4";
-const heroVideoSrc = "/videos/ibiza-boats-header.web.mp4";
+const heroMobileVideoSrc = "/videos/ibiza-boats-header.mobile-optimized.mp4";
+const heroVideoSrc = "/videos/ibiza-boats-header.desktop-optimized.mp4";
 const heroVolume = 0.26;
 const soundPreferenceStorageKey = "fastservice.hero.soundPreference";
 
@@ -124,6 +125,8 @@ export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const soundPreferenceRef = useRef<SoundPreference>("auto");
 	const autoplayAttemptedRef = useRef(false);
+	const automaticPlaybackRef = useRef(false);
+	const [videoVisible, setVideoVisible] = useState(false);
 	const [soundEnabled, setSoundEnabled] = useState(false);
 	const [soundBlocked, setSoundBlocked] = useState(false);
 
@@ -132,6 +135,12 @@ export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps
 		if (!video) return;
 
 		soundPreferenceRef.current = readStoredSoundPreference();
+		const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+		automaticPlaybackRef.current = !window.matchMedia("(prefers-reduced-motion: reduce)").matches && !connection?.saveData;
+		if (automaticPlaybackRef.current) {
+			video.src = window.matchMedia("(max-width: 768px)").matches ? heroMobileVideoSrc : heroVideoSrc;
+			video.load();
+		}
 
 		let active = true;
 		let resumeAfterVisibilityChange = false;
@@ -167,10 +176,7 @@ export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps
 		};
 
 		const startVideo = async () => {
-			if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-				await playMuted();
-				return;
-			}
+			if (!automaticPlaybackRef.current) return;
 
 			if (soundPreferenceRef.current === "off") {
 				await playMuted();
@@ -234,6 +240,11 @@ export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps
 		video.volume = heroVolume;
 
 		if (video.muted || !soundEnabled) {
+			if (!video.getAttribute("src")) {
+				video.src = window.matchMedia("(max-width: 768px)").matches ? heroMobileVideoSrc : heroVideoSrc;
+				video.load();
+			}
+			automaticPlaybackRef.current = true;
 			const previousPreference = soundPreferenceRef.current;
 			soundPreferenceRef.current = "on";
 			video.muted = false;
@@ -271,25 +282,19 @@ export function HomeHeroExperience({ locale, settings }: HomeHeroExperienceProps
 	return (
 		<section className="hero-section">
 			<div className="hero-section__media">
+				<Image src={heroPoster} alt="" fill sizes="100vw" loading="eager" fetchPriority="high" className="hero-section__poster" />
 				<video
 					ref={videoRef}
-					className="hero-section__video"
-					autoPlay
+					className={`hero-section__video${videoVisible ? " is-visible" : ""}`}
 					loop
 					muted
 					playsInline
-					preload="auto"
-					poster={heroPoster}
+					preload="none"
+					onPlaying={() => setVideoVisible(true)}
+					onError={() => setVideoVisible(false)}
 					aria-hidden="true"
 					tabIndex={-1}
-				>
-					<source
-						src={heroMobileVideoSrc}
-						type="video/mp4"
-						media="(max-width: 768px)"
-					/>
-					<source src={heroVideoSrc} type="video/mp4" />
-				</video>
+				/>
 			</div>
 			<div className="hero-section__overlay" />
 			<div className="container hero-section__content">

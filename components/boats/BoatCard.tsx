@@ -31,9 +31,10 @@ interface BoatCardProps {
   locale: Locale;
   href?: string;
   phone?: string;
+  imageSizes?: string;
 }
 
-export function BoatCard({ boat, locale, href, phone }: BoatCardProps) {
+export function BoatCard({ boat, locale, href, phone, imageSizes }: BoatCardProps) {
   const labels = cardLabels[locale];
   const cardHref = href ?? `/${locale}/boat/${getLocalizedSlug(boat.categorySlugsByLocale, locale)}/${getLocalizedSlug(boat.slugsByLocale, locale)}`;
   const boatTypeLabel = getBoatTypeLabel(boat.collectionId, locale);
@@ -56,7 +57,7 @@ export function BoatCard({ boat, locale, href, phone }: BoatCardProps) {
         href={cardHref}
         ariaLabel={`${labels.details}: ${boat.name}`}
         className="boat-card__image"
-        sizes="(max-width: 760px) 88vw, (max-width: 1180px) 46vw, 32vw"
+        sizes={imageSizes ?? "(max-width: 760px) 88vw, (max-width: 1180px) 46vw, 32vw"}
         showFullscreen={false}
         variant="card"
       />

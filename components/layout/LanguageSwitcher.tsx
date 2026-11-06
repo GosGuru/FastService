@@ -30,8 +30,15 @@ export function LanguageSwitcher({ locale, routes }: LanguageSwitcherProps) {
     function onOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
   return (
@@ -47,8 +54,7 @@ export function LanguageSwitcher({ locale, routes }: LanguageSwitcherProps) {
         <span>{locale.toUpperCase()}</span>
         <FiChevronDown aria-hidden="true" className={open ? "lang-dropdown__chevron--open" : ""} />
       </button>
-      {open && (
-        <div className="lang-dropdown__menu">
+        <div className={`lang-dropdown__menu${open ? " is-open" : ""}`} aria-hidden={!open} inert={!open}>
           {locales.map((item) => (
             <Link
               key={item}
@@ -62,7 +68,6 @@ export function LanguageSwitcher({ locale, routes }: LanguageSwitcherProps) {
             </Link>
           ))}
         </div>
-      )}
     </div>
   );
 }

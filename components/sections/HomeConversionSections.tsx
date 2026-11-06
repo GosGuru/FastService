@@ -63,7 +63,7 @@ export function HomeConversionSections({ boats, collections, locale, settings }:
 							<p>{getLocalizedValue(settings.featured.description, locale)}</p>
 						</div>
 						<div className="conversion-featured__rail">
-							{featuredBoats.map((boat) => <BoatCard boat={boat} locale={locale} key={boat.id} />)}
+							{featuredBoats.map((boat) => <BoatCard boat={boat} locale={locale} key={boat.id} imageSizes="(max-width: 392px) 84vw, (max-width: 760px) 330px, (max-width: 1080px) 46vw, 25vw" />)}
 						</div>
 						<Link href="#tipos-de-barco" className="conversion-outline-link">{labels.allBoats}<FiArrowRight aria-hidden="true" /></Link>
 					</div>
